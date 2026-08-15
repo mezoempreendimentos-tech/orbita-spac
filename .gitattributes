@@ -1,0 +1,29 @@
+# Normalizar line endings no repositório
+# Windows usa CRLF por padrão, mas o conteúdo versionado fica em LF
+# Exceto para arquivos que precisam de CRLF (ex: scripts .bat, .cmd, .ps1 no Windows)
+
+# Default: LF no repositório, mas checkout mantém CRLF no Windows
+* text=auto eol=lf
+
+# Scripts Windows que precisam de CRLF
+*.bat      text eol=crlf
+*.cmd      text eol=crlf
+*.ps1      text eol=crlf
+
+# Binários explicitamente
+*.png      binary
+*.jpg      binary
+*.jpeg     binary
+*.gif      binary
+*.ico      binary
+*.pdf      binary
+*.zip      binary
+*.gz       binary
+*.tar      binary
+*.7z       binary
+*.jar      binary
+*.war      binary
+*.class    binary
+*.exe      binary
+*.dll      binary
+*.so       binary

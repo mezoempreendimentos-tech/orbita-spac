@@ -1,0 +1,85 @@
+name: CI
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+
+jobs:
+  # ============================================================
+  # Backend (Java 21, Spring Boot, Maven)
+  # Será habilitado a partir de F1 quando houver código backend
+  # ============================================================
+  backend:
+    name: Backend (Java + Spring Boot)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Java 21
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+          cache: maven
+
+      - name: Build & Test
+        run: |
+          chmod +x mvnw
+          ./mvnw -B verify --file pom.xml
+        # Será ativado quando pom.xml existir
+        continue-on-error: true
+
+  # ============================================================
+  # Frontend (Node 22, Next.js)
+  # Será habilitado a partir de F1 quando houver código frontend
+  # ============================================================
+  frontend:
+    name: Frontend (Next.js)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: frontend
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+
+      - name: Install & Lint
+        run: |
+          npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+          npm run lint || true
+        continue-on-error: true
+
+  # ============================================================
+  # Lint de Markdown e estrutura de docs
+  # ============================================================
+  docs:
+    name: Docs & Estrutura
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Validar estrutura mínima
+        run: |
+          test -f README.md
+          test -f LICENSE
+          test -f CONTRIBUTING.md
+          test -f .gitignore
+          test -d docs
+          test -d backend
+          test -d frontend
+          test -d infra
+          test -d bpmn
+          echo "✅ Estrutura mínima validada"
