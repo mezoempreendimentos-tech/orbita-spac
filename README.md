@@ -1,117 +1,42 @@
-# 🌀 ÓRBITA
+# Sistema ÓRBITA
 
-**Plataforma Integrada de Contratações do Setor de Planejamento e Acompanhamento de Contratações (SPAC)**
+Plataforma institucional para planejamento, acompanhamento e formalização de contratações públicas. A versão atual implementa o fluxo **DFD → consolidação → PCA → deliberação → publicação → abertura → instauração**, com rastreabilidade, controles LGPD, integração individual ao Google Drive e edição auto-hospedável.
 
-> *Diferentes processos, pessoas, informações e funções se conectam e gravitam em torno de um mesmo sistema, sem perder suas características e responsabilidades próprias.*
+## Tecnologias
 
----
-
-## 📌 Status
-
-🚧 **Protótipo em desenvolvimento ativo** — Fase 0 (Fundação)
-
-Sistema sendo construído para o **SPAC** com planos de comercialização posterior para outros órgãos públicos.
-
-## 🎯 O que é
-
-Plataforma que acompanha a contratação pública desde o surgimento da necessidade, passando pelo planejamento, instrução, análise jurídica, condução do procedimento, gestão e fiscalização contratual, até as publicações e preservação de todo o histórico.
-
-Acompanha a Lei nº 14.133/2021 (Nova Lei de Licitações) e integra com PNCP, Comprasnet, gov.br e demais sistemas do ecossistema público brasileiro.
-
-## 🏛️ Arquitetura
-
-19 módulos organizados em 3 camadas:
-
-1. **Fluxo da Contratação:** PORTA · AGENDA · TRILHA · LUPA · RÉGUA · TERMÔMETRO · LASTRO · ORÁCULO · MAESTRO · ELO · VIGIA
-2. **Produção e Transparência:** ECO · VITRINE
-3. **Inteligência e Suporte:** ÁGUIA · FAROL · MAPA · BÚSSOLA · ÍMÃ · OFICINA · ATLAS · MEMÓRIA
-
-Detalhes completos em [`docs/PROPOSTA_TECNICA.md`](docs/PROPOSTA_TECNICA.md).
-
-## 🛠️ Stack
-
-| Camada | Tecnologia |
+| Camada | Implementação |
 |---|---|
-| Backend | Java 21 + Spring Boot 3 + Spring Modulith |
-| Frontend | Next.js 14 (React 18) + TypeScript |
-| Banco OLTP | PostgreSQL 16 |
-| Busca | OpenSearch |
-| Mensageria | Apache Kafka 3.6+ |
-| Workflow | Camunda 8 (Zeebe) |
-| Identidade | Keycloak + gov.br |
-| Object Storage | MinIO (S3-compatible) |
-| Container | Docker + Docker Compose (dev) / Kubernetes (prod) |
-| IaC | Terraform + Helm |
-| CI/CD | GitHub Actions |
+| Interface | React 19, TypeScript, Vite e Tailwind CSS |
+| Servidor | Node.js, Express e tRPC |
+| Persistência | MariaDB/MySQL com Drizzle ORM |
+| Autenticação local | Senhas com scrypt e sessões JWT |
+| Implantação inicial | Docker Compose para Windows |
 
-## 👥 Equipe
+## Execução local inicial
 
-| Papel | Pessoa | Responsabilidade |
-|---|---|---|
-| **Arquiteto off-code / Chefe** | (você) | Visão de produto, decisões de negócio, governança, priorização |
-| **Tester / Líder de equipe** | Débora | Garantia de qualidade, homologação com usuários, validação de fluxos |
-| **Arquiteto full-stack + Engenheiro de dados + DevOps** | Mavis (IA) | Implementação, modelagem, infra, código, testes automatizados |
+A edição independente está em [`standalone/`](./standalone). Para uma instalação inicial em computador Windows, siga [`standalone/windows/README.md`](./standalone/windows/README.md). O procedimento completo, incluindo migração, OAuth do Google Drive e primeiro acesso, está em [`docs/implantacao-independente.md`](./docs/implantacao-independente.md).
 
-> **Workflow 2+1:** Mavis prepara e commita localmente. Equipe valida e faz push. Credenciais nunca saem das máquinas humanas.
+> Os arquivos `environment`, dumps de banco, volumes Docker e demais segredos não devem ser enviados ao GitHub.
 
-## 🚀 Quick start (desenvolvimento local)
+## Desenvolvimento
 
-> Pré-requisitos: Docker Desktop, Java 21, Node 22, Git 2.50+
-
-```powershell
-# 1. Clonar o repositório
-git clone https://github.com/mezoempreendimentos-tech/orbita-spac.git
-cd orbita-spac
-
-# 2. Subir os serviços de infraestrutura (Postgres, Kafka, Keycloak, Camunda, MinIO)
-docker compose -f infra/docker/docker-compose.dev.yml up -d
-
-# 3. Backend (a partir de F1)
-cd backend
-./mvnw spring-boot:run
-
-# 4. Frontend (a partir de F1)
-cd ../frontend
-npm install
-npm run dev
+```bash
+corepack enable
+pnpm install
+pnpm test
+pnpm exec tsc --noEmit
+pnpm build
 ```
 
-Acesse:
-- App: http://localhost:3000
-- Keycloak: http://localhost:8081
-- Camunda Operate: http://localhost:8082
-- MinIO Console: http://localhost:9001
+## Documentação principal
 
-## 📚 Documentação
+| Tema | Documento |
+|---|---|
+| Implantação independente | [`docs/implantacao-independente.md`](./docs/implantacao-independente.md) |
+| Primeira instalação local | [`docs/primeira-instalacao-local.md`](./docs/primeira-instalacao-local.md) |
+| Backup semanal no Windows | [`standalone/windows/README.md`](./standalone/windows/README.md) |
+| Fluxo institucional | [`docs/fluxo_dfd_pca_contratacao.md`](./docs/fluxo_dfd_pca_contratacao.md) |
 
-- [Proposta Técnica completa](docs/PROPOSTA_TECNICA.md)
-- [Arquitetura](docs/ARQUITETURA.md)
-- [Roadmap por fases](docs/ROADMAP.md)
-- [Estratégia de implantação](docs/IMPLANTACAO.md)
-- [Decisões arquiteturais (ADRs)](docs/DECISOES.md)
-- [Como contribuir](CONTRIBUTING.md)
+## Segurança operacional
 
-## 🗺️ Roadmap
-
-- **F0** (3-4 meses) — Fundação, identidade, motor BPMN, 1 fluxo piloto
-- **F1** (5-7 meses) — MVP: DFD → MAESTRO (dispensas)
-- **F2** (4-6 meses) — Execução + Fornecedores + Portal público
-- **F3** (4-6 meses) — Inteligência + extração seletiva de microsserviços
-- **F4+** — IA, multi-tenant comercial, mobile
-
-Detalhes em [`docs/ROADMAP.md`](docs/ROADMAP.md).
-
-## 📄 Licença
-
-Proprietária — Copyright © 2026 Mezo Empreendimentos.
-Todos os direitos reservados. Licenciamento para terceiros sob contrato.
-Contato: mezoempreendimentos@gmail.com
-
-## 📞 Contato
-
-- **Issues do GitHub:** https://github.com/mezoempreendimentos-tech/orbita-spac/issues
-- **Email:** mezoempreendimentos@gmail.com
-
----
-
-*"E todos gravitam na Órbita."*
+O repositório contém somente código e modelos de configuração. Antes de uma implantação, substitua senhas e tokens de exemplo, mantenha o arquivo `environment` fora do controle de versão e use uma unidade institucional protegida para os backups locais.

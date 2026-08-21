@@ -1,0 +1,1 @@
+ALTER TABLE `demands` ADD `hasFutureFiscalImpact` boolean DEFAULT false NOT NULL;

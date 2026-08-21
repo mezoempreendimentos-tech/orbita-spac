@@ -1,0 +1,1 @@
+ALTER TABLE `procurement_processes` ADD `externalFolderModifiedAt` timestamp;

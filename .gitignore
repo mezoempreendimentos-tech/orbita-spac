@@ -1,158 +1,114 @@
-# =====================================================================
-# ÓRBITA — .gitignore
-# Cobrindo Java, Node, Python, Docker, Terraform, IDEs e SO
-# =====================================================================
+# Dependencies
+**/node_modules
+.pnpm-store/
 
-# ===== Java / Spring Boot / Maven / Gradle =====
-HELP.md
-target/
-!.mvn/wrapper/maven-wrapper.jar
-!**/src/main/**/target/
-!**/src/test/**/target/
-
-### STS ###
-.apt_generated
-.classpath
-.factorypath
-.project
-.settings
-.springBeans
-.sts4-cache
-bin/
-!**/src/main/**/bin/
-!**/src/test/**/bin/
-
-### IntelliJ IDEA ###
-.idea
-*.iws
-*.iml
-*.ipr
-out/
-!**/src/main/**/out/
-!**/src/test/**/out/
-
-### NetBeans ###
-/nbproject/private/
-/nbbuild/
-/dist/
-/nbdist/
-/.nb-gradle/
+# Build outputs
+dist/
 build/
-!**/src/main/**/build/
-!**/src/test/**/build/
+*.dist
 
-### VS Code ###
+# Environment variables
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# IDE and editor files
 .vscode/
+.idea/
+*.swp
+*.swo
+*~
 
-# ===== Node / Next.js / npm =====
-node_modules/
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+
+# Logs
+logs
+*.log
 npm-debug.log*
 yarn-debug.log*
 yarn-error.log*
-.pnpm-debug.log*
-.next/
-out/
-build/
-dist/
-coverage/
-*.tsbuildinfo
-next-env.d.ts
+pnpm-debug.log*
+lerna-debug.log*
 
-# ===== Python =====
-__pycache__/
-*.py[cod]
-*$py.class
-*.so
-.Python
-.venv/
-venv/
-env/
-ENV/
-.pytest_cache/
-.coverage
-htmlcov/
-.mypy_cache/
-.ruff_cache/
-
-# ===== Docker =====
-Dockerfile.*
-docker-compose*.yml
-!.env.example
-.env
-.env.local
-.env.*.local
-
-# ===== Terraform =====
-*.tfstate
-*.tfstate.*
-*.tfstate.backup
-.terraform/
-.terraform.lock.hcl
-*.tfvars
-!example.tfvars
-crash.log
-crash.*.log
-override.tf
-override.tf.json
-*_override.tf
-*_override.tf.json
-
-# ===== Helm =====
-charts/*.tgz
-
-# ===== K8s =====
-kubeconfig
-*.kubeconfig
-
-# ===== Logs =====
-*.log
-logs/
+# Runtime data
 pids
 *.pid
 *.seed
 *.pid.lock
+*.bak
 
-# ===== OS =====
-.DS_Store
-Thumbs.db
-ehthumbs.db
-Desktop.ini
-$RECYCLE.BIN/
+# Coverage directory used by tools like istanbul
+coverage/
+*.lcov
 
-# ===== Secrets e credenciais (NUNCA versionar) =====
-*.pem
-*.key
-*.p12
-*.pfx
-*.crt
-*.cer
-secrets/
-credentials/
-.gcp/
-.aws/
-.azure/
-kubeconfig
-service-account*.json
-*credentials*.json
-**/application-local.yml
-**/application-local.properties
+# nyc test coverage
+.nyc_output
 
-# ===== Temporários e caches =====
-*.swp
-*.swo
-*~
+# Dependency directories
+jspm_packages/
+
+# TypeScript cache
+*.tsbuildinfo
+
+# Optional npm cache directory
+.npm
+
+# Optional eslint cache
+.eslintcache
+
+# Microbundle cache
+.rpt2_cache/
+.rts2_cache_cjs/
+.rts2_cache_es/
+.rts2_cache_umd/
+
+# Optional REPL history
+.node_repl_history
+
+# Output of 'npm pack'
+*.tgz
+
+# Yarn Integrity file
+.yarn-integrity
+
+# parcel-bundler cache (https://parceljs.org/)
+.cache
+.parcel-cache
+
+# Next.js build output
+.next
+
+# Nuxt.js build / generate output
+.nuxt
+
+# Gatsby files
 .cache/
-.tmp/
-.temp/
-.parcel-cache/
 
-# ===== Documentação local (se houver) =====
-docs/_local/
-docs/private/
+# Storybook build outputs
+.out
+.storybook-out
 
-# ===== Dados de teste locais =====
-test-data/
-fixtures/local/
+# Temporary folders
+tmp/
+temp/
+
+# Database
+*.db
 *.sqlite
 *.sqlite3
-*.db
+
+# Webdev artifacts (checkpoint zips, migrations, etc.)
+.webdev/
+
+# Manus version file (auto-generated, not part of source)
+client/public/__manus__/version.json
+.project-config.json

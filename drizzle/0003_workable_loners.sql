@@ -1,0 +1,1 @@
+ALTER TABLE `user_process_roles` MODIFY COLUMN `role` enum('demandante','chefia_compras','compras','instrumentalizacao','contabilidade','juridico','encarregado_lgpd','agente_contratacao','autoridade_competente','gestao_contratos','fiscal_contrato','administrador') NOT NULL;

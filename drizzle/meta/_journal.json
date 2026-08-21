@@ -1,0 +1,160 @@
+{
+  "version": "7",
+  "dialect": "mysql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "5",
+      "when": 1786800570633,
+      "tag": "0000_daily_nehzno",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "5",
+      "when": 1786800940583,
+      "tag": "0001_slim_baron_zemo",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1786802228843,
+      "tag": "0002_moaning_jasper_sitwell",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "5",
+      "when": 1786802305796,
+      "tag": "0003_workable_loners",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "5",
+      "when": 1786806687678,
+      "tag": "0004_ambitious_excalibur",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "5",
+      "when": 1786807118449,
+      "tag": "0005_public_spectrum",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "5",
+      "when": 1786807545708,
+      "tag": "0006_daffy_mephisto",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "5",
+      "when": 1786808385652,
+      "tag": "0007_serious_midnight",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "5",
+      "when": 1786808966868,
+      "tag": "0008_curvy_dakota_north",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "5",
+      "when": 1786959674760,
+      "tag": "0009_omniscient_vindicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "5",
+      "when": 1786976191365,
+      "tag": "0010_fresh_captain_flint",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "5",
+      "when": 1787046581670,
+      "tag": "0011_youthful_skrulls",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "5",
+      "when": 1787063238340,
+      "tag": "0012_wide_mulholland_black",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "5",
+      "when": 1787064445664,
+      "tag": "0013_nappy_roxanne_simpson",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "5",
+      "when": 1787148192286,
+      "tag": "0014_last_rick_jones",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "5",
+      "when": 1787230840517,
+      "tag": "0015_clean_black_widow",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "5",
+      "when": 1787236160939,
+      "tag": "0016_groovy_vermin",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "5",
+      "when": 1787237875090,
+      "tag": "0017_fair_vulcan",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "5",
+      "when": 1787238743003,
+      "tag": "0018_wooden_boomer",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "5",
+      "when": 1787318953910,
+      "tag": "0019_workable_korg",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "5",
+      "when": 1787320890391,
+      "tag": "0020_empty_edwin_jarvis",
+      "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "5",
+      "when": 1787329316044,
+      "tag": "0021_bored_wendigo",
+      "breakpoints": true
+    }
+  ]
+}

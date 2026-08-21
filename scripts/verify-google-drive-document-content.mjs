@@ -1,0 +1,43 @@
+import { createHash } from "node:crypto";
+import { execFile } from "node:child_process";
+import { promisify } from "node:util";
+import mysql from "mysql2/promise";
+import { compactDecrypt } from "jose";
+
+const execFileAsync = promisify(execFile);
+const fileId = process.argv[2];
+if (!fileId || !/^[A-Za-z0-9_-]{10,500}$/.test(fileId)) throw new Error("Informe o ID válido do documento Google.");
+const databaseUrl = process.env.DATABASE_URL;
+const clientId = process.env.GOOGLE_OAUTH_CLIENT_ID;
+const clientSecret = process.env.GOOGLE_OAUTH_CLIENT_SECRET;
+const jwtSecret = process.env.JWT_SECRET;
+if (!databaseUrl || !clientId || !clientSecret || !jwtSecret) throw new Error("A configuração institucional do Drive não está disponível neste ambiente.");
+
+const db = await mysql.createConnection(databaseUrl);
+try {
+  const [rows] = await db.execute("SELECT encryptedRefreshToken FROM google_drive_connections WHERE userId = 6900001 AND revokedAt IS NULL LIMIT 1");
+  const key = createHash("sha256").update(jwtSecret).digest();
+  const decrypted = await compactDecrypt(rows[0].encryptedRefreshToken, key);
+  const refreshToken = new TextDecoder().decode(decrypted.plaintext);
+  const tokenBody = new URLSearchParams({ client_id: clientId, client_secret: clientSecret, refresh_token: refreshToken, grant_type: "refresh_token" }).toString();
+  const { stdout: tokenStdout } = await execFileAsync("curl", ["--silent", "--show-error", "--fail-with-body", "--request", "POST", "--header", "Content-Type: application/x-www-form-urlencoded", "--data", tokenBody, "https://oauth2.googleapis.com/token"]);
+  const token = JSON.parse(tokenStdout);
+  if (!token.access_token) throw new Error("Não foi possível renovar a autorização institucional do Google Drive.");
+  const { stdout } = await execFileAsync("curl", ["--silent", "--show-error", "--fail-with-body", "--header", `Authorization: Bearer ${token.access_token}`, `https://docs.googleapis.com/v1/documents/${encodeURIComponent(fileId)}`]);
+  const document = JSON.parse(stdout);
+  const text = (document.body?.content ?? [])
+    .flatMap(item => item.paragraph?.elements ?? [])
+    .map(item => item.textRun?.content ?? "")
+    .join("");
+  const markers = ["{{PROCESSO}}", "{{OBJETO}}", "{{VALOR}}", "{{UNIDADE_REQUISITANTE}}"];
+  console.log(JSON.stringify({
+    fileId,
+    title: document.title,
+    markerFree: markers.every(marker => !text.includes(marker)),
+    markersPresent: markers.filter(marker => text.includes(marker)),
+    containsProcessReference: text.includes("CD-CHGVTCNCHF"),
+    textPreview: text.slice(0, 700),
+  }, null, 2));
+} finally {
+  await db.end();
+}

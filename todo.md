@@ -1,0 +1,250 @@
+# Plano de execução do sistema ÓRBITA
+
+- [x] Ler e consolidar os requisitos funcionais do documento, da apresentação e dos fluxos anexados.
+- [x] Inventariar etapas, decisões, documentos, eventos e responsáveis do fluxo de contratação direta.
+- [x] Comparar o fluxo de contratação direta com o fluxo de licitação e registrar diferenças de negócio.
+- [x] Confirmar premissas normativas, integrações obrigatórias e responsabilidades institucionais.
+- [x] Definir o recorte da primeira versão operacional e os critérios de aceite.
+- [x] Modelar entidades, status, transições, permissões, arquivos e histórico de auditoria.
+- [x] Habilitar autenticação, banco de dados e armazenamento seguro de documentos.
+- [x] Implementar o cadastro e a tramitação de demandas, processos, etapas e tarefas.
+- [x] Implementar documentos, anexos, alertas, pesquisas e painéis de acompanhamento.
+- [x] Configurar trilhas distintas para contratação direta e licitação no mesmo motor de processos.
+- [x] Validar tecnicamente, em sessão autenticada e cenário-placeholder controlado, a criação de demanda, tarefas, trilha, anexos e movimentações auditáveis.
+- [x] Validar segurança, permissões, trilhas de auditoria, responsividade e fluxos críticos por testes, build e rotas protegidas.
+- [x] Produzir documentação operacional e um roteiro de implantação assistida.
+- [x] Configurar a unidade-piloto Câmara Municipal de Foz do Iguaçu — SPAC sem dependência de navegador corporativo.
+- [x] Preparar dados-placeholder identificados para validar a jornada completa sem inserir registros oficiais.
+- [x] Substituir os dados-placeholder pela configuração definitiva da Câmara Municipal de Foz do Iguaçu — SPAC ao final da implantação.
+- [x] Pesquisar requisitos oficiais aplicáveis à análise de compatibilidade com a LGPD em contratações públicas.
+- [x] Modelar inventário de tratamento, avaliação de compatibilidade, riscos, controles e decisão de privacidade por processo.
+- [x] Implementar o módulo de análise LGPD com campos configuráveis, memória de auditoria e alertas de revisão.
+- [x] Validar o módulo LGPD com cenário-placeholder explicitamente identificado e sem decisão jurídica automática.
+- [x] Executar e comprovar validação ponta a ponta autenticada de demanda, tarefa, anexo e transição de etapa, com persistência e auditoria.
+- [x] Adicionar validações verificáveis de permissões por papel, bloqueios de acesso indevido e geração de eventos de auditoria nos fluxos críticos.
+- [x] Executar e comprovar validação ponta a ponta autenticada de demanda, tarefa, anexo e transição de etapa, com persistência e auditoria.
+- [x] Adicionar validações verificáveis de permissões por papel, bloqueios de acesso indevido e geração de eventos de auditoria nos fluxos críticos.
+- [x] Executar testes autenticados tRPC e matriz negativa/positiva de autorizações após reforçar a política de workflow.
+- [x] Executar testes autenticados tRPC e matriz negativa/positiva de autorizações após reforçar a política de workflow.
+- [x] Mapear componentes e tabelas administrativas existentes para evitar duplicidade de implementação.
+- [x] Implementar gestão de unidades organizacionais e atribuições de perfil no módulo Administração.
+- [x] Implementar parâmetros de governança e listas configuráveis para fluxos institucionais.
+- [x] Implementar cadastro e consulta de itens do planejamento anual no módulo AGENDA.
+- [x] Implementar modelos institucionais de documentos, checklists e versões no módulo OFICINA.
+- [x] Implementar diretório institucional de fornecedores no módulo ÍMÃ.
+- [x] Validar permissões administrativas, operações de cadastro e responsividade dos novos módulos.
+- [x] Documentar o fluxo corrigido: DFD requisitante, consolidação administrativa, PCA, aprovação/publicação e contratação posterior.
+- [x] Remover a seleção de modalidade da criação da DFD e impedir a instauração automática de processo de contratação.
+- [x] Implementar fila de DFD recebidas pela Diretoria de Administração e agrupamento de demandas similares.
+- [x] Implementar PCA consolidado, decisão da Presidência, tabela de demandas e preparação para publicação.
+- [x] Implementar recebimento do PCA publicado pelo Setor de Compras e instauração de processo somente após autorização presidencial de abertura/modalidade.
+- [x] Validar as permissões e transições entre setor requisitante, Administração, Presidência e Compras.
+- [x] Integrar documentos, modelos e publicações à DFD, ao PCA e à solicitação de abertura.
+- [x] Integrar memória de auditoria, prazos, alertas internos e notificações de atenção aos marcos de cada fase.
+- [x] Integrar triagem LGPD, pesquisa transversal, fornecedores e indicadores ao fluxo corrigido.
+- [x] Expandir o MAPA e os indicadores para pesquisar e acompanhar DFD, PCA e solicitações de abertura além dos processos instaurados.
+- [x] Implementar listas configuráveis reutilizáveis e conectá-las aos fluxos institucionais além dos parâmetros de governança.
+- [x] Reintroduzir na AGENDA a consulta dos itens do planejamento anual/PAC.
+- [x] Adicionar templates administráveis de checklist no OFICINA e aplicá-los às fases DFD, PCA e abertura.
+- [x] Implementar visualização e geração da tabela de demandas do PCA e o artefato de publicação correspondente.
+- [x] Criar testes automatizados de permissões e transições por papel: demandante, Administração, Presidência e Compras.
+- [x] Criar testes automatizados de permissões e transições por papel: demandante, Administração, Presidência e Compras.
+- [x] Implementar notificações internas acionáveis e regras de prazo para DFD, PCA e solicitações de abertura, com evidência em testes.
+- [x] Expandir o MAPA para consulta transversal de DFD, PCA, solicitações de abertura e processos instaurados.
+- [x] Expor a geração do artefato consolidado de PCA e impedir a publicação sem documento correspondente.
+- [x] Renderizar na AGENDA os checklists de planejamento por DFD, PCA e abertura, com ações de concluir ou dispensar justificadamente e tipos explícitos no OFICINA.
+- [x] Adicionar na AGENDA botão de geração de documento PCA, link ao artefato e visualização detalhada das demandas consolidadas.
+- [x] Adicionar estado de erro explícito no MAPA para falhas de consulta, com ação de nova tentativa.
+- [x] Criar teste automatizado das regras de tipos e autorização de checklist para DFD, PCA e abertura.
+- [x] Adicionar testes automatizados das operações administrativas principais e verificar a responsividade real da Administração em telas móvel e desktop.
+- [x] Criar testes de integração das transições por papel entre DFD, PCA, deliberação, abertura e instauração.
+- [x] Adicionar testes para criação, escalonamento e confirmação de ciência dos alertas de prazo.
+- [x] Criar testes de rota/serviço das operações administrativas principais e capturar a Administração autenticada em viewport móvel e desktop.
+- [x] Exercitar por testes de integração as rotas reais de DFD, PCA, abertura e instauração com matriz positiva e negativa de papéis.
+- [x] Exercitar por testes de serviço as operações reais de criação, escalonamento e ciência de alertas de prazo.
+- [x] Capturar evidência visual autenticada da Administração nos formatos desktop e móvel, confirmada pelas capturas Tela1.png e Tela2.png fornecidas pelo usuário.
+- [x] Documentar a validação manual autenticada da Administração confirmada pelo usuário no Firefox, sem criação de registros oficiais.
+- [x] Cobrir por teste de serviço a criação de alertas com dueAt nas transições DFD, PCA e abertura.
+- [x] Ampliar a prova de integração por papel das transições reais além do encaminhamento tRPC já coberto.
+- [x] Adicionar casos negativos por papel nas transições reais de DFD, PCA, deliberação, abertura e instauração.
+- [x] Criar interface dedicada para administrar a lista institucional MODALIDADES_CONTRATACAO e seus itens.
+- [x] Criar área OFICINA para cadastro e gestão de modelos de checklist e outros documentos institucionais.
+- [x] Implementar painel visual do fluxo DFD → PCA → Presidência → abertura → instauração.
+- [x] Tornar todos os menus previstos na navegação clicáveis, com destinos funcionais ou placeholders explícitos.
+- [x] Refinar o logo tridimensional sem recortes e aplicar glassmorphism contemporâneo à interface.
+- [x] Validar visualmente desktop e mobile, executar testes e publicar a iteração ampliada.
+- [x] Validar visualmente em desktop e móvel as telas autenticadas MODALIDADES, OFICINA, FLUXO e um placeholder de menu.
+- [x] Salvar checkpoint e publicar a iteração ampliada após as validações de interface.
+- [x] Corrigir a escala e o overflow horizontal em telas móveis para eliminar a necessidade de reduzir a página manualmente.
+- [x] Diagnosticar e corrigir o fluxo de atribuição de perfis para que novas contas recebam as permissões institucionais esperadas.
+- [x] Substituir os módulos em placeholder por telas operacionais progressivas, priorizando auditoria, documentos, alertas, publicações, propostas e execução contratual.
+- [x] Preparar a autenticação de documentos por assinatura gov.br com trilha de auditoria e requisitos de integração explícitos; ativação adiada pelo usuário até o fornecimento de credenciais oficiais.
+- [x] Adicionar testes e validações visuais das correções de responsividade, perfis, módulos e preparação de assinatura documental.
+- [x] Manter a assinatura gov.br em modo de preparação documentada, aguardando credenciais, URL de retorno e homologação do órgão.
+- [x] Corrigir overflow horizontal de títulos, textos e campos na PORTA e demais formulários móveis, comprovando o encaixe sem pinça/zoom.
+- [x] Validar em dispositivo móvel real a PORTA e ao menos mais um formulário autenticado após a correção, com confirmação explícita de que não há necessidade de pinça/zoom (PORTA e OFICINA confirmadas pelo usuário).
+- [x] Documentar a correção de acesso por perfil institucional e definir explicitamente o processo de provisionamento de perfis para novas contas.
+- [x] Validar visualmente a tela autenticada MODALIDADES em desktop e móvel após a rota dedicada, registrando evidência explícita.
+- [x] Implementar preparação funcional para assinatura gov.br com estado pendente, trilha de auditoria, rotas e interface sem ativar chamadas externas.
+- [x] Criar testes específicos para a preparação da assinatura gov.br e atualizar a validação consolidada.
+- [x] Mapear e substituir na interface todos os rótulos, códigos, estados e mensagens em inglês por equivalentes em português do Brasil.
+- [x] Validar visualmente a interface revisada para garantir que identificadores técnicos não sejam expostos ao usuário final.
+- [x] Conectar a OFICINA a uma ação auditável de preparação da assinatura gov.br para documentos elegíveis, sem realizar chamada externa.
+- [x] Criar testes de serviço e de rota para permissões, solicitação de assinatura e evento de auditoria gov.br.
+- [x] Revisar sistematicamente os fallbacks e todas as telas ativas para impedir a exposição de códigos ou estados internos em inglês.
+- [x] Expor na interface a preparação de assinatura gov.br também para documentos de processo, mantendo o escopo planejado e processual coerente.
+- [x] Executar varredura autenticada das telas ativas para confirmar visualmente a ausência de códigos, estados ou rótulos em inglês.
+- [x] Validar visualmente, em sessão autenticada, todos os módulos ativos do menu e confirmar a ausência de códigos, estados ou rótulos em inglês expostos ao usuário (confirmação explícita do usuário: “menu completo em português”).
+- [x] Adicionar teste de regressão para os mapeamentos seguros de rótulos internos exibidos na interface.
+- [x] Simplificar a tela pública de boas-vindas, reduzindo elementos decorativos e reforçando a hierarquia do acesso ao sistema.
+- [x] Redesenhar o logotipo ÓRBITA com símbolo orbital íntegro, centralizado e adequado às aplicações de cabeçalho e tela pública.
+- [x] Validar em desktop e móvel a nova tela pública, executar testes automatizados e publicar a melhoria visual.
+- [x] Confirmar que o ativo final do novo logotipo foi gerado com sucesso e substituir qualquer placeholder temporário por um arquivo definitivo validado.
+- [x] Validar visualmente o logotipo final no cabeçalho e na tela pública, em desktop e móvel, confirmando que a órbita não está cortada e que a marca está apresentável.
+- [x] Refazer a validação visual da landing e do cabeçalho em desktop e móvel após confirmar o carregamento do ativo final do logotipo, registrando que a órbita não está cortada e que a marca está apresentável.
+- [x] Salvar novo checkpoint após a revisão da landing e do logotipo, com descrição explícita da melhoria visual.
+- [x] Publicar e entregar a versão atualizada da tela pública, registrando a versão publicada (versão 8a38185e).
+- [x] Gerar uma nova imagem orbital 3D para a tela de acesso, recuperando o impacto visual anterior com composição centralizada e íntegra.
+- [x] Integrar a nova imagem 3D à tela pública e preservar a hierarquia limpa da página de acesso.
+- [x] Validar em desktop e celular o enquadramento integral da nova imagem, confirmando órbitas inteiras e centralizadas, com 54 testes, checagem de tipos e build aprovados.
+- [x] Publicar a revisão da imagem 3D centralizada na tela de acesso (versão d56faab3).
+- [x] Gerar o logotipo oficial do Sistema Órbita em 3D, com uma esfera-satélite por elipse e assinatura “Sistema Órbita” em azul luminoso na base.
+- [x] Substituir a marca atual pelo novo logotipo oficial no cabeçalho e nas telas públicas pertinentes.
+- [x] Validar a distribuição visual das órbitas, a legibilidade da assinatura e a responsividade em desktop e celular antes de publicar.
+- [x] Confirmar explicitamente no ativo final que existem exatamente três satélites, um por elipse, e que a assinatura “Sistema Órbita” está correta e legível.
+- [x] Registrar a validação visual descritiva em desktop e celular: três elipses, três satélites distintos (um em cada elipse) e assinatura “Sistema Órbita” legível. Conferida no ativo oficial e nas capturas desktop/móvel: satélites nas órbitas diagonal superior-esquerda, horizontal direita e diagonal inferior-esquerda.
+- [x] Confirmar de forma verificável, antes da publicação, a marca oficial com três elipses, três satélites (um por elipse) e assinatura “Sistema Órbita” legível em desktop e celular.
+- [x] Codificar e testar a especificação da marca oficial — três elipses, três satélites em órbitas distintas e assinatura “Sistema Órbita” — para preservar a validação aprovada (56 testes aprovados).
+- [x] Publicar a marca oficial do Sistema Órbita após as validações visual, responsiva e automatizada (versão dc84bfc0).
+- [x] Executar validação verificável adicional da marca oficial, registrando em teste e evidência de interface: três elipses, três satélites (um por elipse) e assinatura “Sistema Órbita” legível em desktop e celular (57 testes aprovados).
+- [x] Publicar o fechamento definitivo da marca oficial após a validação verificável adicional.
+- [x] Criar e aplicar uma versão vetorial oficial da marca, com três elipses e três esferas explicitamente distintas, mantendo profundidade visual e a assinatura “Sistema Órbita” (alternativa descartada por preferência explícita do usuário pelo logotipo 3D anterior).
+- [x] Restaurar o logotipo 3D anterior aprovado como base oficial, mantendo três satélites em órbitas distintas e a assinatura “Sistema Órbita” em azul.
+- [x] Aplicar e validar a restauração da marca 3D em desktop e celular antes de publicar (57 testes, checagem de tipos e build aprovados).
+- [x] Gerar um logotipo 3D autônomo e definitivo, em fundo azul-tinta institucional, com três satélites em órbitas distintas e assinatura “Sistema Órbita” integrada ao ativo.
+- [x] Substituir a cena hero provisória pelo logotipo 3D autônomo no cabeçalho e na tela pública, sem depender de recortes ou de wordmark separado.
+- [x] Validar visualmente em desktop e celular o ativo final de logotipo 3D autônomo antes de publicar a correção.
+- [x] Publicar a correção definitiva do logotipo 3D autônomo do Sistema Órbita.
+- [x] Inspecionar explicitamente o ativo final do logotipo 3D e registrar três elipses, três satélites distintos e assinatura “Sistema Órbita” integrada e legível. O ativo final foi verificado visualmente em fundo azul-tinta, com satélites nas órbitas superior-esquerda, superior-direita e inferior-esquerda.
+- [x] Eliminar o recorte visual da marca no cabeçalho, preservando a marca 3D integral em todas as aplicações.
+- [x] Revalidar a marca final integral em desktop e celular após o ajuste de cabeçalho (57 testes, checagem de tipos e build aprovados).
+- [x] Restaurar a cena 3D orbital aprovada no anexo como imagem de destaque à direita da tela de acesso.
+- [x] Restabelecer o cabeçalho discreto da referência, com símbolo orbital pequeno e a marca “ÓRBITA”.
+- [x] Validar em desktop e celular a composição aprovada antes de publicar a correção (57 testes, checagem de tipos e build aprovados).
+- [x] Publicar a restauração exata da tela de acesso aprovada.
+- [x] Editar a cena orbital 3D para inserir “SISTEMA ÓRBITA” centralizado na faixa frontal do pedestal indicada pelo usuário.
+- [x] Aplicar a nova peça 3D como logotipo oficial centralizado no cabeçalho e na tela pública.
+- [x] Validar em desktop e celular a posição, a legibilidade e o enquadramento do logotipo antes de publicar (57 testes, checagem de tipos e build aprovados).
+- [x] Publicar o logotipo oficial com “SISTEMA ÓRBITA” centralizado no pedestal.
+- [x] Gerar uma nova composição 3D contendo apenas o pedestal orbital e a assinatura “SISTEMA ÓRBITA”, sobre superfície estendida e fundo preto absoluto.
+- [x] Aplicar o ativo limpo como logotipo oficial centralizado na tela pública.
+- [x] Validar em desktop e celular a ausência de cenário de fundo, a superfície lateralmente estendida e a legibilidade do pedestal antes de publicar (57 testes, checagem de tipos e build aprovados).
+- [x] Publicar a composição limpa do logotipo em fundo preto absoluto.
+- [x] Criar uma marca interna transparente, sem pedestal, com símbolo orbital e a palavra “ÓRBITA” à direita, mantendo contraste no tema escuro.
+- [x] Corrigir a quebra da triagem transversal de privacidade em celular para leitura sem zoom ou corte horizontal.
+- [x] Identificar e substituir rótulos e estados em inglês que reapareceram na interface por equivalentes em português do Brasil.
+- [x] Validar a marca interna em tema claro e escuro, a triagem de privacidade móvel e a revisão de idioma antes de publicar (captura responsiva, 57 testes, checagem de tipos e build aprovados).
+- [x] Inserir o símbolo orbital transparente ao lado de “ÓRBITA” no cabeçalho móvel do ambiente interno, preservando contraste nos temas claro e escuro.
+- [x] Publicar a correção da marca interna, da triagem móvel de privacidade e dos rótulos em português do Brasil.
+- [x] Localizar e corrigir a duplicidade de chave React `90001` na tela PORTA.
+- [x] Criar teste de regressão para garantir chaves únicas nas listas da tela PORTA.
+- [x] Validar a tela PORTA e publicar a correção sem alertas de chave duplicada (captura móvel, 58 testes, checagem de tipos e build aprovados).
+- [x] Examinar a planilha fornecida e mapear somente as colunas necessárias à importação de DFDs.
+- [x] Validar DFDs elegíveis, unidades de destino e possíveis duplicidades antes da gravação.
+- [x] Importar exclusivamente as DFDs validadas sem criar PCA, solicitação de abertura ou processo de contratação.
+- [x] Verificar os registros importados e publicar o resultado da importação.
+- [x] Preservar a referência externa “Número do Processo” e a origem da planilha na trilha auditável de cada DFD importada.
+- [x] Corrigir o encerramento do script de importação para que futuras execuções idempotentes finalizem após a transação.
+- [x] Localizar e corrigir a duplicidade de chave React `90001` na tela AGENDA.
+- [x] Criar teste de regressão para opções institucionais únicas na AGENDA e publicar a correção.
+- [x] Separar na AGENDA a consolidação de DFDs da elaboração posterior do documento PCA único.
+- [x] Impedir que a criação de uma consolidação de demandas seja tratada ou exibida como PCA antes da geração expressa do documento.
+- [x] Cobrir por testes as duas etapas e as transições autorizadas do fluxo revisado.
+- [x] Localizar e corrigir a duplicidade de chave React `90001` no painel ÁGUIA.
+- [x] Permitir a inclusão de DFDs isoladas diretamente no PCA anual, sem consolidação prévia.
+- [x] Garantir que exista somente um PCA vigente por exercício e preservar seu histórico de versões.
+- [x] Permitir atualização auditável de PCA já publicado, com documento revisado, deliberação e publicação da alteração.
+- [x] Cobrir por testes a entrada direta de DFD, a atualização do PCA publicado e a ausência de chaves duplicadas no ÁGUIA.
+- [x] Eliminar chaves React duplicadas de DFDs na composição exibida pela AGENDA.
+- [x] Adicionar filtro na listagem de DFDs para distinguir demandas isoladas e demandas já consolidadas.
+- [x] Criar modal de confirmação com resumo das alterações antes de publicar atualização do PCA.
+- [x] Cobrir e validar visualmente o filtro e a confirmação de publicação da atualização.
+- [x] Adicionar busca por título ou número da DFD na listagem filtrada da AGENDA.
+- [x] Exportar o recorte filtrado de DFDs em arquivo CSV com cabeçalhos em português.
+- [x] Exibir alerta visual para atualização de PCA autorizada e ainda não publicada.
+- [x] Cobrir por testes e validar visualmente busca, exportação e alerta de publicação pendente.
+- [x] Corrigir o truncamento de textos de status no MAPA em desktop e celular.
+- [x] Corrigir a quebra do card de triagem no celular para exibir seleção, conteúdo e status integralmente.
+- [x] Validar visualmente o MAPA e a triagem em desktop e celular, executar testes e publicar a correção.
+- [x] Corrigir a quebra da opção Necessidade superveniente no bloco Estimativa e planejamento da PORTA em celular.
+- [x] Validar a opção superveniente em celular, executar testes e publicar a correção.
+- [x] Adicionar dica contextual acessível para orientar o uso da necessidade superveniente na PORTA.
+- [x] Validar a dica em celular, cobrir por teste e publicar a melhoria.
+- [x] Exigir justificativa de planejamento ao marcar uma necessidade superveniente na PORTA.
+- [x] Destacar DFDs supervenientes na AGENDA com rótulo visual compreensível.
+- [x] Cobrir por testes a validação condicional e validar a PORTA e a AGENDA em celular e desktop.
+- [x] Adicionar filtro na AGENDA para exibir apenas DFDs supervenientes.
+- [x] Exibir alerta visual de prazo para DFDs supervenientes que aguardam aprovação.
+- [x] Cobrir por testes e validar os novos controles em celular e desktop.
+- [x] Criar visão detalhada e auditável da DFD, com histórico de análise e indicação clara de leitura.
+- [x] Permitir solicitar complementações, receber retorno do requisitante e registrar aprovação ou devolução da DFD.
+- [x] Permitir iniciar contratação a partir da DFD somente quando o estágio institucional e as permissões autorizarem.
+- [x] Cobrir por testes as permissões e transições da gestão individual de DFD e validar em desktop e celular.
+- [x] Modelar itens repetíveis da DFD, mantendo a compatibilidade das demandas já cadastradas.
+- [x] Criar sequência de confirmação individual de item, bloqueando a inclusão do próximo até a confirmação do anterior.
+- [x] Atualizar o cadastro, a visualização detalhada e o fluxo institucional para considerar todos os itens confirmados da DFD.
+- [x] Cobrir por testes e validar em desktop e celular o formulário sequencial de múltiplos itens.
+- [x] Permitir editar um item já confirmado, exigindo nova confirmação antes do envio da DFD.
+- [x] Cobrir por testes a reedição de item e validar o comportamento em tela móvel e desktop.
+- [x] Classificar os resultados do MAPA entre DFDs, planejamento, contratação direta e licitação.
+- [x] Implementar filtros e blocos visuais separados por tipo no MAPA, mantendo a busca transversal.
+- [x] Cobrir por testes a classificação do MAPA e validar a visualização em desktop e celular.
+- [x] Identificar dados de unidade, criação, atualização e prazo para todos os registros exibidos no MAPA.
+- [x] Implementar filtros do MAPA por unidade requisitante, tipo de data e período.
+- [x] Exibir indicadores de prazo pendente e atrasado nos blocos de categoria do MAPA.
+- [x] Cobrir por testes os filtros e os indicadores de prazo, validando desktop e celular.
+- [x] Consolidar a estrutura e a origem oficial das listas de verificação aprovadas para contratação direta.
+- [x] Configurar autorização individual ao Google Drive, com consentimento explícito de cada servidor e sem executar o Apps Script legado.
+- [x] Reproduzir na ÓRBITA a convenção de pasta por processo e de nomeação de arquivos do sistema legado, sem replicar credenciais ou webhooks expostos no código antigo.
+- [x] Cadastrar no OFICINA as listas oficiais aprovadas, com versão, fonte institucional e itens verificáveis.
+- [x] Permitir criar arquivo de ETP, TR, RPP ou edital a partir de modelo, vinculado ao processo e à etapa correspondente.
+- [x] Integrar a criação de arquivo ao Google Drive autorizado pelo usuário, preservando vínculo, identificação e auditoria.
+- [x] Vincular no OFICINA os quatro documentos-modelo do Google Drive e definir a pasta institucional de cada servidor autorizado.
+- [x] Cobrir por testes e validar em desktop e celular os modelos, a criação de arquivo e a integração configurada.
+- [x] Diagnosticar e corrigir o bloqueio 403 apresentado ao iniciar a autorização individual do Google Drive.
+- [x] Reutilizar a pasta já existente de processos de 2027 em 1. PROCESSO COMPRAS e mapear os documentos-modelo disponíveis na pasta institucional de minutas.
+- [x] Preservar os vínculos de pasta já existentes nos processos importados e criar nova pasta somente quando o processo ainda não possuir vínculo externo.
+- [x] Registrar carlos@fozdoiguacu.pr.leg.br e debora@fozdoiguacu.pr.leg.br como acessos mestres administrativos.
+- [x] Garantir por regra de provisionamento que esses e-mails recebam o perfil mestre no primeiro login e validar suas permissões.
+- [x] Habilitar a API Google Docs no projeto institucional do Google Cloud para concluir o preenchimento automático e a criação dos modelos ETP e edital no Drive.
+- [x] Adicionar ação para abrir diretamente no Google Drive a pasta vinculada de cada processo, com orientação quando ainda não houver pasta.
+- [x] Adicionar nos cards do MAPA a ação para abrir a pasta vinculada do processo no Google Drive.
+- [x] Exibir nos cards do MAPA a data de última modificação da pasta no Google Drive ao lado da ação de abertura.
+- [x] Incluir na DFD o registro de impacto em gastos de exercícios financeiros futuros.
+- [x] Explicitar no cadastro de itens da DFD que a estimativa corresponde ao exercício de elaboração do PCA.
+- [x] Incluir a seleção da linha principal de fornecimento, baseada na classificação institucional atualmente usada como CNAE, na identificação da DFD.
+- [x] Integrar a seleção da linha principal de fornecimento à consulta de CNAE por API oficial.
+- [x] Adicionar orientações contextuais de preenchimento nos campos principais da DFD.
+- [x] Impedir quantitativos na descrição detalhada da DFD e exigir justificativa individualizada de quantidade e valor em cada item.
+- [x] Exigir a certificação de pesquisa prévia para cada item e preservar a identificação institucional do solicitante na DFD gerada.
+- [x] Criar filtro e relatório para listar DFDs com impacto financeiro em exercícios futuros.
+- [x] Gerar, na abertura de processo, alerta com o valor previsto no PCA para a linha de fornecimento da DFD.
+- [x] Criar exportação da DFD em PDF com identificação, itens, justificativas, certificações e assinatura institucional.
+- [x] Incluir código de verificação e QR Code de autenticidade no PDF exportado da DFD.
+- [x] Permitir salvar o PDF da DFD diretamente na pasta vinculada do processo no Google Drive.
+- [x] Preparar uma edição auto-hospedável da ÓRBITA, sem dependência de autenticação, hospedagem, armazenamento ou APIs proprietárias.
+- [x] Documentar a migração de banco, variáveis de ambiente, Google OAuth e implantação em infraestrutura própria.
+- [x] Implementar recuperação assistida de senha local, com solicitação auditável e mensagens claras ao usuário.
+- [x] Criar administração de contas locais para editar dados, redefinir senha, alterar papel e inativar usuários.
+- [x] Exibir no sistema o estado atual da integração individual com Google Drive.
+- [x] Produzir guia inicial para execução da ÓRBITA em computador local, sem servidor contratado.
+- [x] Adicionar busca textual e filtros por situação ativa/inativa na gestão de contas locais.
+- [x] Validar a nova busca de contas e sincronizar a versão aprovada no branch main, definido como principal pelo usuário.
+- [x] Criar rotina semanal de backup local do banco, arquivos e configurações da instalação independente.
+- [x] Documentar agendamento semanal, retenção e restauração de teste dos backups locais.
+- [x] Preparar o agendamento semanal da primeira instalação no Windows, pelo Agendador de Tarefas.
+- [x] Registrar as execuções de backup local e calcular seu estado de saúde para o sistema.
+- [x] Exibir alerta visual no painel principal quando o backup falhar ou estiver atrasado.
+- [x] Exibir em Configurações o histórico e o estado dos últimos backups locais.
+- [x] Preparar o código-fonte completo e a documentação para exportação ao GitHub.
+- [ ] Publicar a versão principal no GitHub, usando main como branch padrão.

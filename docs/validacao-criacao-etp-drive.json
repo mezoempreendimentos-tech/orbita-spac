@@ -1,0 +1,22 @@
+{
+  "processPublicId": "CD-CHGVTCNCHF",
+  "status": "already_validated",
+  "document": {
+    "id": 60001,
+    "externalFileId": "1tpseKjrWlqBvRPFZZ-q7CqOpIivDiO71sK1dodXRK5o",
+    "externalUrl": "https://docs.google.com/document/d/1tpseKjrWlqBvRPFZZ-q7CqOpIivDiO71sK1dodXRK5o/edit?usp=drivesdk"
+  }
+}
+[ERROR] Command was killed with SIGHUP (Terminal closed): pnpm install
+
+pnpm: Command was killed with SIGHUP (Terminal closed): pnpm install
+    at getFinalError (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:89001:14)
+    at makeError (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:91308:21)
+    at getSyncResult (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:93152:10)
+    at spawnSubprocessSync (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:93112:14)
+    at execaCoreSync (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:93042:23)
+    at callBoundExeca (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:95570:23)
+    at boundExeca (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:95547:49)
+    at sync2 (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:95702:14)
+    at runPnpmCli (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:252538:5)
+    at runDepsStatusCheck (file:///home/ubuntu/.nvm/versions/node/v22.13.0/lib/node_modules/pnpm/dist/pnpm.mjs:254302:7)
