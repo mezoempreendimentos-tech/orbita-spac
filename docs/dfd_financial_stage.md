@@ -4,7 +4,7 @@
 
 A DFD deverá passar pelo **Financeiro**, representado inicialmente pelo perfil institucional `contabilidade`, **antes da triagem da Diretoria de Administração**. O Financeiro informa o código numérico da rubrica orçamentária — por exemplo, `339039` — e registra ciência do gasto para apoiar o planejamento e a inclusão na LOA.
 
-A lista oficial de rubricas será cadastrada posteriormente nas listas de referência do sistema. Até essa etapa, o sistema **ÓRBITA** valida somente um código numérico de 4 a 12 dígitos, sem substituir o cadastro institucional que ainda será definido.
+O catálogo inicial foi incorporado ao sistema a partir da aba **PC Desp-2027** da planilha oficial `PC-DESPESA-PR-2027-Versao1.0a-publicada_em_06_08_2026.xlsx`. Ele contém somente classificações até o elemento de despesa — `cdDesdobramento=00` e `cdDetalhamento=00` — e está versionado como **PC Desp-2027 · versão 1.0a · TCE-PR**. O usuário pode digitar o código completo, como `339039`, um prefixo, como `3390`, ou termos da descrição, como `outros serviços pessoa jurídica`. O sistema exige a seleção de um elemento válido; não permite salvar apenas um prefixo ou texto livre.
 
 ## Ordem do fluxo
 
@@ -29,7 +29,7 @@ O **SPAC** é o Setor de Planejamento e Acompanhamento das Contratações. A **D
 
 ## Limite desta entrega
 
-Nesta rodada não foi criado o catálogo fechado de rubricas, não foi feita a classificação automática da despesa e não foi modelada a LOA como documento independente. Esses pontos dependem da definição do Financeiro e da normativa institucional.
+Nesta rodada foi criado o catálogo inicial da planilha 2027 e a busca por código/descrição. Ainda não há catálogo versionado para os demais exercícios, classificação automática a partir do objeto da DFD nem modelagem da LOA como documento independente. A lista de outros exercícios e sua política de vigência dependem da definição do Financeiro e da normativa institucional.
 
 ## Referências
 

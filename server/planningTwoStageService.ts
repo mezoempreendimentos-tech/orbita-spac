@@ -28,6 +28,7 @@ import {
   users,
 } from "../drizzle/schema";
 import { canConsolidateDemand, canCreatePcaFromDemandConsolidation, canGeneratePcaArtifact, canPublishPca, canRequestOpening, canSubmitDemandToPresidency, canSubmitPca, demandPresidencyDecisionStatus, pcaDecisionStatus } from "../shared/planningPolicies";
+import { getFinancialRubricByCode } from "../shared/financialRubrics";
 import { notifyDemandAudience, type NotificationDb } from "./notificationService";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
@@ -251,8 +252,9 @@ export async function approveDemand(actor: Actor, input: { demandPublicId: strin
 export async function registerDemandFinancialClassification(actor: Actor, input: { demandPublicId: string; budgetRubricCode: string; acknowledge: boolean; budgetNote?: string }) {
   const db = await dbOrThrow();
   await requireRole(db, actor, ["contabilidade"], "A classificação orçamentária exige um perfil ativo do Financeiro.");
-  const budgetRubricCode = input.budgetRubricCode.trim();
-  if (!/^\d{4,12}$/.test(budgetRubricCode)) throw new Error("Informe inicialmente apenas o código numérico da rubrica, por exemplo: 339039.");
+  const budgetRubricCode = input.budgetRubricCode.trim().replace(/\D/g, "");
+  const rubric = getFinancialRubricByCode(budgetRubricCode);
+  if (!rubric) throw new Error("Selecione uma natureza de despesa válida até o elemento de despesa. Digite o código completo ou escolha um resultado da lista.");
   if (!input.acknowledge) throw new Error("Confirme a ciência do gasto antes de registrar a rubrica.");
   const [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
   const allowedStatuses = ["financial_review", "submitted", "under_review", "returned", "presidency_review", "accepted", "partially_accepted"] as const;
