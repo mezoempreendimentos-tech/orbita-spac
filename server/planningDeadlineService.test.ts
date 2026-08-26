@@ -30,7 +30,7 @@ describe("serviço de alertas de prazo", () => {
   it("escalona alertas vencidos reais para criticidade", async () => {
     const db = database([[{ id: 7, status: "open", dueAt: new Date(Date.now() - 1000) }]]);
     vi.mocked(getDb).mockResolvedValue(db as never);
-    await expect(refreshPlanningDeadlineAlerts()).resolves.toEqual({ overdueCount: 1 });
+    await expect(refreshPlanningDeadlineAlerts()).resolves.toEqual({ overdueCount: 1, forwardedDemandCount: 0 });
     expect(db.updates).toEqual([{ severity: "critical" }]);
   });
 

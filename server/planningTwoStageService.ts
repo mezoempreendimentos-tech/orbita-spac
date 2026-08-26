@@ -27,13 +27,14 @@ import {
   userProcessRoles,
   users,
 } from "../drizzle/schema";
-import { canCreatePcaFromDemandConsolidation, canGeneratePcaArtifact, canPublishPca, canRequestOpening, canSubmitPca, pcaDecisionStatus } from "../shared/planningPolicies";
+import { canConsolidateDemand, canCreatePcaFromDemandConsolidation, canGeneratePcaArtifact, canPublishPca, canRequestOpening, canSubmitDemandToPresidency, canSubmitPca, demandPresidencyDecisionStatus, pcaDecisionStatus } from "../shared/planningPolicies";
+import { notifyDemandAudience, type NotificationDb } from "./notificationService";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
 
 type Actor = { id: number; role: "user" | "admin" };
 type EntityType = "demand" | "demand_consolidation" | "pca" | "opening_request";
-type DemandCaseEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "approved" | "returned";
+type DemandCaseEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "sent_to_presidency" | "approved" | "partially_approved" | "presidency_rejected" | "returned" | "procurement_completed";
 
 const publicId = (prefix: string) => `${prefix}-${nanoid(10).toUpperCase()}`;
 const deadlineAt = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
@@ -55,6 +56,7 @@ async function audit(db: Awaited<ReturnType<typeof dbOrThrow>>, actorUserId: num
 }
 
 const demandManagementRoles = ["administrador", "chefia_compras", "compras", "instrumentalizacao"];
+const demandPresidencyRoles = ["autoridade_competente"];
 
 async function demandManagementAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
   if (actor.role === "admin") return true;
@@ -65,11 +67,17 @@ async function demandManagementAccess(db: Awaited<ReturnType<typeof dbOrThrow>>,
 async function demandReviewAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
   if (actor.role === "admin") return true;
   const roles = await db.select({ role: userProcessRoles.role }).from(userProcessRoles).where(and(eq(userProcessRoles.userId, actor.id), eq(userProcessRoles.active, true)));
-  return roles.length > 0;
+  return roles.some(item => demandManagementRoles.includes(item.role));
 }
 
 async function requireDemandReviewer(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor, message: string) {
   if (!await demandReviewAccess(db, actor)) throw new Error(message);
+}
+
+async function demandPresidencyAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
+  if (actor.role === "admin") return true;
+  const roles = await db.select({ role: userProcessRoles.role }).from(userProcessRoles).where(and(eq(userProcessRoles.userId, actor.id), eq(userProcessRoles.active, true)));
+  return roles.some(item => demandPresidencyRoles.includes(item.role));
 }
 
 async function demandOpeningAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
@@ -78,7 +86,7 @@ async function demandOpeningAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, ac
   return roles.some(item => item.role === "administrador" || item.role === "compras");
 }
 
-async function recordDemandCaseEvent(db: Awaited<ReturnType<typeof dbOrThrow>>, demandId: number, actorUserId: number, eventType: DemandCaseEventType, note?: string) {
+async function recordDemandCaseEvent(db: Awaited<ReturnType<typeof dbOrThrow>>, demandId: number, actorUserId: number | null, eventType: DemandCaseEventType, note?: string) {
   await db.insert(demandCaseEvents).values({ demandId, actorUserId, eventType, note: note?.trim() || null });
 }
 
@@ -173,10 +181,10 @@ export async function getDemandControl(actor: Actor, demandPublicId: string) {
   const [row] = await db.select({ demand: demands, unitName: organizationalUnits.name, requesterName: users.name }).from(demands).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).leftJoin(users, eq(demands.requesterUserId, users.id)).where(eq(demands.publicId, demandPublicId)).limit(1);
   if (!row) throw new Error("DFD não encontrada.");
   const canReview = await demandReviewAccess(db, actor);
-  const canApprove = await demandManagementAccess(db, actor);
+  const canApprove = await demandPresidencyAccess(db, actor);
   const canOpen = await demandOpeningAccess(db, actor);
   const canRespond = row.demand.requesterUserId === actor.id;
-  if (!canReview && !canRespond) throw new Error("Você não possui acesso a esta DFD.");
+  if (!canReview && !canApprove && !canRespond) throw new Error("Você não possui acesso a esta DFD.");
   const [events, documents, alerts, requests, processes, items] = await Promise.all([
     db.select({ event: demandCaseEvents, actorName: users.name }).from(demandCaseEvents).leftJoin(users, eq(demandCaseEvents.actorUserId, users.id)).where(eq(demandCaseEvents.demandId, row.demand.id)).orderBy(desc(demandCaseEvents.createdAt)),
     db.select().from(planningDocuments).where(and(eq(planningDocuments.entityType, "demand"), eq(planningDocuments.entityPublicId, demandPublicId))).orderBy(desc(planningDocuments.createdAt)),
@@ -230,17 +238,45 @@ export async function provideDemandComplementation(actor: Actor, input: { demand
 }
 
 export async function approveDemand(actor: Actor, input: { demandPublicId: string; note: string }) {
+  return decideDemandAtPresidency(actor, { demandPublicId: input.demandPublicId, action: "approve", notes: input.note });
+}
+
+export async function decideDemandAtPresidency(actor: Actor, input: { demandPublicId: string; action: "approve" | "partial" | "reject"; notes: string; approvedItems?: { itemId: number; approvedValue?: string }[] }) {
   const db = await dbOrThrow();
-  await requireRole(db, actor, demandManagementRoles, "A aprovação de DFD exige acesso da Administração, SPAC ou setor autorizado.");
+  await requireRole(db, actor, ["autoridade_competente"], "Somente a Presidência pode aceitar, aprovar parcialmente ou rejeitar uma DFD.");
   const [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
-  if (!demand || !["submitted", "under_review"].includes(demand.status)) throw new Error("Esta DFD não está disponível para aprovação.");
+  if (!demand || demand.status !== "presidency_review") throw new Error("Esta DFD ainda não está na caixa de decisão da Presidência.");
+  const items = await db.select().from(demandItems).where(eq(demandItems.demandId, demand.id)).orderBy(asc(demandItems.sequence));
+  if (!items.length) throw new Error("A DFD precisa conter itens antes da decisão presidencial.");
+  const selected = new Map((input.approvedItems ?? []).map(item => [item.itemId, item]));
+  if (input.action === "partial" && !selected.size) throw new Error("Na aprovação parcial, selecione ao menos um item aprovado.");
+  if (input.action !== "reject" && input.action === "approve" && selected.size && selected.size !== items.length) throw new Error("A aprovação integral deve abranger todos os itens ou use aprovação parcial.");
+  if (input.action !== "reject" && input.action === "partial" && Array.from(selected.keys()).some(id => !items.some(item => item.id === id))) throw new Error("Um ou mais itens selecionados não pertencem à DFD.");
+  const approvedItems = input.action === "reject" ? [] : items.filter(item => input.action === "approve" || selected.has(item.id));
+  const approvedTotal = approvedItems.reduce((total, item) => {
+    const selectedValue = selected.get(item.id)?.approvedValue;
+    const original = Number(item.estimatedValue ?? 0);
+    const value = selectedValue === undefined ? original : Number(selectedValue);
+    if (!Number.isFinite(value) || value < 0) throw new Error("Informe valores aprovados válidos para os itens selecionados.");
+    if (original > 0 && value > original) throw new Error("O valor aprovado de um item não pode superar sua estimativa apresentada.");
+    return total + value;
+  }, 0);
+  if (input.action !== "reject" && approvedTotal <= 0) throw new Error("A decisão deve aprovar ao menos um item com valor maior que zero.");
+  const status = demandPresidencyDecisionStatus(input.action);
   await db.transaction(async tx => {
-    await tx.update(demands).set({ status: "accepted" }).where(eq(demands.id, demand.id));
-    await recordDemandCaseEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, demand.id, actor.id, "approved", input.note);
+    await tx.update(demands).set({ status, presidencyDecisionNotes: input.notes.trim(), presidencyDecidedByUserId: actor.id, presidencyDecidedAt: new Date(), presidencyApprovedValue: input.action === "reject" ? "0.00" : approvedTotal.toFixed(2) }).where(eq(demands.id, demand.id));
+    await tx.update(demandItems).set({ presidencyDecision: input.action === "reject" ? "rejected" : "approved", presidencyApprovedValue: null }).where(eq(demandItems.demandId, demand.id));
+    if (approvedItems.length) {
+      for (const item of approvedItems) {
+        await tx.update(demandItems).set({ presidencyDecision: "approved", presidencyApprovedValue: (selected.get(item.id)?.approvedValue ?? item.estimatedValue ?? "0.00") }).where(eq(demandItems.id, item.id));
+      }
+    }
+    await recordDemandCaseEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, demand.id, actor.id, input.action === "approve" ? "approved" : input.action === "partial" ? "partially_approved" : "presidency_rejected", input.notes);
     await tx.update(planningAlerts).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(planningAlerts.entityType, "demand"), eq(planningAlerts.entityPublicId, demand.publicId), eq(planningAlerts.status, "open")));
-    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.approved", `DFD ${demand.publicId} analisada e aprovada para planejamento.`, { demandId: demand.id, demandPublicId: demand.publicId, note: input.note.trim() });
+    await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: demand.id, requesterUserId: demand.requesterUserId, demandPublicId: demand.publicId, title: input.action === "reject" ? "DFD rejeitada pela Presidência" : input.action === "partial" ? "DFD aprovada parcialmente pela Presidência" : "DFD aprovada pela Presidência", body: `A DFD ${demand.publicId} — ${demand.title} recebeu decisão presidencial. Valor aprovado: ${input.action === "reject" ? "R$ 0,00" : `R$ ${approvedTotal.toFixed(2)}`}. Consulte a DFD para ver a motivação e os itens aprovados.`, notificationType: "demand_presidency_decision", idempotencyPrefix: `demand-presidency-decision:${demand.publicId}` });
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, `demand.presidency_${input.action}`, `Presidência registrou decisão ${input.action} para a DFD ${demand.publicId}.`, { demandId: demand.id, demandPublicId: demand.publicId, approvedItemIds: approvedItems.map(item => item.id), approvedTotal, notes: input.notes.trim() });
   });
-  return { success: true };
+  return { success: true, status, approvedTotal: approvedTotal.toFixed(2) };
 }
 
 export async function createDemandConsolidation(actor: Actor, input: { title: string; demandPublicIds: string[]; notes?: string }) {
@@ -249,7 +285,7 @@ export async function createDemandConsolidation(actor: Actor, input: { title: st
   const publicIds = Array.from(new Set(input.demandPublicIds));
   const selected = await db.select().from(demands).where(inArray(demands.publicId, publicIds));
   if (!publicIds.length || selected.length !== publicIds.length) throw new Error("Selecione DFD válidas para formar a consolidação de demandas.");
-  if (selected.some(demand => !["submitted", "under_review", "accepted", "returned"].includes(demand.status))) throw new Error("Somente DFD em triagem podem integrar uma nova consolidação.");
+  if (selected.some(demand => !canConsolidateDemand(demand.status))) throw new Error("Somente DFDs aceitas pela Presidência podem integrar uma nova consolidação.");
   const demandConsolidationPublicId = publicId("CON");
   return db.transaction(async tx => {
     const result = await tx.insert(demandConsolidations).values({ publicId: demandConsolidationPublicId, title: input.title.trim(), notes: input.notes?.trim() || null, status: "ready_for_pca", createdByUserId: actor.id });
@@ -274,7 +310,7 @@ export async function createPca(actor: Actor, input: { title: string; planId: nu
   if (selectedGroups.length !== groupPublicIds.length) throw new Error("Selecione consolidações de demandas válidas para elaborar o PCA.");
   if (selectedDemands.length !== demandPublicIds.length) throw new Error("Selecione DFD válidas para incluir diretamente no PCA.");
   if (selectedGroups.some(group => !canCreatePcaFromDemandConsolidation(group.status))) throw new Error("Somente consolidações prontas podem integrar um novo PCA.");
-  if (selectedDemands.some(demand => !["submitted", "under_review", "accepted", "returned"].includes(demand.status))) throw new Error("Somente DFD em triagem podem ser incluídas diretamente no PCA.");
+  if (selectedDemands.some(demand => !canConsolidateDemand(demand.status))) throw new Error("Somente DFDs aceitas pela Presidência podem ser incluídas diretamente no PCA.");
   const [plan] = await db.select({ id: annualPlans.id, fiscalYear: annualPlans.fiscalYear }).from(annualPlans).where(eq(annualPlans.id, input.planId)).limit(1);
   if (!plan) throw new Error("O planejamento anual selecionado não está disponível.");
   const [existingPca] = await db.select({ publicId: planningConsolidations.publicId }).from(planningConsolidations).where(eq(planningConsolidations.planId, input.planId)).limit(1);

@@ -4,6 +4,7 @@ import {
   annualPlanItems,
   auditEvents,
   demands,
+  demandCaseEvents,
   documentTemplates,
   openingRequests,
   organizationalUnits,
@@ -31,6 +32,7 @@ import { workflowStepsFor } from "../shared/workflow";
 import { getDb } from "./db";
 import { createGoogleDriveDocument, getGoogleDriveFolderMetadata, uploadGoogleDrivePdf } from "./googleDriveService";
 import { storagePut } from "./storage";
+import { notifyDemandAudience, type NotificationDb } from "./notificationService";
 
 export type ProcessRole = "demandante" | "chefia_compras" | "compras" | "instrumentalizacao" | "contabilidade" | "juridico" | "encarregado_lgpd" | "agente_contratacao" | "autoridade_competente" | "gestao_contratos" | "fiscal_contrato" | "administrador";
 
@@ -477,7 +479,7 @@ export async function updateChecklist(user: { id: number; role: "user" | "admin"
 
 export async function transitionStep(
   user: { id: number; role: "user" | "admin" },
-  input: { processPublicId: string; action: "complete" | "return" | "waive"; note: string; targetStepKey?: string },
+  input: { processPublicId: string; action: "complete" | "return" | "waive"; note: string; targetStepKey?: string; outcome?: "success" | "failure" },
 ) {
   const detail = await getProcessDetail(input.processPublicId);
   if (!detail) throw new Error("Processo não encontrado.");
@@ -499,9 +501,12 @@ export async function transitionStep(
         await tx.update(workflowSteps).set({ status: "in_progress", startedAt: new Date() }).where(eq(workflowSteps.id, next.id));
         await tx.update(procurementProcesses).set({ currentStepKey: next.stepKey, currentResponsibleRole: next.assigneeRole }).where(eq(procurementProcesses.id, detail.process.id));
       } else {
-        await tx.update(procurementProcesses).set({ status: "archived", currentStepKey: null, currentResponsibleRole: null, closedAt: new Date() }).where(eq(procurementProcesses.id, detail.process.id));
+        const closureOutcome = input.outcome ?? "success";
+        await tx.update(procurementProcesses).set({ status: "archived", currentStepKey: null, currentResponsibleRole: null, closedAt: new Date(), closureOutcome, closureNote: input.note.trim() }).where(eq(procurementProcesses.id, detail.process.id));
+        await tx.insert(demandCaseEvents).values({ demandId: detail.demand.id, actorUserId: user.id, eventType: "procurement_completed", note: input.note.trim() });
+        await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: detail.demand.id, requesterUserId: detail.demand.requesterUserId, demandPublicId: detail.demand.publicId, title: closureOutcome === "success" ? "Contratação finalizada com sucesso" : "Contratação finalizada sem sucesso", body: `A contratação vinculada à DFD ${detail.demand.publicId} — ${detail.demand.title} foi finalizada por Compras com resultado: ${closureOutcome === "success" ? "sucesso" : "fracasso"}. Consulte a DFD e a TRILHA para ver o registro final.`, notificationType: "procurement_completed", idempotencyPrefix: `procurement-completed:${detail.process.publicId}` });
       }
-      await writeAuditEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, detail.process.id, user.id, "workflow.completed", `Etapa concluída: ${current.title}`, { stepKey: current.stepKey, note: input.note.trim(), nextStepKey: next?.stepKey });
+      await writeAuditEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, detail.process.id, user.id, "workflow.completed", `Etapa concluída: ${current.title}`, { stepKey: current.stepKey, note: input.note.trim(), nextStepKey: next?.stepKey, outcome: next ? null : input.outcome ?? "success" });
     });
     return { success: true };
   }

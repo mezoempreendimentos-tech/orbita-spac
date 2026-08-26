@@ -275,3 +275,22 @@ textarea:focus-visible {
     transition-duration: .01ms !important;
   }
 }
+
+/* PORTA / DFD: calendário, decisão presidencial e avisos internos */
+.planning-calendar-panel { margin-bottom: 24px; }
+.planning-calendar-panel .form-grid { align-items: start; }
+.planning-calendar-panel small { display: block; margin-top: 6px; color: var(--muted); line-height: 1.45; }
+.presidency-decision-box { width: 100%; margin-top: 18px; padding-top: 18px; border-top: 1px solid var(--line); }
+.presidency-decision-box > div:first-child p { max-width: 70ch; color: var(--muted); }
+.presidency-value-input { width: 140px; min-width: 120px; }
+.button-danger { background: #a62b50; color: #fff; border-color: #a62b50; }
+.button-danger:hover { background: #8b2141; border-color: #8b2141; }
+.notification-panel { margin-bottom: 24px; }
+.notification-row { align-items: flex-start; }
+.notification-row > div { flex: 1; }
+.notification-row p { margin: 8px 0 0; color: var(--muted); line-height: 1.45; }
+.notification-unread { border-left: 3px solid var(--orbit-magenta); }
+@media (max-width: 720px) {
+  .presidency-value-input { width: 100%; min-width: 0; }
+  .notification-row { flex-wrap: wrap; }
+}

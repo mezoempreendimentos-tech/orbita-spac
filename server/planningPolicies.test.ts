@@ -16,7 +16,8 @@ import {
 
 describe("fluxo institucional DFD–PCA–abertura", () => {
   it("permite a jornada positiva até a instauração somente após as decisões exigidas", () => {
-    expect(canConsolidateDemand("submitted")).toBe(true);
+    expect(canConsolidateDemand("accepted")).toBe(true);
+    expect(canConsolidateDemand("partially_accepted")).toBe(true);
     expect(canCreatePcaFromDemandConsolidation("ready_for_pca")).toBe(true);
     expect(canGeneratePcaArtifact("draft")).toBe(true);
     expect(canSubmitPca("ready_for_review")).toBe(true);

@@ -179,7 +179,11 @@ export const demands = mysqlTable("demands", {
   containsSensitiveData: boolean("containsSensitiveData").default(false).notNull(),
   privacyContext: text("privacyContext"),
   requesterCertifiedAt: timestamp("requesterCertifiedAt"),
-  status: mysqlEnum("status", ["draft", "submitted", "under_review", "accepted", "returned", "cancelled", "rejected", "grouped", "awaiting_pca_publication", "published_in_pca", "awaiting_opening", "opening_authorized", "process_instantiated"]).default("draft").notNull(),
+  presidencyDecisionNotes: text("presidencyDecisionNotes"),
+  presidencyDecidedByUserId: int("presidencyDecidedByUserId").references(() => users.id),
+  presidencyDecidedAt: timestamp("presidencyDecidedAt"),
+  presidencyApprovedValue: decimal("presidencyApprovedValue", { precision: 14, scale: 2 }),
+  status: mysqlEnum("status", ["draft", "submitted", "under_review", "presidency_review", "accepted", "partially_accepted", "returned", "cancelled", "rejected", "grouped", "awaiting_pca_publication", "published_in_pca", "awaiting_opening", "opening_authorized", "process_instantiated"]).default("draft").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
@@ -197,6 +201,8 @@ export const demandItems = mysqlTable("demand_items", {
   quantityJustification: text("quantityJustification"),
   estimatedValueJustification: text("estimatedValueJustification"),
   priceResearchCertifiedAt: timestamp("priceResearchCertifiedAt"),
+  presidencyDecision: mysqlEnum("presidencyDecision", ["pending", "approved", "rejected"]).default("pending").notNull(),
+  presidencyApprovedValue: decimal("presidencyApprovedValue", { precision: 14, scale: 2 }),
   confirmed: boolean("confirmed").default(true).notNull(),
   confirmedAt: timestamp("confirmedAt").defaultNow().notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
@@ -209,9 +215,9 @@ export const demandItems = mysqlTable("demand_items", {
 export const demandCaseEvents = mysqlTable("demand_case_events", {
   id: int("id").autoincrement().primaryKey(),
   demandId: int("demandId").notNull(),
-  eventType: mysqlEnum("eventType", ["analysis_started", "complementation_requested", "complementation_provided", "approved", "returned"]).notNull(),
+  eventType: mysqlEnum("eventType", ["analysis_started", "complementation_requested", "complementation_provided", "sent_to_presidency", "approved", "partially_approved", "presidency_rejected", "returned", "procurement_completed"]).notNull(),
   note: text("note"),
-  actorUserId: int("actorUserId").notNull(),
+  actorUserId: int("actorUserId").references(() => users.id),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 }, (table) => [
   foreignKey({ columns: [table.demandId], foreignColumns: [demands.id], name: "dce_demand_fk" }),
@@ -345,6 +351,8 @@ export const procurementProcesses = mysqlTable("procurement_processes", {
   createdByUserId: int("createdByUserId").notNull().references(() => users.id),
   startedAt: timestamp("startedAt"),
   closedAt: timestamp("closedAt"),
+  closureOutcome: mysqlEnum("closureOutcome", ["success", "failure"]),
+  closureNote: text("closureNote"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [
@@ -408,6 +416,23 @@ export const planningAlerts = mysqlTable("planning_alerts", {
 }, (table) => [
   index("planning_alerts_entity_idx").on(table.entityType, table.entityPublicId),
   index("planning_alerts_status_idx").on(table.status),
+]);
+
+export const userNotifications = mysqlTable("user_notifications", {
+  id: int("id").autoincrement().primaryKey(),
+  recipientUserId: int("recipientUserId").notNull().references(() => users.id),
+  entityType: varchar("entityType", { length: 80 }).notNull(),
+  entityPublicId: varchar("entityPublicId", { length: 64 }).notNull(),
+  notificationType: varchar("notificationType", { length: 100 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  body: text("body").notNull(),
+  status: mysqlEnum("status", ["unread", "read"]).default("unread").notNull(),
+  idempotencyKey: varchar("idempotencyKey", { length: 180 }).notNull().unique(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  readAt: timestamp("readAt"),
+}, (table) => [
+  index("user_notifications_recipient_status_idx").on(table.recipientUserId, table.status),
+  index("user_notifications_entity_idx").on(table.entityType, table.entityPublicId),
 ]);
 
 export const planningChecklistItems = mysqlTable("planning_checklist_items", {

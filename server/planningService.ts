@@ -4,11 +4,13 @@ import {
   annualPlans,
   annualPlanItems,
   auditEvents,
+  demandCaseEvents,
   demandConsolidationDemands,
   demandConsolidations,
   demandItems,
   demands,
   documentTemplates,
+  governanceSettings,
   openingRequests,
   organizationalUnits,
   planningAlerts,
@@ -30,19 +32,33 @@ import {
   workflowSteps,
 } from "../drizzle/schema";
 import { workflowStepsFor } from "../shared/workflow";
-import { canConsolidateDemand, canInstantiateOpening, canPublishPca, canRequestOpening, canSubmitPca, openingDecisionStatus, pcaDecisionStatus, shouldEscalatePlanningAlert } from "../shared/planningPolicies";
+import {   canConsolidateDemand, canInstantiateOpening, canPublishPca, canRequestOpening, canSubmitDemandToPresidency, canSubmitPca, openingDecisionStatus, pcaDecisionStatus, shouldEscalatePlanningAlert } from "../shared/planningPolicies";
 import { superveningPlanningJustificationError } from "../shared/superveningDemand";
-import { detailedDemandDescriptionError } from "../shared/demandDescription";
+import { detailedDemandDescriptionError, detailedDemandJustificationError } from "../shared/demandDescription";
+import { parsePlanningCalendarDate, planningCalendarKeys } from "../shared/planningCalendar";
 import { demandItemValidationError, MAX_DEMAND_ITEMS, totalEstimatedValueOfDemandItems, type DemandItemInput } from "../shared/demandItems";
 import { pcaSupplyLineAlertTitle } from "../shared/pcaSupplyLineAlert";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
+import { notifyDemandAudience, type NotificationDb } from "./notificationService";
 
 type Actor = { id: number; role: "user" | "admin" };
 type PlanningEntityType = "demand" | "demand_consolidation" | "pca" | "consolidation" | "opening_request";
 const publicId = (prefix: string) => `${prefix}-${nanoid(10).toUpperCase()}`;
 export const planningDeadlineDays = { demand: 5, demand_consolidation: 3, pca: 3, opening_request: 2 } as const;
 export const deadlineAt = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
+
+async function configuredCalendarDate(db: Awaited<ReturnType<typeof dbOrThrow>>, key: string) {
+  const [setting] = await db.select({ value: governanceSettings.value }).from(governanceSettings).where(and(eq(governanceSettings.settingKey, key), eq(governanceSettings.active, true))).limit(1);
+  return parsePlanningCalendarDate(setting?.value);
+}
+
+export async function getPlanningCalendar() {
+  const db = await dbOrThrow();
+  const [rows] = await Promise.all([db.select({ settingKey: governanceSettings.settingKey, value: governanceSettings.value, label: governanceSettings.label, description: governanceSettings.description }).from(governanceSettings).where(and(eq(governanceSettings.category, "planning_calendar"), eq(governanceSettings.active, true))).orderBy(asc(governanceSettings.settingKey))]);
+  const values = Object.fromEntries(rows.map(row => [row.settingKey, row.value]));
+  return { definitions: planningCalendarKeys, values, rows };
+}
 export const planningChecklistTemplateTypes = {
   demand: "CHECKLIST_DFD",
   demand_consolidation: "CHECKLIST_CONSOLIDACAO_DEMANDAS",
@@ -74,7 +90,7 @@ async function requireRole(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Act
   if (!(await canAct(db, actor, allowedRoles))) throw new Error(message);
 }
 
-async function audit(db: Awaited<ReturnType<typeof dbOrThrow>>, actorUserId: number, eventType: string, summary: string, payload: Record<string, unknown>) {
+async function audit(db: Awaited<ReturnType<typeof dbOrThrow>>, actorUserId: number | null, eventType: string, summary: string, payload: Record<string, unknown>) {
   await db.insert(auditEvents).values({ actorUserId, eventType, summary, payload });
 }
 
@@ -82,6 +98,48 @@ async function instantiateChecklistFromTemplates(db: Awaited<ReturnType<typeof d
   const templates = await db.select().from(documentTemplates).where(and(eq(documentTemplates.active, true), eq(documentTemplates.documentType, templateType)));
   const rows = templates.flatMap(template => (template.content ?? "").split(/\r?\n/).map(item => item.trim()).filter(Boolean).map((title, index) => ({ entityType, entityPublicId, templateCode: template.code, code: `${template.code}_${index + 1}`, title, required: true })));
   if (rows.length) await db.insert(planningChecklistItems).values(rows).onDuplicateKeyUpdate({ set: { required: true } });
+}
+
+export async function saveDemandDraft(actor: Actor, input: { draftPublicId: string; unitId: number; title?: string; objectDescription?: string; justification?: string; annualPlanItemId?: number; supplyLineCnaeCode?: string; supplyLineCnaeDescription?: string; desiredContractDate?: Date; deliveryPeriod?: string; hasFutureFiscalImpact?: boolean; isSupervening?: boolean; planningJustification?: string; containsPersonalData?: boolean; containsSensitiveData?: boolean; privacyContext?: string; items?: DemandItemInput[] }) {
+  const db = await dbOrThrow();
+  await requireRole(db, actor, ["demandante"], "A edição de rascunho exige perfil de setor requisitante.");
+  const [draft] = await db.select().from(demands).where(and(eq(demands.publicId, input.draftPublicId), eq(demands.requesterUserId, actor.id), eq(demands.status, "draft"))).limit(1);
+  if (!draft) throw new Error("O rascunho da DFD não foi encontrado ou não pertence ao usuário autenticado.");
+  const [unit] = await db.select({ id: organizationalUnits.id }).from(organizationalUnits).where(and(eq(organizationalUnits.id, input.unitId), eq(organizationalUnits.active, true))).limit(1);
+  if (!unit) throw new Error("A unidade requisitante não está disponível.");
+  return db.transaction(async tx => {
+    await tx.update(demands).set({ requestingUnitId: input.unitId, title: input.title?.trim() || "Rascunho sem título", objectDescription: input.objectDescription?.trim() || "", justification: input.justification?.trim() || "", annualPlanItemId: input.annualPlanItemId, supplyLineCnaeCode: input.supplyLineCnaeCode?.trim() || undefined, supplyLineCnaeDescription: input.supplyLineCnaeDescription?.trim() || undefined, desiredContractDate: input.desiredContractDate, deliveryPeriod: input.deliveryPeriod?.trim() || undefined, hasFutureFiscalImpact: input.hasFutureFiscalImpact ?? false, isSupervening: input.isSupervening ?? false, planningJustification: input.planningJustification?.trim() || undefined, containsPersonalData: input.containsPersonalData ?? false, containsSensitiveData: input.containsSensitiveData ?? false, privacyContext: input.privacyContext?.trim() || undefined }).where(eq(demands.id, draft.id));
+    await tx.delete(demandItems).where(eq(demandItems.demandId, draft.id));
+    const items = (input.items ?? []).filter(item => item.title.trim() || item.objectDescription.trim());
+    if (items.length) await tx.insert(demandItems).values(items.map((item, index) => ({ demandId: draft.id, sequence: index + 1, title: item.title.trim(), objectDescription: item.objectDescription.trim(), quantity: item.quantity || undefined, unitOfMeasure: item.unitOfMeasure?.trim() || undefined, estimatedValue: item.estimatedValue || undefined, itemJustification: item.itemJustification?.trim() || undefined, quantityJustification: item.quantityJustification?.trim() || undefined, estimatedValueJustification: item.estimatedValueJustification?.trim() || undefined, priceResearchCertifiedAt: item.priceResearchCertified ? new Date() : undefined, confirmed: true, confirmedAt: new Date() })));
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.draft_saved", `Rascunho ${draft.publicId} atualizado pelo setor requisitante.`, { demandPublicId: draft.publicId, demandId: draft.id, itemCount: items.length });
+    return { publicId: draft.publicId };
+  });
+}
+
+export async function createDemandDraft(actor: Actor, input: { unitId: number }) {
+  const db = await dbOrThrow();
+  await requireRole(db, actor, ["demandante"], "A criação de rascunho exige perfil de setor requisitante.");
+  const [unit] = await db.select({ id: organizationalUnits.id }).from(organizationalUnits).where(and(eq(organizationalUnits.id, input.unitId), eq(organizationalUnits.active, true))).limit(1);
+  if (!unit) throw new Error("A unidade requisitante não está disponível.");
+  const demandPublicId = publicId("DFD");
+  const result = await db.insert(demands).values({ publicId: demandPublicId, requestingUnitId: input.unitId, requesterUserId: actor.id, title: "Rascunho sem título", objectDescription: "", justification: "", status: "draft" });
+  await audit(db, actor.id, "demand.draft_created", `Rascunho ${demandPublicId} criado pelo setor requisitante.`, { demandPublicId, demandId: Number(result[0].insertId) });
+  return { id: Number(result[0].insertId), publicId: demandPublicId };
+}
+
+export async function listMyDemandDrafts(actor: Actor) {
+  const db = await dbOrThrow();
+  await requireRole(db, actor, ["demandante"], "A consulta de rascunhos exige perfil de setor requisitante.");
+  return db.select({ demand: demands, unitName: organizationalUnits.name }).from(demands).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).where(and(eq(demands.requesterUserId, actor.id), eq(demands.status, "draft"))).orderBy(desc(demands.updatedAt));
+}
+
+export async function getMyDemandDraft(actor: Actor, demandPublicId: string) {
+  const db = await dbOrThrow();
+  const [row] = await db.select({ demand: demands, unitName: organizationalUnits.name }).from(demands).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).where(and(eq(demands.publicId, demandPublicId), eq(demands.requesterUserId, actor.id), eq(demands.status, "draft"))).limit(1);
+  if (!row) throw new Error("Rascunho não encontrado.");
+  const items = await db.select().from(demandItems).where(eq(demandItems.demandId, row.demand.id)).orderBy(asc(demandItems.sequence));
+  return { ...row, items };
 }
 
 export async function createDemand(actor: Actor, input: {
@@ -105,10 +163,14 @@ export async function createDemand(actor: Actor, input: {
   containsSensitiveData?: boolean;
   privacyContext?: string;
   items?: DemandItemInput[];
+  draftPublicId?: string;
 }) {
   const db = await dbOrThrow();
   await requireRole(db, actor, ["demandante"], "A criação de DFD exige perfil de setor requisitante.");
   const planningJustificationError = superveningPlanningJustificationError(input);
+  const justificationError = detailedDemandJustificationError(input.justification);
+  if (justificationError) throw new Error(justificationError);
+  if (!input.annualPlanItemId) throw new Error("Vincule a DFD a um item do planejamento anual antes de enviá-la.");
   if (planningJustificationError) throw new Error(planningJustificationError);
   const descriptionError = detailedDemandDescriptionError(input.objectDescription);
   if (descriptionError) throw new Error(descriptionError);
@@ -122,11 +184,17 @@ export async function createDemand(actor: Actor, input: {
   if (itemValidationError) throw new Error(itemValidationError);
   const [unit] = await db.select({ id: organizationalUnits.id }).from(organizationalUnits).where(and(eq(organizationalUnits.id, input.unitId), eq(organizationalUnits.active, true))).limit(1);
   if (!unit) throw new Error("A unidade requisitante não está disponível.");
-  const demandPublicId = publicId("DFD");
+  const [planItem] = await db.select({ id: annualPlanItems.id, requestingUnitId: annualPlanItems.requestingUnitId, planStatus: annualPlans.status }).from(annualPlanItems).innerJoin(annualPlans, eq(annualPlanItems.planId, annualPlans.id)).where(eq(annualPlanItems.id, input.annualPlanItemId)).limit(1);
+  if (!planItem || planItem.planStatus === "closed") throw new Error("O item de planejamento anual selecionado não está disponível.");
+  if (planItem.requestingUnitId && planItem.requestingUnitId !== input.unitId) throw new Error("A DFD deve estar vinculada a um item do planejamento da mesma unidade demandante.");
+  const existingDraftRows = input.draftPublicId ? await db.select().from(demands).where(and(eq(demands.publicId, input.draftPublicId), eq(demands.requesterUserId, actor.id), eq(demands.status, "draft"))).limit(1) : [];
+  const existingDraft = existingDraftRows[0] ?? null;
+  if (input.draftPublicId && !existingDraft) throw new Error("O rascunho da DFD não foi encontrado ou não pertence ao usuário autenticado.");
+  const demandPublicId = existingDraft?.publicId ?? publicId("DFD");
   const estimatedTotal = totalEstimatedValueOfDemandItems(confirmedItems);
   return db.transaction(async tx => {
-    const result = await tx.insert(demands).values({
-      publicId: demandPublicId,
+    let demandId: number;
+    const demandValues = {
       requestingUnitId: input.unitId,
       requesterUserId: actor.id,
       title: input.title.trim(),
@@ -147,12 +215,20 @@ export async function createDemand(actor: Actor, input: {
       containsSensitiveData: input.containsSensitiveData ?? false,
       privacyContext: input.privacyContext?.trim() || undefined,
       requesterCertifiedAt: new Date(),
-      status: "submitted",
-    });
-    const demandId = Number(result[0].insertId);
+      status: "submitted" as const,
+    };
+    if (existingDraft) {
+      demandId = existingDraft.id;
+      await tx.update(demands).set(demandValues).where(eq(demands.id, demandId));
+      await tx.delete(demandItems).where(eq(demandItems.demandId, demandId));
+    } else {
+      const result = await tx.insert(demands).values({ publicId: demandPublicId, ...demandValues });
+      demandId = Number(result[0].insertId);
+    }
     await tx.insert(demandItems).values(confirmedItems.map((item, index) => ({ demandId, sequence: index + 1, title: item.title.trim(), objectDescription: item.objectDescription.trim(), quantity: item.quantity || undefined, unitOfMeasure: item.unitOfMeasure?.trim() || undefined, estimatedValue: item.estimatedValue || undefined, itemJustification: item.itemJustification?.trim() || undefined, quantityJustification: item.quantityJustification?.trim() || undefined, estimatedValueJustification: item.estimatedValueJustification?.trim() || undefined, priceResearchCertifiedAt: item.priceResearchCertified ? new Date() : undefined, confirmed: true, confirmedAt: new Date() })));
     await instantiateChecklistFromTemplates(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, "demand", demandPublicId, planningChecklistTemplateTypes.demand);
-    await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demandPublicId, severity: input.isSupervening || input.containsSensitiveData ? "warning" : "info", title: input.isSupervening ? "DFD superveniente aguardando análise da Diretoria de Administração dentro do prazo de triagem." : input.containsSensitiveData ? "DFD com indicação de dados pessoais sensíveis requer triagem LGPD." : "DFD recebida pela Diretoria de Administração para triagem.", dueAt: deadlineAt(planningDeadlineDays.demand) });
+    const configuredDemandDeadline = await configuredCalendarDate(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, planningCalendarKeys.dfdApprovalDeadline);
+    await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demandPublicId, severity: input.isSupervening || input.containsSensitiveData ? "warning" : "info", title: input.isSupervening ? "DFD superveniente aguardando análise da Diretoria de Administração dentro do calendário institucional." : input.containsSensitiveData ? "DFD com indicação de dados pessoais sensíveis requer triagem LGPD." : "DFD recebida pela Diretoria de Administração para triagem.", dueAt: configuredDemandDeadline ?? deadlineAt(planningDeadlineDays.demand) });
     await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.submitted", `DFD ${demandPublicId} enviada para triagem da Diretoria de Administração com ${confirmedItems.length} item(ns) confirmado(s).`, { demandId, demandPublicId, unitId: input.unitId, itemCount: confirmedItems.length, estimatedTotal: estimatedTotal ?? null, supplyLineCnaeCode: input.supplyLineCnaeCode, hasFutureFiscalImpact: input.hasFutureFiscalImpact ?? false, requesterCertifiedAt: new Date().toISOString() });
     return { id: demandId, publicId: demandPublicId };
   });
@@ -407,10 +483,29 @@ export async function completePlanningChecklist(actor: Actor, input: { itemId: n
 
 export async function refreshPlanningDeadlineAlerts() {
   const db = await dbOrThrow();
+  const now = new Date();
   const candidates = await db.select({ id: planningAlerts.id, status: planningAlerts.status, dueAt: planningAlerts.dueAt }).from(planningAlerts).where(inArray(planningAlerts.status, ["open", "acknowledged"]));
-  const overdue = candidates.filter(alert => shouldEscalatePlanningAlert(alert));
+  const overdue = candidates.filter(alert => shouldEscalatePlanningAlert(alert, now));
   if (overdue.length) await db.update(planningAlerts).set({ severity: "critical" }).where(inArray(planningAlerts.id, overdue.map(alert => alert.id)));
-  return { overdueCount: overdue.length };
+
+  const approvalDeadline = await configuredCalendarDate(db, planningCalendarKeys.dfdApprovalDeadline);
+  let forwardedDemandCount = 0;
+  if (approvalDeadline && approvalDeadline.getTime() <= now.getTime()) {
+    const demandCandidates = await db.select().from(demands).where(inArray(demands.status, ["submitted", "under_review", "returned"]));
+    for (const demand of demandCandidates) {
+      const existingPresidencyEvent = await db.select({ id: demandCaseEvents.id }).from(demandCaseEvents).where(and(eq(demandCaseEvents.demandId, demand.id), eq(demandCaseEvents.eventType, "sent_to_presidency"))).limit(1);
+      if (existingPresidencyEvent.length) continue;
+      await db.transaction(async tx => {
+        await tx.update(demands).set({ status: "presidency_review" }).where(and(eq(demands.id, demand.id), inArray(demands.status, ["submitted", "under_review", "returned"])));
+        await tx.insert(demandCaseEvents).values({ demandId: demand.id, actorUserId: null, eventType: "sent_to_presidency", note: `Encaminhamento automático pelo prazo final do calendário de aprovação de DFDs (${approvalDeadline.toISOString()}).` });
+        await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demand.publicId, severity: "warning", title: "DFD encaminhada à Presidência para decisão no prazo final do calendário.", dueAt: null });
+        await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: demand.id, requesterUserId: demand.requesterUserId, demandPublicId: demand.publicId, title: "DFD encaminhada à Presidência", body: `A DFD ${demand.publicId} — ${demand.title} foi encaminhada à Presidência pelo encerramento do prazo do calendário. A decisão será tomada com base na versão disponível e no histórico de complementações.`, notificationType: "demand_sent_to_presidency", idempotencyPrefix: `demand-sent-to-presidency:${demand.publicId}` });
+        await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, null, "demand.sent_to_presidency", `DFD ${demand.publicId} encaminhada automaticamente à Presidência pelo prazo final.`, { demandId: demand.id, demandPublicId: demand.publicId, approvalDeadline: approvalDeadline.toISOString() });
+      });
+      forwardedDemandCount += 1;
+    }
+  }
+  return { overdueCount: overdue.length, forwardedDemandCount };
 }
 
 export async function acknowledgePlanningAlert(actor: Actor, alertId: number) {

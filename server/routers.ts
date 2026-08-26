@@ -49,6 +49,10 @@ import {
   acknowledgePlanningAlert,
   completePlanningChecklist,
   createDemand,
+  createDemandDraft,
+  saveDemandDraft,
+  getMyDemandDraft,
+  listMyDemandDrafts,
   decideOpeningRequest,
   instantiateAuthorizedProcess,
   refreshPlanningDeadlineAlerts,
@@ -66,6 +70,7 @@ import {
   getDemandControl,
   getTwoStagePlanningBoard,
   approveDemand,
+  decideDemandAtPresidency,
   publishPca,
   publishPcaUpdate,
   provideDemandComplementation,
@@ -78,6 +83,14 @@ import { listDocumentSignatureRequests, listSignatureEligibleDocuments, prepareG
 import { superveningPlanningJustificationError } from "../shared/superveningDemand";
 import { searchOfficialCnaeClasses } from "./cnaeService";
 import { issueDfdPdfVerification } from "./dfdPdfVerificationService";
+import { listUserNotifications, markAllNotificationsRead, markNotificationRead, unreadNotificationCount } from "./notificationService";
+
+const planningAccessProcedure = protectedProcedure.use(async ({ ctx, next }) => {
+  const roles = await getUserProcessRoles(ctx.user.id);
+  const allowed = ctx.user.role === "admin" || roles.some(role => ["administrador", "chefia_compras", "compras", "autoridade_competente", "instrumentalizacao"].includes(role));
+  if (!allowed) throw new TRPCError({ code: "FORBIDDEN", message: "A gestão do planejamento exige um perfil autorizado." });
+  return next({ ctx });
+});
 
 const institutionalAdminProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const roles = await getUserProcessRoles(ctx.user.id);
@@ -103,7 +116,7 @@ const createDemandInput = z.object({
   unitId: z.number().int().positive(),
   title: z.string().min(5).max(500),
   objectDescription: z.string().min(10),
-  justification: z.string().min(10),
+  justification: z.string().min(1000, "A justificativa da DFD deve ter pelo menos 1.000 caracteres."),
   quantity: z.string().max(32).optional(),
   unitOfMeasure: z.string().max(100).optional(),
   estimatedValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
@@ -120,6 +133,7 @@ const createDemandInput = z.object({
   containsSensitiveData: z.boolean().optional(),
   privacyContext: z.string().max(5000).optional(),
   items: z.array(demandItemInput).min(1).max(50),
+  draftPublicId: z.string().min(4).max(48).optional(),
 }).superRefine((input, context) => {
   const message = superveningPlanningJustificationError(input);
   if (message) context.addIssue({ code: z.ZodIssueCode.custom, path: ["planningJustification"], message });
@@ -210,6 +224,10 @@ export const appRouter = router({
   }),
   dashboard: router({
     summary: protectedProcedure.query(() => dashboardSummary()),
+    notifications: protectedProcedure.query(({ ctx }) => listUserNotifications(ctx.user.id)),
+    unreadNotificationCount: protectedProcedure.query(({ ctx }) => unreadNotificationCount(ctx.user.id)),
+    markNotificationRead: protectedProcedure.input(z.object({ notificationId: z.number().int().positive() })).mutation(({ ctx, input }) => markNotificationRead(ctx.user.id, input.notificationId)),
+    markAllNotificationsRead: protectedProcedure.mutation(({ ctx }) => markAllNotificationsRead(ctx.user.id)),
   }),
   privacy: router({
     assessment: protectedProcedure.input(z.object({ processPublicId: z.string().min(4).max(64) })).query(({ ctx, input }) => getPrivacyAssessment(ctx.user, input.processPublicId)),
@@ -255,13 +273,18 @@ export const appRouter = router({
     })).mutation(({ ctx, input }) => decidePrivacyAssessment(ctx.user, input)),
   }),
   planning: router({
-    board: protectedProcedure.query(() => getTwoStagePlanningBoard()),
+    board: planningAccessProcedure.query(() => getTwoStagePlanningBoard()),
     demandControl: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48) })).query(({ ctx, input }) => getDemandControl(ctx.user, input.demandPublicId)),
+    myDrafts: protectedProcedure.query(({ ctx }) => listMyDemandDrafts(ctx.user)),
+    demandDraft: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48) })).query(({ ctx, input }) => getMyDemandDraft(ctx.user, input.demandPublicId)),
     demandPdfVerification: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48) })).query(({ ctx, input }) => issueDfdPdfVerification(ctx.user, input.demandPublicId)),
     startDemandAnalysis: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().max(5_000).optional() })).mutation(({ ctx, input }) => startDemandAnalysis(ctx.user, input.demandPublicId, input.note)),
     requestDemandComplementation: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().min(5, "Informe o que precisa ser complementado.").max(5_000) })).mutation(({ ctx, input }) => requestDemandComplementation(ctx.user, input)),
     provideDemandComplementation: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().min(5, "Descreva a complementação realizada.").max(5_000) })).mutation(({ ctx, input }) => provideDemandComplementation(ctx.user, input)),
     approveDemand: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().min(5, "Registre a motivação da aprovação.").max(5_000) })).mutation(({ ctx, input }) => approveDemand(ctx.user, input)),
+    decideDemandAtPresidency: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), action: z.enum(["approve", "partial", "reject"]), notes: z.string().min(5).max(10_000), approvedItems: z.array(z.object({ itemId: z.number().int().positive(), approvedValue: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional() })).optional() })).mutation(({ ctx, input }) => decideDemandAtPresidency(ctx.user, input)),
+    createDemandDraft: protectedProcedure.input(z.object({ unitId: z.number().int().positive() })).mutation(({ ctx, input }) => createDemandDraft(ctx.user, input)),
+    saveDemandDraft: protectedProcedure.input(z.object({ draftPublicId: z.string().min(4).max(48), unitId: z.number().int().positive(), title: z.string().max(500).optional(), objectDescription: z.string().optional(), justification: z.string().optional(), annualPlanItemId: z.number().int().positive().optional(), supplyLineCnaeCode: z.string().max(16).optional(), supplyLineCnaeDescription: z.string().max(1000).optional(), desiredContractDate: z.date().optional(), deliveryPeriod: z.string().max(255).optional(), hasFutureFiscalImpact: z.boolean().optional(), isSupervening: z.boolean().optional(), planningJustification: z.string().max(5000).optional(), containsPersonalData: z.boolean().optional(), containsSensitiveData: z.boolean().optional(), privacyContext: z.string().max(5000).optional(), items: z.array(demandItemInput).max(50).optional() })).mutation(({ ctx, input }) => saveDemandDraft(ctx.user, input)),
     createDemand: protectedProcedure.input(createDemandInput).mutation(({ ctx, input }) => createDemand(ctx.user, input)),
     createDemandConsolidation: protectedProcedure.input(z.object({ title: z.string().min(5).max(500), notes: z.string().max(5000).optional(), demandPublicIds: z.array(z.string().min(4).max(48)).min(1).max(100) })).mutation(({ ctx, input }) => createDemandConsolidation(ctx.user, input)),
     createPca: protectedProcedure.input(z.object({ title: z.string().min(5).max(500), planId: z.number().int().positive(), demandConsolidationPublicIds: z.array(z.string().min(4).max(64)).max(100), demandPublicIds: z.array(z.string().min(4).max(48)).max(100).optional() }).refine(input => input.demandConsolidationPublicIds.length > 0 || (input.demandPublicIds?.length ?? 0) > 0, { message: "Selecione ao menos uma consolidação ou uma DFD para o PCA." })).mutation(({ ctx, input }) => createPca(ctx.user, input)),
@@ -298,6 +321,7 @@ export const appRouter = router({
       action: z.enum(["complete", "return", "waive"]),
       note: z.string().min(3).max(5000),
       targetStepKey: z.string().max(100).optional(),
+      outcome: z.enum(["success", "failure"]).optional(),
     })).mutation(({ ctx, input }) => transitionStep(ctx.user, input)),
     uploadDocument: protectedProcedure.input(z.object({
       processPublicId: z.string().min(4).max(64),
