@@ -14,6 +14,7 @@ export function demandReviewState(status: string, events: Array<{ eventType: Dem
   const latest = ordered[0]?.eventType;
   if (latest === "complementation_requested" || status === "returned") return { code: "awaiting_complementation", label: "Complementação solicitada", tone: "warning" };
   if (latest === "complementation_provided") return { code: "complemented", label: "Complementação recebida", tone: "info" };
+  if (status === "financial_review") return { code: "in_analysis", label: "Aguardando classificação financeira", tone: "warning" };
   if (latest === "sent_to_presidency" || status === "presidency_review") return { code: "in_analysis", label: "Aguardando decisão da Presidência", tone: "warning" };
   if (latest === "analysis_started" || status === "under_review") return { code: "in_analysis", label: "Em análise", tone: "info" };
   return { code: "new", label: "Ainda não analisada", tone: "neutral" };

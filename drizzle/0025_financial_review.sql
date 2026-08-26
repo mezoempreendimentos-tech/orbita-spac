@@ -1,0 +1,1 @@
+ALTER TABLE `demands` MODIFY COLUMN `status` enum('draft','financial_review','submitted','under_review','presidency_review','accepted','partially_accepted','returned','cancelled','rejected','grouped','awaiting_pca_publication','published_in_pca','awaiting_opening','opening_authorized','process_instantiated') NOT NULL DEFAULT 'draft';

@@ -27,10 +27,10 @@ function database(selectResults: unknown[]) {
 describe("classificação financeira da DFD", () => {
   beforeEach(() => vi.clearAllMocks());
 
-  it("permite ao Financeiro registrar rubrica e ciência na trilha", async () => {
+  it("permite ao Financeiro registrar rubrica e libera a DFD para triagem", async () => {
     const mocked = database([
       [{ role: "contabilidade" }],
-      [{ id: 7, publicId: "DFD-1", status: "under_review" }],
+      [{ id: 7, publicId: "DFD-1", status: "financial_review" }],
     ]);
     vi.mocked(getDb).mockResolvedValue(mocked.db as never);
 
@@ -39,7 +39,7 @@ describe("classificação financeira da DFD", () => {
       { demandPublicId: "DFD-1", budgetRubricCode: "339039", acknowledge: true, budgetNote: "Despesa corrente prevista para o exercício." },
     )).resolves.toEqual({ success: true, budgetRubricCode: "339039" });
 
-    expect(mocked.updates).toContainEqual(expect.objectContaining({ budgetRubricCode: "339039", budgetAcknowledgedByUserId: 12, budgetNote: "Despesa corrente prevista para o exercício." }));
+    expect(mocked.updates).toContainEqual(expect.objectContaining({ status: "submitted", budgetRubricCode: "339039", budgetAcknowledgedByUserId: 12, budgetNote: "Despesa corrente prevista para o exercício." }));
     expect(mocked.inserts).toContainEqual(expect.objectContaining({ demandId: 7, eventType: "financial_classified" }));
   });
 

@@ -255,10 +255,13 @@ export async function registerDemandFinancialClassification(actor: Actor, input:
   if (!/^\d{4,12}$/.test(budgetRubricCode)) throw new Error("Informe inicialmente apenas o código numérico da rubrica, por exemplo: 339039.");
   if (!input.acknowledge) throw new Error("Confirme a ciência do gasto antes de registrar a rubrica.");
   const [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
-  const allowedStatuses = ["submitted", "under_review", "returned", "presidency_review", "accepted", "partially_accepted"] as const;
+  const allowedStatuses = ["financial_review", "submitted", "under_review", "returned", "presidency_review", "accepted", "partially_accepted"] as const;
   if (!demand || !allowedStatuses.includes(demand.status as typeof allowedStatuses[number])) throw new Error("Esta DFD não está disponível para classificação financeira.");
+  const nextStatus = demand.status === "financial_review" ? "submitted" : demand.status;
   await db.transaction(async tx => {
-    await tx.update(demands).set({ budgetRubricCode, budgetAcknowledgedAt: new Date(), budgetAcknowledgedByUserId: actor.id, budgetNote: input.budgetNote?.trim() || null }).where(eq(demands.id, demand.id));
+    await tx.update(planningAlerts).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(planningAlerts.entityType, "demand"), eq(planningAlerts.entityPublicId, demand.publicId), eq(planningAlerts.status, "open")));
+    await tx.update(demands).set({ status: nextStatus, budgetRubricCode, budgetAcknowledgedAt: new Date(), budgetAcknowledgedByUserId: actor.id, budgetNote: input.budgetNote?.trim() || null }).where(eq(demands.id, demand.id));
+    await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demand.publicId, severity: "info", title: "DFD classificada pelo Financeiro e disponível para triagem da Diretoria de Administração.", dueAt: deadlineAt(5) });
     await recordDemandCaseEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, demand.id, actor.id, "financial_classified", `Rubrica orçamentária indicada: ${budgetRubricCode}. Ciência do gasto registrada para planejamento e LOA.${input.budgetNote?.trim() ? ` Observação: ${input.budgetNote.trim()}` : ""}`);
     await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.financial_classified", `Financeiro registrou a rubrica orçamentária da DFD ${demand.publicId}.`, { demandId: demand.id, demandPublicId: demand.publicId, budgetRubricCode, budgetAcknowledgedAt: new Date().toISOString(), budgetNote: input.budgetNote?.trim() || null });
   });

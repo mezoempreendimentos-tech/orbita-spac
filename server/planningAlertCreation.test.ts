@@ -55,7 +55,7 @@ describe("criação de alertas com prazo", () => {
     await createDemand({ id: 1, role: "user" }, { unitId: 1, title: "Demanda superveniente", objectDescription: "Descrição detalhada da necessidade superveniente.", justification: "Justificativa institucional da necessidade.", isSupervening: true, planningJustification: "Justificativa de planejamento suficiente.", ...requiredDemandData });
     const alert = findAlert(db.inserts);
     expect(alert).toMatchObject({ entityType: "demand", severity: "warning" });
-    expect(alert?.title).toContain("superveniente aguardando análise");
+    expect(alert?.title).toContain("superveniente recebida pelo Financeiro");
     expect(alert?.dueAt).toBeInstanceOf(Date);
   });
 

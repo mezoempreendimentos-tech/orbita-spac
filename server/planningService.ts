@@ -211,7 +211,7 @@ export async function createDemand(actor: Actor, input: {
       containsSensitiveData: input.containsSensitiveData ?? false,
       privacyContext: input.privacyContext?.trim() || undefined,
       requesterCertifiedAt: new Date(),
-      status: "submitted" as const,
+      status: "financial_review" as const,
     };
     if (existingDraft) {
       demandId = existingDraft.id;
@@ -224,8 +224,8 @@ export async function createDemand(actor: Actor, input: {
     await tx.insert(demandItems).values(confirmedItems.map((item, index) => ({ demandId, sequence: index + 1, title: item.title.trim(), objectDescription: item.objectDescription.trim(), quantity: item.quantity || undefined, unitOfMeasure: item.unitOfMeasure?.trim() || undefined, estimatedValue: item.estimatedValue || undefined, itemJustification: item.itemJustification?.trim() || undefined, quantityJustification: item.quantityJustification?.trim() || undefined, estimatedValueJustification: item.estimatedValueJustification?.trim() || undefined, priceResearchCertifiedAt: item.priceResearchCertified ? new Date() : undefined, confirmed: true, confirmedAt: new Date() })));
     await instantiateChecklistFromTemplates(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, "demand", demandPublicId, planningChecklistTemplateTypes.demand);
     const configuredDemandDeadline = await configuredCalendarDate(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, planningCalendarKeys.dfdApprovalDeadline);
-    await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demandPublicId, severity: input.isSupervening || input.containsSensitiveData ? "warning" : "info", title: input.isSupervening ? "DFD superveniente aguardando análise da Diretoria de Administração dentro do calendário institucional." : input.containsSensitiveData ? "DFD com indicação de dados pessoais sensíveis requer triagem LGPD." : "DFD recebida pela Diretoria de Administração para triagem.", dueAt: configuredDemandDeadline ?? deadlineAt(planningDeadlineDays.demand) });
-    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.submitted", `DFD ${demandPublicId} enviada para triagem da Diretoria de Administração com ${confirmedItems.length} item(ns) confirmado(s).`, { demandId, demandPublicId, unitId: input.unitId, itemCount: confirmedItems.length, estimatedTotal: estimatedTotal ?? null, supplyLineCnaeCode: input.supplyLineCnaeCode, hasFutureFiscalImpact: input.hasFutureFiscalImpact ?? false, requesterCertifiedAt: new Date().toISOString() });
+    await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demandPublicId, severity: "warning", title: input.isSupervening ? "DFD superveniente recebida pelo Financeiro para indicação da rubrica orçamentária e ciência do gasto." : "DFD recebida pelo Financeiro para indicação da rubrica orçamentária e ciência do gasto.", dueAt: configuredDemandDeadline ?? deadlineAt(planningDeadlineDays.demand) });
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.submitted", `DFD ${demandPublicId} enviada ao Financeiro antes da triagem da Diretoria de Administração com ${confirmedItems.length} item(ns) confirmado(s).`, { demandId, demandPublicId, unitId: input.unitId, itemCount: confirmedItems.length, estimatedTotal: estimatedTotal ?? null, supplyLineCnaeCode: input.supplyLineCnaeCode, hasFutureFiscalImpact: input.hasFutureFiscalImpact ?? false, requesterCertifiedAt: new Date().toISOString(), firstStage: "financial_review" });
     return { id: demandId, publicId: demandPublicId };
   });
 }
@@ -487,12 +487,12 @@ export async function refreshPlanningDeadlineAlerts() {
   const approvalDeadline = await configuredCalendarDate(db, planningCalendarKeys.dfdApprovalDeadline);
   let forwardedDemandCount = 0;
   if (approvalDeadline && approvalDeadline.getTime() <= now.getTime()) {
-    const demandCandidates = await db.select().from(demands).where(inArray(demands.status, ["submitted", "under_review", "returned"]));
+    const demandCandidates = await db.select().from(demands).where(inArray(demands.status, ["financial_review", "submitted", "under_review", "returned"]));
     for (const demand of demandCandidates) {
       const existingPresidencyEvent = await db.select({ id: demandCaseEvents.id }).from(demandCaseEvents).where(and(eq(demandCaseEvents.demandId, demand.id), eq(demandCaseEvents.eventType, "sent_to_presidency"))).limit(1);
       if (existingPresidencyEvent.length) continue;
       await db.transaction(async tx => {
-        await tx.update(demands).set({ status: "presidency_review" }).where(and(eq(demands.id, demand.id), inArray(demands.status, ["submitted", "under_review", "returned"])));
+        await tx.update(demands).set({ status: "presidency_review" }).where(and(eq(demands.id, demand.id), inArray(demands.status, ["financial_review", "submitted", "under_review", "returned"])));
         await tx.insert(demandCaseEvents).values({ demandId: demand.id, actorUserId: null, eventType: "sent_to_presidency", note: `Encaminhamento automático pelo prazo final do calendário de aprovação de DFDs (${approvalDeadline.toISOString()}).` });
         await tx.insert(planningAlerts).values({ entityType: "demand", entityPublicId: demand.publicId, severity: "warning", title: "DFD encaminhada à Presidência para decisão no prazo final do calendário.", dueAt: null });
         await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: demand.id, requesterUserId: demand.requesterUserId, demandPublicId: demand.publicId, title: "DFD encaminhada à Presidência", body: `A DFD ${demand.publicId} — ${demand.title} foi encaminhada à Presidência pelo encerramento do prazo do calendário. A decisão será tomada com base na versão disponível e no histórico de complementações.`, notificationType: "demand_sent_to_presidency", idempotencyPrefix: `demand-sent-to-presidency:${demand.publicId}` });

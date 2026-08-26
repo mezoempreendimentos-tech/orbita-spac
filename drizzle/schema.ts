@@ -187,7 +187,7 @@ export const demands = mysqlTable("demands", {
   presidencyDecidedByUserId: int("presidencyDecidedByUserId").references(() => users.id),
   presidencyDecidedAt: timestamp("presidencyDecidedAt"),
   presidencyApprovedValue: decimal("presidencyApprovedValue", { precision: 14, scale: 2 }),
-  status: mysqlEnum("status", ["draft", "submitted", "under_review", "presidency_review", "accepted", "partially_accepted", "returned", "cancelled", "rejected", "grouped", "awaiting_pca_publication", "published_in_pca", "awaiting_opening", "opening_authorized", "process_instantiated"]).default("draft").notNull(),
+  status: mysqlEnum("status", ["draft", "financial_review", "submitted", "under_review", "presidency_review", "accepted", "partially_accepted", "returned", "cancelled", "rejected", "grouped", "awaiting_pca_publication", "published_in_pca", "awaiting_opening", "opening_authorized", "process_instantiated"]).default("draft").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
