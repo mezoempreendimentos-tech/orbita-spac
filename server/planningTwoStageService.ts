@@ -34,7 +34,7 @@ import { storagePut } from "./storage";
 
 type Actor = { id: number; role: "user" | "admin" };
 type EntityType = "demand" | "demand_consolidation" | "pca" | "opening_request";
-type DemandCaseEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "sent_to_presidency" | "approved" | "partially_approved" | "presidency_rejected" | "returned" | "procurement_completed";
+type DemandCaseEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "sent_to_presidency" | "approved" | "partially_approved" | "presidency_rejected" | "financial_classified" | "returned" | "procurement_completed";
 
 const publicId = (prefix: string) => `${prefix}-${nanoid(10).toUpperCase()}`;
 const deadlineAt = (days: number) => new Date(Date.now() + days * 24 * 60 * 60 * 1000);
@@ -78,6 +78,12 @@ async function demandPresidencyAccess(db: Awaited<ReturnType<typeof dbOrThrow>>,
   if (actor.role === "admin") return true;
   const roles = await db.select({ role: userProcessRoles.role }).from(userProcessRoles).where(and(eq(userProcessRoles.userId, actor.id), eq(userProcessRoles.active, true)));
   return roles.some(item => demandPresidencyRoles.includes(item.role));
+}
+
+async function demandFinancialAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
+  if (actor.role === "admin") return true;
+  const roles = await db.select({ role: userProcessRoles.role }).from(userProcessRoles).where(and(eq(userProcessRoles.userId, actor.id), eq(userProcessRoles.active, true)));
+  return roles.some(item => item.role === "contabilidade");
 }
 
 async function demandOpeningAccess(db: Awaited<ReturnType<typeof dbOrThrow>>, actor: Actor) {
@@ -182,9 +188,10 @@ export async function getDemandControl(actor: Actor, demandPublicId: string) {
   if (!row) throw new Error("DFD não encontrada.");
   const canReview = await demandReviewAccess(db, actor);
   const canApprove = await demandPresidencyAccess(db, actor);
+  const canFinancial = await demandFinancialAccess(db, actor);
   const canOpen = await demandOpeningAccess(db, actor);
   const canRespond = row.demand.requesterUserId === actor.id;
-  if (!canReview && !canApprove && !canRespond) throw new Error("Você não possui acesso a esta DFD.");
+  if (!canReview && !canApprove && !canFinancial && !canRespond) throw new Error("Você não possui acesso a esta DFD.");
   const [events, documents, alerts, requests, processes, items] = await Promise.all([
     db.select({ event: demandCaseEvents, actorName: users.name }).from(demandCaseEvents).leftJoin(users, eq(demandCaseEvents.actorUserId, users.id)).where(eq(demandCaseEvents.demandId, row.demand.id)).orderBy(desc(demandCaseEvents.createdAt)),
     db.select().from(planningDocuments).where(and(eq(planningDocuments.entityType, "demand"), eq(planningDocuments.entityPublicId, demandPublicId))).orderBy(desc(planningDocuments.createdAt)),
@@ -194,7 +201,7 @@ export async function getDemandControl(actor: Actor, demandPublicId: string) {
     db.select().from(demandItems).where(eq(demandItems.demandId, row.demand.id)).orderBy(asc(demandItems.sequence)),
   ]);
   const itemSummary = items.length ? `\n\nItens confirmados (${items.length}): ${items.map(item => `${item.sequence}. ${item.title}${item.quantity ? ` — ${item.quantity} ${item.unitOfMeasure || "unidade(s)"}` : ""}${item.estimatedValue ? ` · ${item.estimatedValue}` : ""}`).join("; ")}.` : "";
-  return { ...row, documentObjectDescription: row.demand.objectDescription, demand: { ...row.demand, objectDescription: `${row.demand.objectDescription}${itemSummary}` }, events, documents: documents.map(document => ({ ...document, fileUrl: document.storageUrl })), alerts, openingRequest: requests[0] ?? null, process: processes[0] ?? null, items, canReview, canApprove, canOpen, canRespond };
+  return { ...row, documentObjectDescription: row.demand.objectDescription, demand: { ...row.demand, objectDescription: `${row.demand.objectDescription}${itemSummary}` }, events, documents: documents.map(document => ({ ...document, fileUrl: document.storageUrl })), alerts, openingRequest: requests[0] ?? null, process: processes[0] ?? null, items, canReview, canApprove, canFinancial, canOpen, canRespond };
 }
 
 export async function startDemandAnalysis(actor: Actor, demandPublicId: string, note?: string) {
@@ -239,6 +246,23 @@ export async function provideDemandComplementation(actor: Actor, input: { demand
 
 export async function approveDemand(actor: Actor, input: { demandPublicId: string; note: string }) {
   return decideDemandAtPresidency(actor, { demandPublicId: input.demandPublicId, action: "approve", notes: input.note });
+}
+
+export async function registerDemandFinancialClassification(actor: Actor, input: { demandPublicId: string; budgetRubricCode: string; acknowledge: boolean; budgetNote?: string }) {
+  const db = await dbOrThrow();
+  await requireRole(db, actor, ["contabilidade"], "A classificação orçamentária exige um perfil ativo do Financeiro.");
+  const budgetRubricCode = input.budgetRubricCode.trim();
+  if (!/^\d{4,12}$/.test(budgetRubricCode)) throw new Error("Informe inicialmente apenas o código numérico da rubrica, por exemplo: 339039.");
+  if (!input.acknowledge) throw new Error("Confirme a ciência do gasto antes de registrar a rubrica.");
+  const [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
+  const allowedStatuses = ["submitted", "under_review", "returned", "presidency_review", "accepted", "partially_accepted"] as const;
+  if (!demand || !allowedStatuses.includes(demand.status as typeof allowedStatuses[number])) throw new Error("Esta DFD não está disponível para classificação financeira.");
+  await db.transaction(async tx => {
+    await tx.update(demands).set({ budgetRubricCode, budgetAcknowledgedAt: new Date(), budgetAcknowledgedByUserId: actor.id, budgetNote: input.budgetNote?.trim() || null }).where(eq(demands.id, demand.id));
+    await recordDemandCaseEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, demand.id, actor.id, "financial_classified", `Rubrica orçamentária indicada: ${budgetRubricCode}. Ciência do gasto registrada para planejamento e LOA.${input.budgetNote?.trim() ? ` Observação: ${input.budgetNote.trim()}` : ""}`);
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "demand.financial_classified", `Financeiro registrou a rubrica orçamentária da DFD ${demand.publicId}.`, { demandId: demand.id, demandPublicId: demand.publicId, budgetRubricCode, budgetAcknowledgedAt: new Date().toISOString(), budgetNote: input.budgetNote?.trim() || null });
+  });
+  return { success: true, budgetRubricCode };
 }
 
 export async function decideDemandAtPresidency(actor: Actor, input: { demandPublicId: string; action: "approve" | "partial" | "reject"; notes: string; approvedItems?: { itemId: number; approvedValue?: string }[] }) {
@@ -286,6 +310,7 @@ export async function createDemandConsolidation(actor: Actor, input: { title: st
   const selected = await db.select().from(demands).where(inArray(demands.publicId, publicIds));
   if (!publicIds.length || selected.length !== publicIds.length) throw new Error("Selecione DFD válidas para formar a consolidação de demandas.");
   if (selected.some(demand => !canConsolidateDemand(demand.status))) throw new Error("Somente DFDs aceitas pela Presidência podem integrar uma nova consolidação.");
+  if (selected.some(demand => !demand.budgetRubricCode || !demand.budgetAcknowledgedAt)) throw new Error("Todas as DFDs selecionadas precisam ter rubrica orçamentária e ciência do Financeiro registradas antes da consolidação.");
   const demandConsolidationPublicId = publicId("CON");
   return db.transaction(async tx => {
     const result = await tx.insert(demandConsolidations).values({ publicId: demandConsolidationPublicId, title: input.title.trim(), notes: input.notes?.trim() || null, status: "ready_for_pca", createdByUserId: actor.id });
@@ -311,6 +336,7 @@ export async function createPca(actor: Actor, input: { title: string; planId: nu
   if (selectedDemands.length !== demandPublicIds.length) throw new Error("Selecione DFD válidas para incluir diretamente no PCA.");
   if (selectedGroups.some(group => !canCreatePcaFromDemandConsolidation(group.status))) throw new Error("Somente consolidações prontas podem integrar um novo PCA.");
   if (selectedDemands.some(demand => !canConsolidateDemand(demand.status))) throw new Error("Somente DFDs aceitas pela Presidência podem ser incluídas diretamente no PCA.");
+  if (selectedDemands.some(demand => !demand.budgetRubricCode || !demand.budgetAcknowledgedAt)) throw new Error("Todas as DFDs selecionadas precisam ter rubrica orçamentária e ciência do Financeiro registradas antes de integrar o PCA.");
   const [plan] = await db.select({ id: annualPlans.id, fiscalYear: annualPlans.fiscalYear }).from(annualPlans).where(eq(annualPlans.id, input.planId)).limit(1);
   if (!plan) throw new Error("O planejamento anual selecionado não está disponível.");
   const [existingPca] = await db.select({ publicId: planningConsolidations.publicId }).from(planningConsolidations).where(eq(planningConsolidations.planId, input.planId)).limit(1);
@@ -340,6 +366,7 @@ export async function createPcaUpdate(actor: Actor, input: { pcaPublicId: string
   const selectedDemands = await db.select().from(demands).where(inArray(demands.publicId, demandPublicIds));
   if (selectedDemands.length !== demandPublicIds.length) throw new Error("Selecione DFD válidas para atualizar o PCA.");
   if (selectedDemands.some(demand => !["submitted", "under_review", "accepted", "returned"].includes(demand.status))) throw new Error("Somente DFD em triagem podem ser encaminhadas para atualização do PCA.");
+  if (selectedDemands.some(demand => !demand.budgetRubricCode || !demand.budgetAcknowledgedAt)) throw new Error("Todas as DFDs selecionadas precisam ter rubrica orçamentária e ciência do Financeiro registradas antes da atualização do PCA.");
   const existingDemandIds = new Set((await collectPcaDemandDetails(db, pca.id)).map(demand => demand.id));
   if (selectedDemands.some(demand => existingDemandIds.has(demand.id))) throw new Error("Uma ou mais DFD já integram o PCA anual publicado.");
   const [activeUpdate] = await db.select({ publicId: pcaUpdates.publicId }).from(pcaUpdates).where(and(eq(pcaUpdates.pcaId, pca.id), inArray(pcaUpdates.status, ["draft", "ready_for_review", "presidency_review", "approved_for_publication", "returned"]))).limit(1);

@@ -1,4 +1,4 @@
-export type DemandReviewEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "sent_to_presidency" | "approved" | "partially_approved" | "presidency_rejected" | "returned" | "procurement_completed";
+export type DemandReviewEventType = "analysis_started" | "complementation_requested" | "complementation_provided" | "sent_to_presidency" | "approved" | "partially_approved" | "presidency_rejected" | "financial_classified" | "returned" | "procurement_completed";
 
 export type DemandReviewState = {
   code: "new" | "in_analysis" | "awaiting_complementation" | "complemented" | "approved" | "rejected";

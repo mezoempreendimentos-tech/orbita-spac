@@ -71,6 +71,7 @@ import {
   getTwoStagePlanningBoard,
   approveDemand,
   decideDemandAtPresidency,
+  registerDemandFinancialClassification,
   publishPca,
   publishPcaUpdate,
   provideDemandComplementation,
@@ -87,7 +88,7 @@ import { listUserNotifications, markAllNotificationsRead, markNotificationRead, 
 
 const planningAccessProcedure = protectedProcedure.use(async ({ ctx, next }) => {
   const roles = await getUserProcessRoles(ctx.user.id);
-  const allowed = ctx.user.role === "admin" || roles.some(role => ["administrador", "chefia_compras", "compras", "autoridade_competente", "instrumentalizacao"].includes(role));
+  const allowed = ctx.user.role === "admin" || roles.some(role => ["administrador", "chefia_compras", "compras", "autoridade_competente", "instrumentalizacao", "contabilidade"].includes(role));
   if (!allowed) throw new TRPCError({ code: "FORBIDDEN", message: "A gestão do planejamento exige um perfil autorizado." });
   return next({ ctx });
 });
@@ -283,6 +284,7 @@ export const appRouter = router({
     provideDemandComplementation: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().min(5, "Descreva a complementação realizada.").max(5_000) })).mutation(({ ctx, input }) => provideDemandComplementation(ctx.user, input)),
     approveDemand: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), note: z.string().min(5, "Registre a motivação da aprovação.").max(5_000) })).mutation(({ ctx, input }) => approveDemand(ctx.user, input)),
     decideDemandAtPresidency: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), action: z.enum(["approve", "partial", "reject"]), notes: z.string().min(5).max(10_000), approvedItems: z.array(z.object({ itemId: z.number().int().positive(), approvedValue: z.string().regex(/^\\d+(\\.\\d{1,2})?$/).optional() })).optional() })).mutation(({ ctx, input }) => decideDemandAtPresidency(ctx.user, input)),
+    registerDemandFinancialClassification: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), budgetRubricCode: z.string().regex(/^\\d{4,12}$/, "Informe somente o código numérico da rubrica, por exemplo: 339039."), acknowledge: z.literal(true), budgetNote: z.string().max(5000).optional() })).mutation(({ ctx, input }) => registerDemandFinancialClassification(ctx.user, input)),
     createDemandDraft: protectedProcedure.input(z.object({ unitId: z.number().int().positive() })).mutation(({ ctx, input }) => createDemandDraft(ctx.user, input)),
     saveDemandDraft: protectedProcedure.input(z.object({ draftPublicId: z.string().min(4).max(48), unitId: z.number().int().positive(), title: z.string().max(500).optional(), objectDescription: z.string().optional(), justification: z.string().optional(), annualPlanItemId: z.number().int().positive().optional(), supplyLineCnaeCode: z.string().max(16).optional(), supplyLineCnaeDescription: z.string().max(1000).optional(), desiredContractDate: z.date().optional(), deliveryPeriod: z.string().max(255).optional(), hasFutureFiscalImpact: z.boolean().optional(), isSupervening: z.boolean().optional(), planningJustification: z.string().max(5000).optional(), containsPersonalData: z.boolean().optional(), containsSensitiveData: z.boolean().optional(), privacyContext: z.string().max(5000).optional(), items: z.array(demandItemInput).max(50).optional() })).mutation(({ ctx, input }) => saveDemandDraft(ctx.user, input)),
     createDemand: protectedProcedure.input(createDemandInput).mutation(({ ctx, input }) => createDemand(ctx.user, input)),
