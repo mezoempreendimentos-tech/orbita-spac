@@ -121,10 +121,12 @@ export async function createAnnualPlan(actor: AdminActor, input: { fiscalYear: n
   return { id };
 }
 
-export async function createAnnualPlanItem(actor: AdminActor, input: { planId: number; code: string; title: string; requestingUnitId?: number; estimatedValue?: string; status: "planned" | "in_progress" | "completed" | "changed" | "cancelled" }) {
+export async function createAnnualPlanItem(actor: AdminActor, input: { planId: number; code: string; title: string; requestingUnitId?: number; quantity?: string; unitOfMeasure?: string; estimatedValue?: string; status: "planned" | "in_progress" | "completed" | "changed" | "cancelled" }) {
   const db = await dbOrThrow();
   const [plan] = await db.select({ id: annualPlans.id }).from(annualPlans).where(eq(annualPlans.id, input.planId)).limit(1);
   if (!plan) throw new Error("Planejamento anual não encontrado.");
+  const quantity = input.quantity?.trim() || undefined;
+  if (quantity !== undefined && (!/^\\d+(\\.\\d{1,4})?$/.test(quantity) || Number(quantity) <= 0)) throw new Error("A quantidade total do item deve ser maior que zero.");
   if (input.requestingUnitId) {
     const [unit] = await db.select({ id: organizationalUnits.id }).from(organizationalUnits).where(and(eq(organizationalUnits.id, input.requestingUnitId), eq(organizationalUnits.active, true))).limit(1);
     if (!unit) throw new Error("A unidade vinculada ao item não está disponível.");
@@ -134,6 +136,8 @@ export async function createAnnualPlanItem(actor: AdminActor, input: { planId: n
     code: input.code.trim().toUpperCase(),
     title: input.title.trim(),
     requestingUnitId: input.requestingUnitId,
+    quantity,
+    unitOfMeasure: input.unitOfMeasure?.trim() || undefined,
     estimatedValue: input.estimatedValue || undefined,
     status: input.status,
   });

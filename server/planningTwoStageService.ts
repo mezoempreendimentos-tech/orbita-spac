@@ -1,4 +1,4 @@
-import { and, asc, desc, eq, inArray } from "drizzle-orm";
+import { and, asc, desc, eq, inArray, sql } from "drizzle-orm";
 import { nanoid } from "nanoid";
 import {
   annualPlanItems,
@@ -11,6 +11,12 @@ import {
   demands,
   documentTemplates,
   openingRequests,
+  openingRequestVersions,
+  openingRequestVersionItems,
+  openingRequestAnalyses,
+  openingRequestAnalysisMatches,
+  procurementProcessItems,
+  procurementModalityChanges,
   organizationalUnits,
   planningAlerts,
   planningChecklistItems,
@@ -20,6 +26,7 @@ import {
   planningDocuments,
   pcaUpdateDemands,
   pcaUpdates,
+  pcaDemandItems,
   procurementProcesses,
   processAlerts,
   referenceListItems,
@@ -29,6 +36,9 @@ import {
 } from "../drizzle/schema";
 import { canConsolidateDemand, canCreatePcaFromDemandConsolidation, canGeneratePcaArtifact, canPublishPca, canRequestOpening, canSubmitDemandToPresidency, canSubmitPca, demandPresidencyDecisionStatus, pcaDecisionStatus } from "../shared/planningPolicies";
 import { getFinancialRubricByCode } from "../shared/financialRubrics";
+import { analyzePcaOpeningMatches, type OpeningAnalysisCandidate } from "../shared/openingRequestAnalysis";
+import { calculateOpeningQuantityBalance, isOpeningQuantityWithinBalance } from "../shared/openingRequestQuantities";
+import { getOfficialCnaeSubclassByCode } from "./cnaeService";
 import { notifyDemandAudience, type NotificationDb } from "./notificationService";
 import { getDb } from "./db";
 import { storagePut } from "./storage";
@@ -121,9 +131,53 @@ async function collectPcaDemandDetails(db: Awaited<ReturnType<typeof dbOrThrow>>
   return Array.from(new Map(rows.map(row => [row.id, row])).values());
 }
 
+async function ensurePcaDemandItems(db: Awaited<ReturnType<typeof dbOrThrow>>, pcaId: number, demandIds: number[]) {
+  const uniqueDemandIds = Array.from(new Set(demandIds));
+  if (!uniqueDemandIds.length) return 0;
+  const sourceRows = await db.select({ demand: demands, item: demandItems })
+    .from(demandItems)
+    .innerJoin(demands, eq(demandItems.demandId, demands.id))
+    .where(and(
+      inArray(demandItems.demandId, uniqueDemandIds),
+      eq(demandItems.presidencyDecision, "approved"),
+      eq(demandItems.confirmed, true),
+    ))
+    .orderBy(asc(demandItems.demandId), asc(demandItems.sequence));
+  if (!sourceRows.length) return 0;
+  const existingRows = await db.select({ demandItemId: pcaDemandItems.demandItemId, code: pcaDemandItems.code })
+    .from(pcaDemandItems)
+    .where(eq(pcaDemandItems.pcaId, pcaId));
+  const existingDemandItemIds = new Set(existingRows.map(row => row.demandItemId));
+  const existingCodes = new Set(existingRows.map(row => row.code));
+  let nextCode = existingRows.length + 1;
+  const rowsToInsert = sourceRows.filter(row => !existingDemandItemIds.has(row.item.id)).map(row => {
+    let code = `${String(nextCode).padStart(2, "0")}.${String(row.item.sequence).padStart(2, "0")}`;
+    while (existingCodes.has(code)) {
+      nextCode += 1;
+      code = `${String(nextCode).padStart(2, "0")}.${String(row.item.sequence).padStart(2, "0")}`;
+    }
+    existingCodes.add(code);
+    nextCode += 1;
+    return {
+      pcaId,
+      demandId: row.demand.id,
+      demandItemId: row.item.id,
+      code,
+      title: row.item.title,
+      objectDescription: row.item.objectDescription,
+      quantity: row.item.quantity ?? "1",
+      unitOfMeasure: row.item.unitOfMeasure ?? "unidade",
+      estimatedValue: row.item.presidencyApprovedValue ?? row.item.estimatedValue ?? undefined,
+      status: "available" as const,
+    };
+  });
+  if (rowsToInsert.length) await db.insert(pcaDemandItems).values(rowsToInsert);
+  return rowsToInsert.length;
+}
+
 export async function getTwoStagePlanningBoard() {
   const db = await dbOrThrow();
-  const [demandRows, demandGroupRows, demandLinks, pcaRows, pcaGroupLinks, directPcaDemandLinks, pcaUpdateRows, pcaUpdateDemandLinks, openingRows, plans, planItems, documents, alerts, processAlertRows, checklists, activeLists, activeListItems] = await Promise.all([
+  const [demandRows, demandGroupRows, demandLinks, pcaRows, pcaGroupLinks, directPcaDemandLinks, pcaUpdateRows, pcaUpdateDemandLinks, openingRows, plans, planItems, pcaItemRows, openingItemRows, processItemRows, documents, alerts, processAlertRows, checklists, activeLists, activeListItems] = await Promise.all([
     db.select({ demand: demands, unitName: organizationalUnits.name, requesterName: users.name }).from(demands).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).leftJoin(users, eq(demands.requesterUserId, users.id)).orderBy(desc(demands.updatedAt)),
     db.select().from(demandConsolidations).orderBy(desc(demandConsolidations.updatedAt)),
     db.select().from(demandConsolidationDemands).orderBy(asc(demandConsolidationDemands.sequence)),
@@ -132,9 +186,12 @@ export async function getTwoStagePlanningBoard() {
     db.select().from(planningConsolidationDemands).orderBy(asc(planningConsolidationDemands.sequence)),
     db.select().from(pcaUpdates).orderBy(desc(pcaUpdates.updateNumber)),
     db.select().from(pcaUpdateDemands).orderBy(asc(pcaUpdateDemands.sequence)),
-    db.select({ request: openingRequests, demandPublicId: demands.publicId, demandTitle: demands.title, unitName: organizationalUnits.name, pcaPublicId: planningConsolidations.publicId }).from(openingRequests).innerJoin(demands, eq(openingRequests.demandId, demands.id)).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).leftJoin(planningConsolidations, eq(openingRequests.pcaId, planningConsolidations.id)).orderBy(desc(openingRequests.updatedAt)),
+    db.select({ request: openingRequests, demandPublicId: demands.publicId, demandTitle: demands.title, unitName: organizationalUnits.name, pcaPublicId: planningConsolidations.publicId }).from(openingRequests).leftJoin(demands, eq(openingRequests.demandId, demands.id)).leftJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).leftJoin(planningConsolidations, eq(openingRequests.pcaId, planningConsolidations.id)).orderBy(desc(openingRequests.updatedAt)),
     db.select().from(annualPlans).orderBy(desc(annualPlans.fiscalYear)),
     db.select({ item: annualPlanItems, planTitle: annualPlans.title, fiscalYear: annualPlans.fiscalYear, unitName: organizationalUnits.name }).from(annualPlanItems).innerJoin(annualPlans, eq(annualPlanItems.planId, annualPlans.id)).leftJoin(organizationalUnits, eq(annualPlanItems.requestingUnitId, organizationalUnits.id)).orderBy(desc(annualPlans.fiscalYear), asc(annualPlanItems.code)),
+    db.select({ item: pcaDemandItems, demand: demands, unitName: organizationalUnits.name, pca: planningConsolidations, plan: annualPlans }).from(pcaDemandItems).innerJoin(demands, eq(pcaDemandItems.demandId, demands.id)).innerJoin(organizationalUnits, eq(demands.requestingUnitId, organizationalUnits.id)).innerJoin(planningConsolidations, eq(pcaDemandItems.pcaId, planningConsolidations.id)).innerJoin(annualPlans, eq(planningConsolidations.planId, annualPlans.id)).orderBy(desc(planningConsolidations.updatedAt), asc(pcaDemandItems.code)),
+    db.select({ item: openingRequestVersionItems, version: openingRequestVersions, request: openingRequests, pcaItem: pcaDemandItems }).from(openingRequestVersionItems).innerJoin(openingRequestVersions, eq(openingRequestVersionItems.versionId, openingRequestVersions.id)).innerJoin(openingRequests, eq(openingRequestVersions.openingRequestId, openingRequests.id)).innerJoin(pcaDemandItems, eq(openingRequestVersionItems.pcaItemId, pcaDemandItems.id)).orderBy(desc(openingRequestVersionItems.createdAt)),
+    db.select({ item: procurementProcessItems, process: procurementProcesses }).from(procurementProcessItems).innerJoin(procurementProcesses, eq(procurementProcessItems.processId, procurementProcesses.id)),
     db.select().from(planningDocuments).orderBy(desc(planningDocuments.createdAt)),
     db.select().from(planningAlerts).where(eq(planningAlerts.status, "open")).orderBy(desc(planningAlerts.createdAt)),
     db.select({ alert: processAlerts, processPublicId: procurementProcesses.publicId }).from(processAlerts).innerJoin(procurementProcesses, eq(processAlerts.processId, procurementProcesses.id)).where(eq(processAlerts.status, "open")).orderBy(desc(processAlerts.createdAt)),
@@ -151,6 +208,20 @@ export async function getTwoStagePlanningBoard() {
   const demandConsolidationsWithDetails = demandGroupRows.map(group => {
     const pcaPublicIds = pcaGroupLinks.filter(link => link.demandConsolidationId === group.id).map(link => pcaRows.find(pca => pca.id === link.planningConsolidationId)?.publicId).filter(Boolean);
     return { ...group, demandDetails: groupDetail(group.id), pcaPublicIds };
+  });
+
+  const openingUsageByPcaItem = new Map<number, number>();
+  for (const row of openingItemRows) {
+    if (["presidency_review", "authorized"].includes(row.version.status)) openingUsageByPcaItem.set(row.item.pcaItemId, (openingUsageByPcaItem.get(row.item.pcaItemId) ?? 0) + Number(row.item.quantityRequested ?? 0));
+  }
+  for (const row of processItemRows) {
+    const isConsumedOrActive = (row.process.status !== "archived" && !["cancelled", "annulled", "revoked"].includes(row.process.status)) || (row.process.status === "archived" && row.process.closureOutcome === "success");
+    if (isConsumedOrActive) openingUsageByPcaItem.set(row.item.pcaItemId, (openingUsageByPcaItem.get(row.item.pcaItemId) ?? 0) + Number(row.item.quantityRequested ?? 0));
+  }
+  const pcaOpeningItems = pcaItemRows.map(row => {
+    const totalQuantity = Number(row.item.quantity ?? 0);
+    const reservedQuantity = openingUsageByPcaItem.get(row.item.id) ?? 0;
+    return { ...row.item, pcaPublicId: row.pca.publicId, fiscalYear: row.plan.fiscalYear, demandPublicId: row.demand.publicId, demandTitle: row.demand.title, totalQuantity, reservedQuantity, availableQuantity: Math.max(0, totalQuantity - reservedQuantity), unitName: row.unitName };
   });
 
   const pcas = pcaRows.map(pca => {
@@ -175,6 +246,8 @@ export async function getTwoStagePlanningBoard() {
     openingRequests: openingRows,
     plans,
     planItems,
+    pcaItems: pcaOpeningItems,
+    openingRequestItems: openingItemRows,
     documents,
     alerts,
     processAlerts: processAlertRows,
@@ -346,11 +419,17 @@ export async function createPca(actor: Actor, input: { title: string; planId: nu
   if (!plan) throw new Error("O planejamento anual selecionado não está disponível.");
   const [existingPca] = await db.select({ publicId: planningConsolidations.publicId }).from(planningConsolidations).where(eq(planningConsolidations.planId, input.planId)).limit(1);
   if (existingPca) throw new Error(`Já existe um PCA para o exercício selecionado (${existingPca.publicId}). Utilize a atualização do PCA anual.`);
+  const groupDemandLinks = selectedGroups.length ? await db.select({ demandId: demandConsolidationDemands.demandId }).from(demandConsolidationDemands).where(inArray(demandConsolidationDemands.demandConsolidationId, selectedGroups.map(group => group.id))) : [];
+  const pcaDemandIds = Array.from(new Set([...selectedDemands.map(demand => demand.id), ...groupDemandLinks.map(link => link.demandId)]));
+  const pcaSourceRows = pcaDemandIds.length ? await db.select({ demand: demands, item: demandItems }).from(demandItems).innerJoin(demands, eq(demandItems.demandId, demands.id)).where(and(inArray(demandItems.demandId, pcaDemandIds), eq(demandItems.presidencyDecision, "approved"), eq(demandItems.confirmed, true))).orderBy(asc(demandItems.demandId), asc(demandItems.sequence)) : [];
+  if (!pcaSourceRows.length) throw new Error("O PCA precisa conter ao menos um item de DFD para permitir a abertura futura.");
   const pcaPublicId = publicId("PCA");
   return db.transaction(async tx => {
     const result = await tx.insert(planningConsolidations).values({ publicId: pcaPublicId, title: input.title.trim(), planId: input.planId, status: "draft", createdByUserId: actor.id });
     const id = Number(result[0].insertId);
     if (selectedGroups.length) await tx.insert(planningConsolidationGroups).values(selectedGroups.map((group, index) => ({ planningConsolidationId: id, demandConsolidationId: group.id, sequence: index + 1 })));
+    await ensurePcaDemandItems(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, id, pcaDemandIds);
+
     if (selectedDemands.length) await tx.insert(planningConsolidationDemands).values(selectedDemands.map((demand, index) => ({ consolidationId: id, demandId: demand.id, sequence: index + 1 })));
     if (selectedGroups.length) await tx.update(demandConsolidations).set({ status: "included_in_pca" }).where(inArray(demandConsolidations.id, selectedGroups.map(group => group.id)));
     if (selectedDemands.length) await tx.update(demands).set({ status: "awaiting_pca_publication" }).where(inArray(demands.id, selectedDemands.map(demand => demand.id)));
@@ -450,7 +529,9 @@ export async function publishPcaUpdate(actor: Actor, input: { pcaUpdatePublicId:
   const links = await db.select({ demandId: pcaUpdateDemands.demandId }).from(pcaUpdateDemands).where(eq(pcaUpdateDemands.pcaUpdateId, update.id));
   await db.transaction(async tx => {
     await tx.update(pcaUpdates).set({ status: "published", publicationReference: input.publicationReference.trim(), publishedAt: new Date() }).where(eq(pcaUpdates.id, update.id));
-    if (links.length) await tx.update(demands).set({ status: "published_in_pca" }).where(inArray(demands.id, links.map(link => link.demandId)));
+    const linkedDemandIds = links.map(link => link.demandId);
+    await ensurePcaDemandItems(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, update.pcaId, linkedDemandIds);
+    if (linkedDemandIds.length) await tx.update(demands).set({ status: "published_in_pca" }).where(inArray(demands.id, linkedDemandIds));
     await tx.insert(planningAlerts).values({ entityType: "pca", entityPublicId: update.publicId, severity: "info", title: "Atualização do PCA publicada; DFDs incluídas estão disponíveis ao Setor de Compras." });
     await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "pca.update_published", `Atualização ${update.publicId} publicada.`, { pcaUpdateId: update.id, publicationReference: input.publicationReference.trim() });
   });
@@ -526,23 +607,176 @@ export async function publishPca(actor: Actor, input: { pcaPublicId: string; pub
   return { success: true };
 }
 
-export async function createTwoStageOpeningRequest(actor: Actor, input: { demandPublicId: string; proposedWorkflowType: "direct_contracting" | "bidding"; proposedModality: string; justification: string }) {
+type OpeningRequestItemInput = { pcaItemId: number; quantity: string };
+type OpeningRequestInput = {
+  pcaPublicId?: string;
+  pcaItemIds?: number[];
+  items?: OpeningRequestItemInput[];
+  demandPublicId?: string;
+  proposedWorkflowType: "direct_contracting" | "bidding";
+  proposedModality: string;
+  title?: string;
+  integratedObject?: string;
+  justification: string;
+  cnaeFinalCode?: string;
+  cnaeFinalDescription?: string;
+  cnaeBaseCode?: string;
+  cnaeBaseDescription?: string;
+  cnaeOriginalCode?: string;
+  cnaeOriginalDescription?: string;
+  analysisDeclaration?: string;
+  analysisJustification?: string;
+  requestPublicId?: string;
+  previousRequestPublicId?: string;
+  revisionJustification?: string;
+};
+
+function decimalNumber(value: string | number | null | undefined) {
+  const result = Number(value ?? 0);
+  return Number.isFinite(result) ? result : 0;
+}
+
+async function validateOfficialModality(db: Awaited<ReturnType<typeof dbOrThrow>>, value: string) {
+  const [list] = await db.select({ id: referenceLists.id }).from(referenceLists).where(and(eq(referenceLists.code, "MODALIDADES_CONTRATACAO"), eq(referenceLists.active, true))).limit(1);
+  if (!list) throw new Error("A lista oficial de modalidades ainda não foi cadastrada pela Administração.");
+  const [item] = await db.select({ value: referenceListItems.value, label: referenceListItems.label }).from(referenceListItems).where(and(eq(referenceListItems.listId, list.id), eq(referenceListItems.value, value.trim()), eq(referenceListItems.active, true))).limit(1);
+  if (!item) throw new Error("Selecione uma modalidade ativa da lista oficial de modalidades.");
+  return item;
+}
+
+async function resolvePublishedPcaId(db: Awaited<ReturnType<typeof dbOrThrow>>, demandId: number) {
+  const [[groupLink], [directLink], [updateLink]] = await Promise.all([
+    db.select({ pcaId: planningConsolidationGroups.planningConsolidationId }).from(demandConsolidationDemands).innerJoin(planningConsolidationGroups, eq(demandConsolidationDemands.demandConsolidationId, planningConsolidationGroups.demandConsolidationId)).innerJoin(planningConsolidations, eq(planningConsolidationGroups.planningConsolidationId, planningConsolidations.id)).where(and(eq(demandConsolidationDemands.demandId, demandId), eq(planningConsolidations.status, "published"))).limit(1),
+    db.select({ pcaId: planningConsolidationDemands.consolidationId }).from(planningConsolidationDemands).innerJoin(planningConsolidations, eq(planningConsolidationDemands.consolidationId, planningConsolidations.id)).where(and(eq(planningConsolidationDemands.demandId, demandId), eq(planningConsolidations.status, "published"))).limit(1),
+    db.select({ pcaId: pcaUpdates.pcaId }).from(pcaUpdateDemands).innerJoin(pcaUpdates, eq(pcaUpdateDemands.pcaUpdateId, pcaUpdates.id)).where(and(eq(pcaUpdateDemands.demandId, demandId), eq(pcaUpdates.status, "published"))).limit(1),
+  ]);
+  return (groupLink ?? directLink ?? updateLink)?.pcaId;
+}
+
+async function prepareOpeningRequest(db: Awaited<ReturnType<typeof dbOrThrow>>, input: OpeningRequestInput, excludeOpeningRequestId?: number) {
+  const normalizedItems = input.items?.length ? Array.from(new Map(input.items.map(item => [item.pcaItemId, item])).values()) : [];
+  let pcaId = input.pcaPublicId ? (await db.select({ id: planningConsolidations.id }).from(planningConsolidations).where(and(eq(planningConsolidations.publicId, input.pcaPublicId), eq(planningConsolidations.status, "published"))).limit(1))[0]?.id : undefined;
+  let demand: typeof demands.$inferSelect | undefined;
+  if (input.demandPublicId) {
+    [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
+    if (!demand || !canRequestOpening(demand.status)) throw new Error("A DFD precisa integrar um PCA publicado antes da solicitação de abertura.");
+    pcaId ??= await resolvePublishedPcaId(db, demand.id);
+  }
+  if (!pcaId) throw new Error("Selecione um PCA publicado para iniciar o pedido de abertura.");
+  const [pca] = await db.select().from(planningConsolidations).where(and(eq(planningConsolidations.id, pcaId), eq(planningConsolidations.status, "published"))).limit(1);
+  if (!pca) throw new Error("O PCA selecionado não está publicado.");
+  const selectedPcaItems = normalizedItems.length
+    ? await db.select({ item: pcaDemandItems, demand: demands }).from(pcaDemandItems).innerJoin(demands, eq(pcaDemandItems.demandId, demands.id)).where(and(eq(pcaDemandItems.pcaId, pcaId), inArray(pcaDemandItems.id, normalizedItems.map(item => item.pcaItemId))))
+    : demand
+      ? await db.select({ item: pcaDemandItems, demand: demands }).from(pcaDemandItems).innerJoin(demands, eq(pcaDemandItems.demandId, demands.id)).where(and(eq(pcaDemandItems.pcaId, pcaId), eq(pcaDemandItems.demandId, demand.id)))
+      : [];
+  if (!selectedPcaItems.length || (normalizedItems.length && selectedPcaItems.length !== normalizedItems.length)) throw new Error("Selecione itens válidos e pertencentes ao PCA publicado.");
+  if (selectedPcaItems.some(row => row.item.status === "cancelled" || !["published_in_pca", "awaiting_opening", "opening_authorized", "process_instantiated"].includes(row.demand.status))) throw new Error("Todos os itens selecionados devem pertencer a DFDs publicadas no PCA.");
+  await db.execute(sql`SELECT id FROM pca_demand_items WHERE id IN (${sql.join(selectedPcaItems.map(row => sql`${row.item.id}`), sql`, `)}) FOR UPDATE`);
+
+  const allPcaItems = await db.select({ item: pcaDemandItems, demand: demands }).from(pcaDemandItems).innerJoin(demands, eq(pcaDemandItems.demandId, demands.id)).where(eq(pcaDemandItems.pcaId, pcaId));
+  const historyRows = allPcaItems.length
+    ? await db.select({ item: openingRequestVersionItems, version: openingRequestVersions }).from(openingRequestVersionItems).innerJoin(openingRequestVersions, eq(openingRequestVersionItems.versionId, openingRequestVersions.id)).where(eq(openingRequestVersions.pcaId, pcaId)).orderBy(desc(openingRequestVersions.versionNumber), desc(openingRequestVersions.id))
+    : [];
+  const latestCnaeByPcaItem = new Map<number, { cnaeFinalCode: string; cnaeOriginalCode: string | null; cnaeBaseCode: string | null }>();
+  for (const row of historyRows) {
+    if (!latestCnaeByPcaItem.has(row.item.pcaItemId)) latestCnaeByPcaItem.set(row.item.pcaItemId, { cnaeFinalCode: row.version.cnaeFinalCode, cnaeOriginalCode: row.version.cnaeOriginalCode, cnaeBaseCode: row.version.cnaeBaseCode });
+  }
+  const requestedByItem = new Map(normalizedItems.map(item => [item.pcaItemId, decimalNumber(item.quantity)]));
+  const selectedPcaItemIds = selectedPcaItems.map(row => row.item.id);
+  const [reservedRows, processRows] = await Promise.all([
+    db.select({ pcaItemId: openingRequestVersionItems.pcaItemId, openingRequestId: openingRequestVersions.openingRequestId, quantity: openingRequestVersionItems.quantityRequested })
+      .from(openingRequestVersionItems)
+      .innerJoin(openingRequestVersions, eq(openingRequestVersionItems.versionId, openingRequestVersions.id))
+      .where(and(inArray(openingRequestVersionItems.pcaItemId, selectedPcaItemIds), inArray(openingRequestVersions.status, ["presidency_review", "authorized"]))),
+    db.select({ pcaItemId: procurementProcessItems.pcaItemId, quantity: procurementProcessItems.quantityRequested, status: procurementProcesses.status, closureOutcome: procurementProcesses.closureOutcome })
+      .from(procurementProcessItems)
+      .innerJoin(procurementProcesses, eq(procurementProcessItems.processId, procurementProcesses.id))
+      .where(inArray(procurementProcessItems.pcaItemId, selectedPcaItemIds)),
+  ]);
+  const reservedByItem = new Map<number, number>();
+  for (const row of reservedRows) {
+    if (excludeOpeningRequestId && row.openingRequestId === excludeOpeningRequestId) continue;
+    reservedByItem.set(row.pcaItemId, (reservedByItem.get(row.pcaItemId) ?? 0) + decimalNumber(row.quantity));
+  }
+  for (const row of processRows) {
+    const isConsumedOrActive = row.status !== "archived" && !["cancelled", "annulled", "revoked"].includes(row.status) || row.status === "archived" && row.closureOutcome === "success";
+    if (isConsumedOrActive) reservedByItem.set(row.pcaItemId, (reservedByItem.get(row.pcaItemId) ?? 0) + decimalNumber(row.quantity));
+  }
+  const selected = selectedPcaItems.map(row => {
+    const total = decimalNumber(row.item.quantity) || 1;
+    const reserved = reservedByItem.get(row.item.id) ?? 0;
+    const balance = calculateOpeningQuantityBalance(total, reserved);
+    const available = balance.available;
+    const quantity = normalizedItems.length ? requestedByItem.get(row.item.id) ?? 0 : available;
+    if (!isOpeningQuantityWithinBalance(quantity, available)) throw new Error(`A quantidade do item ${row.item.code} deve ser maior que zero e não pode superar o saldo disponível (${available}).`);
+    const totalValue = decimalNumber(row.item.estimatedValue);
+    const estimatedValue = totalValue > 0 ? (totalValue / total) * quantity : 0;
+    return { row, total, reserved, available, quantity, estimatedValue };
+  });
+  if (selected.length > 1 && !input.integratedObject?.trim()) throw new Error("Pedidos com mais de um item exigem um objeto integrado para explicar a contratação conjunta.");
+  const modality = await validateOfficialModality(db, input.proposedModality);
+  const cnae = await getOfficialCnaeSubclassByCode(input.cnaeFinalCode ?? "");
+  if (!cnae) throw new Error("Selecione uma subclasse CNAE válida na consulta oficial do IBGE.");
+  const cnaeOriginalCode = input.cnaeOriginalCode?.trim() || selected[0]?.row.demand.supplyLineCnaeCode || null;
+  const cnaeOriginalDescription = input.cnaeOriginalDescription?.trim() || selected[0]?.row.demand.supplyLineCnaeDescription || null;
+  const candidates: OpeningAnalysisCandidate[] = allPcaItems.map(row => {
+    const historical = latestCnaeByPcaItem.get(row.item.id);
+    return { pcaItemId: row.item.id, demandId: row.demand.id, title: `${row.item.title} ${row.item.objectDescription ?? ""}`, cnaeFinalCode: historical?.cnaeFinalCode ?? row.demand.supplyLineCnaeCode, cnaeOriginalCode: historical?.cnaeOriginalCode ?? row.demand.supplyLineCnaeCode, cnaeBaseCode: historical?.cnaeBaseCode ?? undefined, estimatedValue: row.item.estimatedValue };
+  });
+  const matches = selected.flatMap(entry => analyzePcaOpeningMatches({ pcaItemId: entry.row.item.id, demandId: entry.row.demand.id, title: `${entry.row.item.title} ${entry.row.item.objectDescription ?? ""}`, cnaeFinalCode: cnae.code, cnaeOriginalCode, cnaeBaseCode: cnae.classCode, estimatedValue: entry.estimatedValue }, candidates));
+  const distinctMatches = Array.from(new Map(matches.map(match => [`${match.pcaItemId}:${match.matchType}`, match])).values());
+  return { pca, pcaId, selected, modality, cnae, cnaeOriginalCode, cnaeOriginalDescription, distinctMatches };
+}
+
+export async function previewTwoStageOpeningRequest(actor: Actor, input: OpeningRequestInput) {
+  const db = await dbOrThrow();
+  await requireRole(db, actor, ["compras"], "A prévia de abertura é responsabilidade do Setor de Compras.");
+  const prepared = await prepareOpeningRequest(db, input);
+  return {
+    pca: { publicId: prepared.pca.publicId, title: prepared.pca.title, planId: prepared.pca.planId },
+    items: prepared.selected.map(entry => ({ pcaItemId: entry.row.item.id, code: entry.row.item.code, title: entry.row.item.title, totalQuantity: entry.total, reservedQuantity: entry.reserved, availableQuantity: entry.available, requestedQuantity: entry.quantity, unitOfMeasure: entry.row.item.unitOfMeasure, estimatedValue: entry.estimatedValue, demandPublicId: entry.row.demand.publicId, demandTitle: entry.row.demand.title })),
+    analysis: { alertsFound: prepared.distinctMatches.length > 0, matches: prepared.distinctMatches.map(match => ({ pcaItemId: match.pcaItemId, demandId: match.demandId, matchType: match.matchType, matchingTerms: match.matchingTerms, cnaeFinalCode: match.cnaeFinalCode, cnaeBaseCode: match.cnaeBaseCode, estimatedValue: match.estimatedValue })), summary: prepared.distinctMatches.length ? `${prepared.distinctMatches.length} correspondência(s) potencialmente relacionada(s) encontrada(s) nos demais itens do PCA.` : "Nenhuma correspondência potencialmente relacionada encontrada nos demais itens do PCA." },
+    modality: prepared.modality,
+    cnae: prepared.cnae,
+  };
+}
+
+export async function createTwoStageOpeningRequest(actor: Actor, input: OpeningRequestInput) {
   const db = await dbOrThrow();
   await requireRole(db, actor, ["compras"], "A solicitação de abertura é responsabilidade do Setor de Compras.");
-  const [demand] = await db.select().from(demands).where(eq(demands.publicId, input.demandPublicId)).limit(1);
-  if (!demand || !canRequestOpening(demand.status)) throw new Error("A DFD precisa integrar um PCA publicado antes da solicitação de abertura.");
-  const [[groupLink], [directLink], [updateLink]] = await Promise.all([
-    db.select({ pcaId: planningConsolidationGroups.planningConsolidationId }).from(demandConsolidationDemands).innerJoin(planningConsolidationGroups, eq(demandConsolidationDemands.demandConsolidationId, planningConsolidationGroups.demandConsolidationId)).innerJoin(planningConsolidations, eq(planningConsolidationGroups.planningConsolidationId, planningConsolidations.id)).where(and(eq(demandConsolidationDemands.demandId, demand.id), eq(planningConsolidations.status, "published"))).limit(1),
-    db.select({ pcaId: planningConsolidationDemands.consolidationId }).from(planningConsolidationDemands).innerJoin(planningConsolidations, eq(planningConsolidationDemands.consolidationId, planningConsolidations.id)).where(and(eq(planningConsolidationDemands.demandId, demand.id), eq(planningConsolidations.status, "published"))).limit(1),
-    db.select({ pcaId: pcaUpdates.pcaId }).from(pcaUpdateDemands).innerJoin(pcaUpdates, eq(pcaUpdateDemands.pcaUpdateId, pcaUpdates.id)).where(and(eq(pcaUpdateDemands.demandId, demand.id), eq(pcaUpdates.status, "published"))).limit(1),
-  ]);
-  const link = groupLink ?? directLink ?? updateLink;
-  if (!link) throw new Error("Não foi localizado PCA publicado para esta DFD.");
-  const requestPublicId = publicId("ABR");
-  const result = await db.insert(openingRequests).values({ publicId: requestPublicId, demandId: demand.id, pcaId: link.pcaId, proposedWorkflowType: input.proposedWorkflowType, proposedModality: input.proposedModality.trim(), justification: input.justification.trim(), status: "presidency_review", requestedByUserId: actor.id });
-  await instantiateChecklist(db, "opening_request", requestPublicId, "CHECKLIST_ABERTURA");
-  await db.update(demands).set({ status: "awaiting_opening" }).where(eq(demands.id, demand.id));
-  await db.insert(planningAlerts).values({ entityType: "opening_request", entityPublicId: requestPublicId, severity: "warning", title: "Solicitação de abertura aguardando autorização da Presidência.", dueAt: deadlineAt(2) });
-  await audit(db, actor.id, "opening_request.submitted", `Solicitação ${requestPublicId} enviada à Presidência para abertura e definição de modalidade.`, { openingRequestId: Number(result[0].insertId), demandPublicId: demand.publicId, pcaId: link.pcaId });
-  return { id: Number(result[0].insertId), publicId: requestPublicId };
+  const existingRequest = input.requestPublicId ? (await db.select().from(openingRequests).where(eq(openingRequests.publicId, input.requestPublicId)).limit(1))[0] : undefined;
+  if (input.requestPublicId && (!existingRequest || existingRequest.status !== "returned")) throw new Error("Somente um pedido devolvido pode ser reapresentado como nova versão.");
+  const previousRequest = input.previousRequestPublicId ? (await db.select().from(openingRequests).where(eq(openingRequests.publicId, input.previousRequestPublicId)).limit(1))[0] : undefined;
+  if (input.previousRequestPublicId && (!previousRequest || previousRequest.status !== "rejected")) throw new Error("A referência deve apontar para um pedido anterior não autorizado.");
+  if ((previousRequest || existingRequest) && !input.revisionJustification?.trim()) throw new Error("Explique formalmente o que foi corrigido, alterado ou esclarecido no novo pedido.");
+  return db.transaction(async tx => {
+    const prepared = await prepareOpeningRequest(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, input, existingRequest?.id ?? previousRequest?.id);
+    if (existingRequest?.pcaId && existingRequest.pcaId !== prepared.pcaId) throw new Error("A reapresentação deve permanecer vinculada ao mesmo PCA do pedido devolvido.");
+    const analysisDeclaration = input.analysisDeclaration?.trim() ?? "";
+    if (!analysisDeclaration) throw new Error("Declare formalmente que o PCA foi analisado antes de encaminhar o pedido.");
+    if (prepared.distinctMatches.length && !input.analysisJustification?.trim()) throw new Error("Os alertas encontrados exigem justificativa formal da análise realizada pelo SPAC.");
+    const targetRequestPublicId = existingRequest?.publicId ?? publicId("ABR");
+    const title = input.title?.trim() || (prepared.selected.length === 1 ? prepared.selected[0].row.item.title : `Contratação conjunta — ${prepared.selected.length} itens do PCA`);
+    const versionNumber = existingRequest ? existingRequest.activeVersionNumber + 1 : 1;
+    let requestId: number;
+    if (existingRequest) {
+      requestId = existingRequest.id;
+      await tx.update(openingRequests).set({ demandId: prepared.selected[0]?.row.demand.id ?? null, pcaId: prepared.pcaId, consolidationId: prepared.pcaId, proposedWorkflowType: input.proposedWorkflowType, proposedModality: prepared.modality.value, justification: input.justification.trim(), status: "presidency_review", activeVersionNumber: versionNumber, finalWorkflowType: null, finalModality: null, decidedByUserId: null, decisionNotes: null, decidedAt: null, authorizedAt: null }).where(eq(openingRequests.id, requestId));
+    } else {
+      const requestResult = await tx.insert(openingRequests).values({ publicId: targetRequestPublicId, demandId: prepared.selected[0]?.row.demand.id ?? null, pcaId: prepared.pcaId, consolidationId: prepared.pcaId, proposedWorkflowType: input.proposedWorkflowType, proposedModality: prepared.modality.value, justification: input.justification.trim(), status: "presidency_review", requestedByUserId: actor.id, previousRequestId: previousRequest?.id ?? null, previousDecisionPublicId: previousRequest?.publicId ?? null });
+      requestId = Number(requestResult[0].insertId);
+    }
+    const versionResult = await tx.insert(openingRequestVersions).values({ openingRequestId: requestId, versionNumber, revisionJustification: input.revisionJustification?.trim() || null, pcaId: prepared.pcaId, title, integratedObject: input.integratedObject?.trim() || null, justification: input.justification.trim(), proposedWorkflowType: input.proposedWorkflowType, proposedModality: prepared.modality.value, cnaeOriginalCode: prepared.cnaeOriginalCode, cnaeOriginalDescription: prepared.cnaeOriginalDescription, cnaeFinalCode: prepared.cnae.code, cnaeFinalDescription: prepared.cnae.description, cnaeBaseCode: prepared.cnae.classCode, cnaeBaseDescription: prepared.cnae.classDescription, cnaeSourceUrl: prepared.cnae.sourceUrl, cnaeSourceVersion: prepared.cnae.sourceVersion, analysisAcknowledged: true, analysisAcknowledgedAt: new Date(), analysisAcknowledgedByUserId: actor.id, analysisSummary: prepared.distinctMatches.length ? `${prepared.distinctMatches.length} correspondência(s) potencialmente relacionada(s) encontrada(s) nos demais itens do PCA.` : "Nenhuma correspondência potencialmente relacionada encontrada nos demais itens do PCA.", analysisJustification: input.analysisJustification?.trim() || null, status: "presidency_review", createdByUserId: actor.id });
+    const versionId = Number(versionResult[0].insertId);
+    await tx.insert(openingRequestVersionItems).values(prepared.selected.map((entry, index) => ({ versionId, pcaItemId: entry.row.item.id, demandId: entry.row.demand.id, demandItemId: entry.row.item.demandItemId, sequence: index + 1, titleSnapshot: entry.row.item.title, quantityRequested: entry.quantity.toFixed(4), availableQuantitySnapshot: entry.available.toFixed(4), unitOfMeasure: entry.row.item.unitOfMeasure, estimatedValueSnapshot: entry.estimatedValue.toFixed(2) })));
+    const analysisResult = await tx.insert(openingRequestAnalyses).values({ versionId, declaration: analysisDeclaration, alertsFound: prepared.distinctMatches.length > 0, formalJustification: input.analysisJustification?.trim() || null, executedByUserId: actor.id });
+    const analysisId = Number(analysisResult[0].insertId);
+    if (prepared.distinctMatches.length) await tx.insert(openingRequestAnalysisMatches).values(prepared.distinctMatches.map(match => ({ analysisId, pcaItemId: match.pcaItemId, demandId: match.demandId ?? null, matchType: match.matchType, matchingTerms: match.matchingTerms.join(", ") || null, cnaeCode: match.cnaeFinalCode ?? match.cnaeOriginalCode ?? null, cnaeBaseCode: match.cnaeBaseCode ?? null, estimatedValue: decimalNumber(match.estimatedValue).toFixed(2) })));
+    await instantiateChecklist(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, "opening_request", targetRequestPublicId, "CHECKLIST_ABERTURA");
+    await tx.update(planningAlerts).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(planningAlerts.entityType, "opening_request"), eq(planningAlerts.entityPublicId, targetRequestPublicId), eq(planningAlerts.status, "open")));
+    await tx.insert(planningAlerts).values({ entityType: "opening_request", entityPublicId: targetRequestPublicId, severity: "warning", title: existingRequest ? `Versão ${versionNumber} do pedido de abertura aguardando autorização da Presidência.` : "Pedido de abertura aguardando autorização da Presidência.", dueAt: deadlineAt(2) });
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "opening_request.submitted", `Pedido ${targetRequestPublicId}, versão ${versionNumber}, enviado à Presidência para autorização do grupo e definição da modalidade.`, { openingRequestId: requestId, versionId, versionNumber, previousRequestPublicId: previousRequest?.publicId ?? null, pcaId: prepared.pcaId, pcaItemIds: prepared.selected.map(entry => entry.row.item.id), quantities: prepared.selected.map(entry => ({ pcaItemId: entry.row.item.id, quantity: entry.quantity })), proposedWorkflowType: input.proposedWorkflowType, proposedModality: prepared.modality.value, cnaeFinalCode: prepared.cnae.code, analysisMatchCount: prepared.distinctMatches.length });
+    return { id: requestId, publicId: targetRequestPublicId, versionId, versionNumber, itemCount: prepared.selected.length, totalQuantity: prepared.selected.reduce((sum, entry) => sum + entry.quantity, 0).toFixed(4), alertCount: prepared.distinctMatches.length };
+  });
 }

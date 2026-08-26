@@ -1,5 +1,5 @@
 export type PcaDecision = "approve" | "return" | "reject";
-export type OpeningDecision = "authorize" | "return" | "reject";
+export type OpeningDecision = "authorize" | "authorize_different_modality" | "return" | "reject";
 export type DemandPresidencyDecision = "approve" | "partial" | "reject";
 
 export const canConsolidateDemand = (status: string) => ["accepted", "partially_accepted"].includes(status);
@@ -12,7 +12,7 @@ export const canRequestOpening = (demandStatus: string) => demandStatus === "pub
 export const canInstantiateOpening = (openingStatus: string) => openingStatus === "authorized";
 export const pcaDecisionStatus = (action: PcaDecision) => action === "approve" ? "approved_for_publication" : action === "return" ? "returned" : "rejected";
 export const demandPresidencyDecisionStatus = (action: DemandPresidencyDecision) => action === "approve" ? "accepted" : action === "partial" ? "partially_accepted" : "rejected";
-export const openingDecisionStatus = (action: OpeningDecision) => action === "authorize" ? "authorized" : action === "return" ? "returned" : "rejected";
+export const openingDecisionStatus = (action: OpeningDecision) => action === "authorize" || action === "authorize_different_modality" ? "authorized" : action === "return" ? "returned" : "rejected";
 
 export const normalizeReferenceListCode = (code: string) => code.trim().toUpperCase().replace(/[^A-Z0-9_-]+/g, "_").replace(/_+/g, "_").replace(/^_+|_+$/g, "");
 export const isReferenceListItemValueValid = (value: string) => value.trim().length > 0;

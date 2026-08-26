@@ -12,6 +12,10 @@ import {
   documentTemplates,
   governanceSettings,
   openingRequests,
+  openingRequestVersions,
+  openingRequestVersionItems,
+  pcaDemandItems,
+  procurementProcessItems,
   organizationalUnits,
   planningAlerts,
   planningChecklistItems,
@@ -369,19 +373,42 @@ export async function createOpeningRequest(actor: Actor, input: { demandPublicId
   return { id: Number(result[0].insertId), publicId: requestPublicId };
 }
 
-export async function decideOpeningRequest(actor: Actor, input: { requestPublicId: string; action: "authorize" | "return" | "reject"; notes: string }) {
+export async function decideOpeningRequest(actor: Actor, input: { requestPublicId: string; action: "authorize" | "authorize_different_modality" | "return" | "reject"; notes: string; finalWorkflowType?: "direct_contracting" | "bidding"; finalModality?: string }) {
   const db = await dbOrThrow();
   await requireRole(db, actor, ["autoridade_competente"], "A autorização de abertura exige perfil da Presidência/autoridade competente.");
   const [request] = await db.select().from(openingRequests).where(eq(openingRequests.publicId, input.requestPublicId)).limit(1);
   if (!request || request.status !== "presidency_review") throw new Error("Esta solicitação não está aguardando decisão da Presidência.");
+  const [version] = await db.select().from(openingRequestVersions).where(eq(openingRequestVersions.openingRequestId, request.id)).orderBy(desc(openingRequestVersions.versionNumber)).limit(1);
+  const isAuthorization = input.action === "authorize" || input.action === "authorize_different_modality";
+  const proposedWorkflowType = version?.proposedWorkflowType ?? request.proposedWorkflowType;
+  const proposedModality = version?.proposedModality ?? request.proposedModality;
+  const finalWorkflowType = isAuthorization ? (input.action === "authorize_different_modality" ? (input.finalWorkflowType ?? proposedWorkflowType) : proposedWorkflowType) : null;
+  const finalModality = isAuthorization ? (input.action === "authorize_different_modality" ? input.finalModality?.trim() : proposedModality) : null;
+  if (input.action === "authorize_different_modality" && !finalModality) throw new Error("Informe a modalidade determinada pela Presidência.");
+  if (input.action === "authorize_different_modality" && finalWorkflowType === proposedWorkflowType && finalModality === proposedModality) throw new Error("A autorização diferente deve alterar a modalidade ou o fluxo proposto.");
+  if (input.action === "authorize_different_modality") {
+    const modalityToValidate = finalModality ?? version?.proposedModality ?? request.proposedModality;
+    const [list] = await db.select({ id: referenceLists.id }).from(referenceLists).where(and(eq(referenceLists.code, "MODALIDADES_CONTRATACAO"), eq(referenceLists.active, true))).limit(1);
+    if (!list) throw new Error("A lista oficial de modalidades ainda não foi cadastrada pela Administração.");
+    const [item] = await db.select({ value: referenceListItems.value }).from(referenceListItems).where(and(eq(referenceListItems.listId, list.id), eq(referenceListItems.value, modalityToValidate.trim()), eq(referenceListItems.active, true))).limit(1);
+    if (!item) throw new Error("A modalidade determinada deve estar ativa na lista oficial.");
+  }
   const status = openingDecisionStatus(input.action);
   await db.transaction(async tx => {
-    await tx.update(openingRequests).set({ status, decidedByUserId: actor.id, decisionNotes: input.notes.trim(), decidedAt: new Date() }).where(eq(openingRequests.id, request.id));
-    await tx.update(demands).set({ status: input.action === "authorize" ? "opening_authorized" : "published_in_pca" }).where(eq(demands.id, request.demandId));
+    await tx.update(openingRequests).set({ status, decidedByUserId: actor.id, decisionNotes: input.notes.trim(), decidedAt: new Date(), finalWorkflowType, finalModality, authorizedAt: isAuthorization ? new Date() : null }).where(eq(openingRequests.id, request.id));
+    if (version) {
+      await tx.update(openingRequestVersions).set({ status, decisionAction: input.action, finalWorkflowType, finalModality, decisionNotes: input.notes.trim(), decidedByUserId: actor.id, decidedAt: new Date() }).where(eq(openingRequestVersions.id, version.id));
+      if (isAuthorization) {
+        const selectedRows = await tx.select({ pcaItemId: openingRequestVersionItems.pcaItemId }).from(openingRequestVersionItems).where(eq(openingRequestVersionItems.versionId, version.id));
+        if (selectedRows.length) await tx.update(pcaDemandItems).set({ status: "in_progress" }).where(inArray(pcaDemandItems.id, selectedRows.map(row => row.pcaItemId)));
+      }
+    }
+    if (request.demandId && !version) await tx.update(demands).set({ status: input.action === "authorize" ? "opening_authorized" : "published_in_pca" }).where(eq(demands.id, request.demandId));
     await tx.update(planningAlerts).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(planningAlerts.entityType, "opening_request"), eq(planningAlerts.entityPublicId, request.publicId), eq(planningAlerts.status, "open")));
-    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, `opening_request.${input.action}d`, `Presidência registrou ${input.action} para a solicitação ${request.publicId}.`, { openingRequestId: request.id, notes: input.notes.trim() });
+    if (input.action === "return") await tx.insert(planningAlerts).values({ entityType: "opening_request", entityPublicId: request.publicId, severity: "warning", title: "Pedido de abertura devolvido ao SPAC para correção pela Presidência.", dueAt: deadlineAt(2) });
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, `opening_request.${input.action}d`, `Presidência registrou ${input.action} para a solicitação ${request.publicId}.`, { openingRequestId: request.id, versionId: version?.id ?? null, finalWorkflowType, finalModality, notes: input.notes.trim() });
   });
-  return { success: true };
+  return { success: true, finalWorkflowType, finalModality };
 }
 
 async function pcaSupplyLineForecast(db: Awaited<ReturnType<typeof dbOrThrow>>, pcaId: number, cnaeCode: string) {
@@ -400,53 +427,47 @@ async function pcaSupplyLineForecast(db: Awaited<ReturnType<typeof dbOrThrow>>, 
 export async function instantiateAuthorizedProcess(actor: Actor, requestPublicId: string) {
   const db = await dbOrThrow();
   await requireRole(db, actor, ["compras"], "A instauração de processo é responsabilidade do Setor de Compras.");
-  const [request] = await db.select({ request: openingRequests, demand: demands }).from(openingRequests).innerJoin(demands, eq(openingRequests.demandId, demands.id)).where(eq(openingRequests.publicId, requestPublicId)).limit(1);
+  const [request] = await db.select({ request: openingRequests, demand: demands }).from(openingRequests).leftJoin(demands, eq(openingRequests.demandId, demands.id)).where(eq(openingRequests.publicId, requestPublicId)).limit(1);
   if (!request || !canInstantiateOpening(request.request.status)) throw new Error("Somente solicitações autorizadas pela Presidência podem instaurar processo de contratação.");
+  const [version] = await db.select().from(openingRequestVersions).where(and(eq(openingRequestVersions.openingRequestId, request.request.id), eq(openingRequestVersions.status, "authorized"))).orderBy(desc(openingRequestVersions.versionNumber)).limit(1);
+  const versionItems = version ? await db.select({ item: openingRequestVersionItems, pcaItem: pcaDemandItems, demand: demands }).from(openingRequestVersionItems).innerJoin(pcaDemandItems, eq(openingRequestVersionItems.pcaItemId, pcaDemandItems.id)).innerJoin(demands, eq(openingRequestVersionItems.demandId, demands.id)).where(eq(openingRequestVersionItems.versionId, version.id)).orderBy(asc(openingRequestVersionItems.sequence)) : [];
+  const workflowType = request.request.finalWorkflowType ?? version?.finalWorkflowType ?? request.request.proposedWorkflowType;
+  const modality = request.request.finalModality ?? version?.finalModality ?? request.request.proposedModality;
+  const sourceDemand = request.demand ?? versionItems[0]?.demand;
+  if (!sourceDemand) throw new Error("O pedido autorizado não possui uma DFD de origem para instaurar o processo.");
+  const processTitle = version?.title ?? sourceDemand.title;
+  const estimatedValue = versionItems.length ? versionItems.reduce((sum, row) => sum + Number(row.item.estimatedValueSnapshot ?? 0), 0).toFixed(2) : sourceDemand.initialEstimatedValue ?? undefined;
   return db.transaction(async tx => {
-    const steps = workflowStepsFor(request.request.proposedWorkflowType);
+    const steps = workflowStepsFor(workflowType);
     const first = steps[0];
-    const processPublicId = publicId(request.request.proposedWorkflowType === "bidding" ? "LIC" : "CD");
-    const result = await tx.insert(procurementProcesses).values({ publicId: processPublicId, demandId: request.demand.id, workflowType: request.request.proposedWorkflowType, modality: request.request.proposedModality, title: request.demand.title, currentStepKey: first.key, currentResponsibleRole: first.role, status: "active", estimatedValue: request.demand.initialEstimatedValue ?? undefined, createdByUserId: actor.id, startedAt: new Date() });
+    const processPublicId = publicId(workflowType === "bidding" ? "LIC" : "CD");
+    const result = await tx.insert(procurementProcesses).values({ publicId: processPublicId, demandId: sourceDemand.id, workflowType, modality, title: processTitle, currentStepKey: first.key, currentResponsibleRole: first.role, status: "active", estimatedValue, createdByUserId: actor.id, startedAt: new Date() });
     const processId = Number(result[0].insertId);
+    if (versionItems.length) await tx.insert(procurementProcessItems).values(versionItems.map((row, index) => ({ processId, openingRequestVersionItemId: row.item.id, pcaItemId: row.pcaItem.id, demandId: row.demand.id, demandItemId: row.item.demandItemId, sequence: index + 1, quantityRequested: row.item.quantityRequested, unitOfMeasure: row.item.unitOfMeasure, estimatedValue: row.item.estimatedValueSnapshot })));
     await tx.insert(workflowSteps).values(steps.map((step, index) => ({ processId, stepKey: step.key, title: step.title, module: step.module, sequence: index + 1, status: index === 0 ? "in_progress" as const : "waiting" as const, assigneeRole: step.role, assigneeUserId: index === 0 ? actor.id : undefined, startedAt: index === 0 ? new Date() : undefined })));
     const savedSteps = await tx.select().from(workflowSteps).where(eq(workflowSteps.processId, processId));
     const baseChecklistRows = steps.map(step => ({ processId, workflowStepId: savedSteps.find(saved => saved.stepKey === step.key)?.id, code: `${step.key}_BASE`, title: step.checklist }));
-    const officialTemplates = request.request.proposedWorkflowType === "direct_contracting"
-      ? await tx.select().from(documentTemplates).where(and(eq(documentTemplates.active, true), eq(documentTemplates.templateKind, "checklist")))
-      : [];
+    const officialTemplates = workflowType === "direct_contracting" ? await tx.select().from(documentTemplates).where(and(eq(documentTemplates.active, true), eq(documentTemplates.templateKind, "checklist"))) : [];
     const officialChecklistRows = officialTemplates.flatMap(template => {
       if (!template.workflowStepKey || !template.content) return [];
       const workflowStepId = savedSteps.find(saved => saved.stepKey === template.workflowStepKey)?.id;
       if (!workflowStepId) return [];
-      return template.content.split(/\r?\n/).filter(Boolean).map((title, index) => ({
-        processId,
-        workflowStepId,
-        code: `${template.code}_${String(index + 1).padStart(3, "0")}`,
-        title,
-      }));
+      return template.content.split(/\r?\n/).filter(Boolean).map((title, index) => ({ processId, workflowStepId, code: `${template.code}_${String(index + 1).padStart(3, "0")}`, title }));
     });
     await tx.insert(workflowChecklists).values([...baseChecklistRows, ...officialChecklistRows]);
     await tx.insert(processAlerts).values({ processId, workflowStepId: savedSteps[0]?.id, severity: "info", title: "Processo instaurado após autorização presidencial de abertura.", status: "open" });
-    if (request.request.pcaId && request.demand.supplyLineCnaeCode) {
-      const forecast = await pcaSupplyLineForecast(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, request.request.pcaId, request.demand.supplyLineCnaeCode);
-      if (forecast) {
-        await tx.insert(processAlerts).values({ processId, workflowStepId: savedSteps[0]?.id, severity: "info", title: pcaSupplyLineAlertTitle(request.demand.supplyLineCnaeCode, forecast.total), status: "open" });
-      }
+    if (request.request.pcaId && sourceDemand.supplyLineCnaeCode) {
+      const forecast = await pcaSupplyLineForecast(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, request.request.pcaId, sourceDemand.supplyLineCnaeCode);
+      if (forecast) await tx.insert(processAlerts).values({ processId, workflowStepId: savedSteps[0]?.id, severity: "info", title: pcaSupplyLineAlertTitle(sourceDemand.supplyLineCnaeCode, forecast.total), status: "open" });
     }
-    if (request.demand.containsPersonalData || request.demand.containsSensitiveData) {
-      await tx.insert(privacyAssessments).values({
-        processId,
-        status: "in_review",
-        containsPersonalData: request.demand.containsPersonalData,
-        containsSensitiveData: request.demand.containsSensitiveData,
-        treatmentDescription: request.demand.privacyContext || "Triagem iniciada na DFD; detalhar o tratamento na análise LGPD do processo.",
-        riskLevel: request.demand.containsSensitiveData ? "medium" : "unknown",
-        createdByUserId: actor.id,
-      });
+    if (sourceDemand.containsPersonalData || sourceDemand.containsSensitiveData) {
+      await tx.insert(privacyAssessments).values({ processId, status: "in_review", containsPersonalData: sourceDemand.containsPersonalData, containsSensitiveData: sourceDemand.containsSensitiveData, treatmentDescription: sourceDemand.privacyContext || "Triagem iniciada na DFD; detalhar o tratamento na análise LGPD do processo.", riskLevel: sourceDemand.containsSensitiveData ? "medium" : "unknown", createdByUserId: actor.id });
     }
     await tx.update(openingRequests).set({ status: "instantiated", processId }).where(eq(openingRequests.id, request.request.id));
-    await tx.update(demands).set({ status: "process_instantiated" }).where(eq(demands.id, request.demand.id));
-    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "process.instantiated", `Processo ${processPublicId} instaurado após autorização da solicitação ${request.request.publicId}.`, { processId, processPublicId, openingRequestPublicId: request.request.publicId, modality: request.request.proposedModality, supplyLineCnaeCode: request.demand.supplyLineCnaeCode ?? null });
+    if (version) await tx.update(openingRequestVersions).set({ status: "instantiated" }).where(eq(openingRequestVersions.id, version.id));
+    const demandIds = Array.from(new Set(versionItems.map(row => row.demand.id).concat(sourceDemand.id)));
+    if (demandIds.length && !versionItems.length) await tx.update(demands).set({ status: "process_instantiated" }).where(inArray(demands.id, demandIds));
+    await audit(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, actor.id, "process.instantiated", `Processo ${processPublicId} instaurado após autorização da solicitação ${request.request.publicId}.`, { processId, processPublicId, openingRequestPublicId: request.request.publicId, modality, workflowType, pcaItemIds: versionItems.map(row => row.pcaItem.id), quantities: versionItems.map(row => ({ pcaItemId: row.pcaItem.id, quantity: row.item.quantityRequested })) });
     return { id: processId, publicId: processPublicId };
   });
 }

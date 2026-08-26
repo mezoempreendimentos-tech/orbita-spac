@@ -148,6 +148,8 @@ export const annualPlanItems = mysqlTable("annual_plan_items", {
   title: varchar("title", { length: 500 }).notNull(),
   requestingUnitId: int("requestingUnitId").references(() => organizationalUnits.id),
   estimatedValue: decimal("estimatedValue", { precision: 14, scale: 2 }),
+  quantity: decimal("quantity", { precision: 14, scale: 4 }),
+  unitOfMeasure: varchar("unitOfMeasure", { length: 100 }),
   status: mysqlEnum("status", ["planned", "in_progress", "completed", "changed", "cancelled"]).default("planned").notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
@@ -290,6 +292,26 @@ export const planningConsolidationGroups = mysqlTable("planning_consolidation_gr
   index("planning_consolidation_groups_pca_idx").on(table.planningConsolidationId),
 ]);
 
+export const pcaDemandItems = mysqlTable("pca_demand_items", {
+  id: int("id").autoincrement().primaryKey(),
+  pcaId: int("pcaId").notNull().references(() => planningConsolidations.id),
+  demandId: int("demandId").notNull().references(() => demands.id),
+  demandItemId: int("demandItemId").notNull().references(() => demandItems.id),
+  code: varchar("code", { length: 48 }).notNull(),
+  title: varchar("title", { length: 500 }).notNull(),
+  objectDescription: text("objectDescription"),
+  quantity: decimal("quantity", { precision: 14, scale: 4 }).notNull(),
+  unitOfMeasure: varchar("unitOfMeasure", { length: 100 }),
+  estimatedValue: decimal("estimatedValue", { precision: 14, scale: 2 }),
+  status: mysqlEnum("status", ["available", "in_progress", "completed", "changed", "cancelled"]).default("available").notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+}, (table) => [
+  uniqueIndex("pca_demand_items_origin_uq").on(table.pcaId, table.demandItemId),
+  index("pca_demand_items_pca_idx").on(table.pcaId),
+  index("pca_demand_items_demand_idx").on(table.demandId),
+]);
+
 export const pcaUpdates = mysqlTable("pca_updates", {
   id: int("id").autoincrement().primaryKey(),
   publicId: varchar("publicId", { length: 64 }).notNull().unique(),
@@ -368,7 +390,7 @@ export const procurementProcesses = mysqlTable("procurement_processes", {
 export const openingRequests = mysqlTable("opening_requests", {
   id: int("id").autoincrement().primaryKey(),
   publicId: varchar("publicId", { length: 64 }).notNull().unique(),
-  demandId: int("demandId").notNull().references(() => demands.id),
+  demandId: int("demandId").references(() => demands.id),
   pcaId: int("pcaId"),
   consolidationId: int("consolidationId").references(() => planningConsolidations.id),
   proposedWorkflowType: mysqlEnum("proposedWorkflowType", ["direct_contracting", "bidding"]).notNull(),
@@ -380,14 +402,144 @@ export const openingRequests = mysqlTable("opening_requests", {
   decisionNotes: text("decisionNotes"),
   decidedAt: timestamp("decidedAt"),
   processId: int("processId").references(() => procurementProcesses.id),
+  activeVersionNumber: int("activeVersionNumber").default(1).notNull(),
+  previousRequestId: int("previousRequestId"),
+  previousDecisionPublicId: varchar("previousDecisionPublicId", { length: 64 }),
+  finalWorkflowType: mysqlEnum("finalWorkflowType", ["direct_contracting", "bidding"]),
+  finalModality: varchar("finalModality", { length: 120 }),
+  authorizedAt: timestamp("authorizedAt"),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 }, (table) => [
-  uniqueIndex("opening_requests_demand_uq").on(table.demandId),
   index("opening_requests_status_idx").on(table.status),
   foreignKey({ columns: [table.pcaId], foreignColumns: [planningConsolidations.id], name: "opening_request_pca_fk" }),
   index("opening_requests_pca_idx").on(table.pcaId),
   index("opening_requests_consolidation_idx").on(table.consolidationId),
+  index("opening_requests_previous_request_idx").on(table.previousRequestId),
+  index("opening_requests_demand_idx").on(table.demandId),
+]);
+
+export const openingRequestVersions = mysqlTable("opening_request_versions", {
+  id: int("id").autoincrement().primaryKey(),
+  openingRequestId: int("openingRequestId").notNull().references(() => openingRequests.id),
+  versionNumber: int("versionNumber").notNull(),
+  revisionJustification: text("revisionJustification"),
+  pcaId: int("pcaId").notNull().references(() => planningConsolidations.id),
+  title: varchar("title", { length: 500 }).notNull(),
+  integratedObject: text("integratedObject"),
+  justification: text("justification").notNull(),
+  proposedWorkflowType: mysqlEnum("proposedWorkflowType", ["direct_contracting", "bidding"]).notNull(),
+  proposedModality: varchar("proposedModality", { length: 120 }).notNull(),
+  cnaeOriginalCode: varchar("cnaeOriginalCode", { length: 32 }),
+  cnaeOriginalDescription: varchar("cnaeOriginalDescription", { length: 1000 }),
+  cnaeFinalCode: varchar("cnaeFinalCode", { length: 32 }).notNull(),
+  cnaeFinalDescription: varchar("cnaeFinalDescription", { length: 1000 }).notNull(),
+  cnaeBaseCode: varchar("cnaeBaseCode", { length: 32 }),
+  cnaeBaseDescription: varchar("cnaeBaseDescription", { length: 1000 }),
+  cnaeSourceUrl: varchar("cnaeSourceUrl", { length: 1000 }),
+  cnaeSourceVersion: varchar("cnaeSourceVersion", { length: 120 }),
+  analysisAcknowledged: boolean("analysisAcknowledged").default(false).notNull(),
+  analysisAcknowledgedAt: timestamp("analysisAcknowledgedAt"),
+  analysisAcknowledgedByUserId: int("analysisAcknowledgedByUserId").references(() => users.id),
+  analysisSummary: text("analysisSummary"),
+  analysisJustification: text("analysisJustification"),
+  status: mysqlEnum("status", ["draft", "presidency_review", "authorized", "returned", "rejected", "instantiated"]).default("draft").notNull(),
+  decisionAction: mysqlEnum("decisionAction", ["authorize", "authorize_different_modality", "return", "reject"]),
+  finalWorkflowType: mysqlEnum("finalWorkflowType", ["direct_contracting", "bidding"]),
+  finalModality: varchar("finalModality", { length: 120 }),
+  decisionNotes: text("decisionNotes"),
+  decidedByUserId: int("decidedByUserId").references(() => users.id),
+  decidedAt: timestamp("decidedAt"),
+  createdByUserId: int("createdByUserId").notNull().references(() => users.id),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("opening_request_versions_uq").on(table.openingRequestId, table.versionNumber),
+  index("opening_request_versions_status_idx").on(table.status),
+  index("opening_request_versions_pca_idx").on(table.pcaId),
+]);
+
+export const openingRequestVersionItems = mysqlTable("opening_request_version_items", {
+  id: int("id").autoincrement().primaryKey(),
+  versionId: int("versionId").notNull().references(() => openingRequestVersions.id),
+  pcaItemId: int("pcaItemId").notNull().references(() => pcaDemandItems.id),
+  demandId: int("demandId").notNull().references(() => demands.id),
+  demandItemId: int("demandItemId").notNull().references(() => demandItems.id),
+  sequence: int("sequence").notNull(),
+  titleSnapshot: varchar("titleSnapshot", { length: 500 }).notNull(),
+  quantityRequested: decimal("quantityRequested", { precision: 14, scale: 4 }).notNull(),
+  availableQuantitySnapshot: decimal("availableQuantitySnapshot", { precision: 14, scale: 4 }).notNull(),
+  unitOfMeasure: varchar("unitOfMeasure", { length: 100 }),
+  estimatedValueSnapshot: decimal("estimatedValueSnapshot", { precision: 14, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("opening_request_version_items_uq").on(table.versionId, table.pcaItemId),
+  index("opening_request_version_items_pca_idx").on(table.pcaItemId),
+  index("opening_request_version_items_demand_idx").on(table.demandId),
+]);
+
+export const openingRequestAnalyses = mysqlTable("opening_request_analyses", {
+  id: int("id").autoincrement().primaryKey(),
+  versionId: int("versionId").notNull().references(() => openingRequestVersions.id),
+  declaration: text("declaration").notNull(),
+  alertsFound: boolean("alertsFound").default(false).notNull(),
+  formalJustification: text("formalJustification"),
+  executedByUserId: int("executedByUserId").notNull().references(() => users.id),
+  executedAt: timestamp("executedAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("opening_request_analyses_version_uq").on(table.versionId),
+  index("opening_request_analyses_alert_idx").on(table.alertsFound),
+]);
+
+export const openingRequestAnalysisMatches = mysqlTable("opening_request_analysis_matches", {
+  id: int("id").autoincrement().primaryKey(),
+  analysisId: int("analysisId").notNull().references(() => openingRequestAnalyses.id),
+  pcaItemId: int("pcaItemId").notNull().references(() => pcaDemandItems.id),
+  demandId: int("demandId").references(() => demands.id),
+  matchType: mysqlEnum("matchType", ["same_subclass", "same_original_subclass", "same_base_class", "similar_object_terms"]).notNull(),
+  matchingTerms: text("matchingTerms"),
+  cnaeCode: varchar("cnaeCode", { length: 32 }),
+  cnaeBaseCode: varchar("cnaeBaseCode", { length: 32 }),
+  estimatedValue: decimal("estimatedValue", { precision: 14, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("opening_request_analysis_matches_analysis_idx").on(table.analysisId),
+  index("opening_request_analysis_matches_pca_idx").on(table.pcaItemId),
+]);
+
+export const procurementProcessItems = mysqlTable("procurement_process_items", {
+  id: int("id").autoincrement().primaryKey(),
+  processId: int("processId").notNull().references(() => procurementProcesses.id),
+  openingRequestVersionItemId: int("openingRequestVersionItemId").references(() => openingRequestVersionItems.id),
+  pcaItemId: int("pcaItemId").notNull().references(() => pcaDemandItems.id),
+  demandId: int("demandId").notNull().references(() => demands.id),
+  demandItemId: int("demandItemId").notNull().references(() => demandItems.id),
+  sequence: int("sequence").notNull(),
+  quantityRequested: decimal("quantityRequested", { precision: 14, scale: 4 }).notNull(),
+  unitOfMeasure: varchar("unitOfMeasure", { length: 100 }),
+  estimatedValue: decimal("estimatedValue", { precision: 14, scale: 2 }),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  uniqueIndex("procurement_process_items_uq").on(table.processId, table.pcaItemId),
+  index("procurement_process_items_pca_idx").on(table.pcaItemId),
+]);
+
+export const procurementModalityChanges = mysqlTable("procurement_modality_changes", {
+  id: int("id").autoincrement().primaryKey(),
+  processId: int("processId").notNull().references(() => procurementProcesses.id),
+  previousWorkflowType: mysqlEnum("previousWorkflowType", ["direct_contracting", "bidding"]).notNull(),
+  previousModality: varchar("previousModality", { length: 120 }).notNull(),
+  proposedWorkflowType: mysqlEnum("proposedWorkflowType", ["direct_contracting", "bidding"]).notNull(),
+  proposedModality: varchar("proposedModality", { length: 120 }).notNull(),
+  justification: text("justification").notNull(),
+  status: mysqlEnum("status", ["presidency_review", "authorized", "returned", "rejected"]).default("presidency_review").notNull(),
+  requestedByUserId: int("requestedByUserId").notNull().references(() => users.id),
+  decidedByUserId: int("decidedByUserId").references(() => users.id),
+  decisionNotes: text("decisionNotes"),
+  decidedAt: timestamp("decidedAt"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+}, (table) => [
+  index("procurement_modality_changes_process_idx").on(table.processId),
+  index("procurement_modality_changes_status_idx").on(table.status),
 ]);
 
 export const planningDocuments = mysqlTable("planning_documents", {

@@ -35,6 +35,9 @@ import {
   listAccessDirectory,
   listActiveSuppliers,
   listProcesses,
+  listOfficialModalities,
+  proposeModalityChange,
+  decideModalityChange,
   getPrivacyAssessment,
   refreshProcessDriveFolderMetadata,
   saveDemandPdfToProcessDrive,
@@ -63,6 +66,7 @@ import {
   createPca,
   createPcaUpdate,
   createTwoStageOpeningRequest,
+  previewTwoStageOpeningRequest,
   decidePca,
   decidePcaUpdate,
   generatePcaArtifact,
@@ -82,7 +86,7 @@ import {
 } from "./planningTwoStageService";
 import { listDocumentSignatureRequests, listSignatureEligibleDocuments, prepareGovbrSignature } from "./documentSignatureService";
 import { superveningPlanningJustificationError } from "../shared/superveningDemand";
-import { searchOfficialCnaeClasses } from "./cnaeService";
+import { searchOfficialCnaeClasses, searchOfficialCnaeSubclasses } from "./cnaeService";
 import { issueDfdPdfVerification } from "./dfdPdfVerificationService";
 import { listUserNotifications, markAllNotificationsRead, markNotificationRead, unreadNotificationCount } from "./notificationService";
 
@@ -111,6 +115,29 @@ const demandItemInput = z.object({
   quantityJustification: z.string().max(5_000).optional(),
   estimatedValueJustification: z.string().max(5_000).optional(),
   priceResearchCertified: z.boolean(),
+});
+
+const openingRequestInput = z.object({
+  pcaPublicId: z.string().min(4).max(64).optional(),
+  pcaItemIds: z.array(z.number().int().positive()).max(200).optional(),
+  items: z.array(z.object({ pcaItemId: z.number().int().positive(), quantity: z.string().regex(/^\d+(\.\d{1,4})?$/, "Informe uma quantidade válida.") })).min(1).max(200).optional(),
+  demandPublicId: z.string().min(4).max(48).optional(),
+  proposedWorkflowType: z.enum(["direct_contracting", "bidding"]),
+  proposedModality: z.string().min(3).max(120),
+  title: z.string().max(500).optional(),
+  integratedObject: z.string().max(10_000).optional(),
+  justification: z.string().min(10).max(10_000),
+  cnaeFinalCode: z.string().max(32).optional(),
+  cnaeFinalDescription: z.string().max(1000).optional(),
+  cnaeBaseCode: z.string().max(32).optional(),
+  cnaeBaseDescription: z.string().max(1000).optional(),
+  cnaeOriginalCode: z.string().max(32).optional(),
+  cnaeOriginalDescription: z.string().max(1000).optional(),
+  analysisDeclaration: z.string().max(5000).optional(),
+  analysisJustification: z.string().max(10_000).optional(),
+  requestPublicId: z.string().min(4).max(64).optional(),
+  previousRequestPublicId: z.string().min(4).max(64).optional(),
+  revisionJustification: z.string().max(10_000).optional(),
 });
 
 const createDemandInput = z.object({
@@ -184,6 +211,8 @@ export const appRouter = router({
       code: z.string().min(2).max(48),
       title: z.string().min(3).max(500),
       requestingUnitId: z.number().int().positive().optional(),
+      quantity: z.string().regex(/^\d+(\.\d{1,4})?$/).optional(),
+      unitOfMeasure: z.string().max(100).optional(),
       estimatedValue: z.string().regex(/^\d+(\.\d{1,2})?$/).optional(),
       status: z.enum(["planned", "in_progress", "completed", "changed", "cancelled"]),
     })).mutation(({ ctx, input }) => createAnnualPlanItem(ctx.user, input)),
@@ -222,6 +251,7 @@ export const appRouter = router({
   }),
   cnae: router({
     search: protectedProcedure.input(z.object({ query: z.string().min(2).max(120) })).query(({ input }) => searchOfficialCnaeClasses(input.query)),
+    searchSubclasses: protectedProcedure.input(z.object({ query: z.string().min(2).max(120) })).query(({ input }) => searchOfficialCnaeSubclasses(input.query)),
   }),
   dashboard: router({
     summary: protectedProcedure.query(() => dashboardSummary()),
@@ -302,13 +332,17 @@ export const appRouter = router({
     decidePcaUpdate: protectedProcedure.input(z.object({ pcaUpdatePublicId: z.string().min(4).max(64), action: z.enum(["approve", "return", "reject"]), notes: z.string().min(5).max(10_000) })).mutation(({ ctx, input }) => decidePcaUpdate(ctx.user, input)),
     publishPca: protectedProcedure.input(z.object({ pcaPublicId: z.string().min(4).max(64), publicationReference: z.string().min(3).max(500) })).mutation(({ ctx, input }) => publishPca(ctx.user, input)),
     publishPcaUpdate: protectedProcedure.input(z.object({ pcaUpdatePublicId: z.string().min(4).max(64), publicationReference: z.string().min(3).max(500) })).mutation(({ ctx, input }) => publishPcaUpdate(ctx.user, input)),
-    createOpeningRequest: protectedProcedure.input(z.object({ demandPublicId: z.string().min(4).max(48), proposedWorkflowType: z.enum(["direct_contracting", "bidding"]), proposedModality: z.string().min(3).max(120), justification: z.string().min(10).max(10_000) })).mutation(({ ctx, input }) => createTwoStageOpeningRequest(ctx.user, input)),
-    decideOpeningRequest: protectedProcedure.input(z.object({ requestPublicId: z.string().min(4).max(64), action: z.enum(["authorize", "return", "reject"]), notes: z.string().min(5).max(10_000) })).mutation(({ ctx, input }) => decideOpeningRequest(ctx.user, input)),
+    previewOpeningRequest: protectedProcedure.input(openingRequestInput).query(({ ctx, input }) => previewTwoStageOpeningRequest(ctx.user, input)),
+    createOpeningRequest: protectedProcedure.input(openingRequestInput).mutation(({ ctx, input }) => createTwoStageOpeningRequest(ctx.user, input)),
+    decideOpeningRequest: protectedProcedure.input(z.object({ requestPublicId: z.string().min(4).max(64), action: z.enum(["authorize", "authorize_different_modality", "return", "reject"]), finalWorkflowType: z.enum(["direct_contracting", "bidding"]).optional(), finalModality: z.string().min(3).max(120).optional(), notes: z.string().min(5).max(10_000) })).mutation(({ ctx, input }) => decideOpeningRequest(ctx.user, input)),
     instantiateProcess: protectedProcedure.input(z.object({ requestPublicId: z.string().min(4).max(64) })).mutation(({ ctx, input }) => instantiateAuthorizedProcess(ctx.user, input.requestPublicId)),
     uploadDocument: protectedProcedure.input(z.object({ entityType: z.enum(["demand", "demand_consolidation", "pca", "consolidation", "opening_request"]), entityPublicId: z.string().min(4).max(64), documentType: z.string().min(2).max(120), title: z.string().min(2).max(500), fileName: z.string().min(1).max(200), mimeType: z.string().max(150), base64: z.string().min(4).max(12_000_000) })).mutation(({ ctx, input }) => uploadPlanningDocument(ctx.user, input)),
   }),
   procurement: router({
     list: protectedProcedure.query(() => listProcesses()),
+    modalityOptions: protectedProcedure.query(() => listOfficialModalities()),
+    proposeModalityChange: protectedProcedure.input(z.object({ processPublicId: z.string().min(4).max(64), proposedWorkflowType: z.enum(["direct_contracting", "bidding"]), proposedModality: z.string().min(3).max(120), justification: z.string().min(10).max(10_000) })).mutation(({ ctx, input }) => proposeModalityChange(ctx.user, input)),
+    decideModalityChange: protectedProcedure.input(z.object({ modalityChangeId: z.number().int().positive(), action: z.enum(["authorize", "return", "reject"]), decisionNotes: z.string().min(5).max(10_000) })).mutation(({ ctx, input }) => decideModalityChange(ctx.user, input)),
     supplierDirectory: protectedProcedure.query(() => listActiveSuppliers()),
     detail: protectedProcedure.input(z.object({ publicId: z.string().min(4).max(64) })).query(({ input }) => getProcessDetail(input.publicId)),
     planItems: protectedProcedure.query(() => listPlanItems()),

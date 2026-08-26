@@ -7,6 +7,8 @@ import {
   demandCaseEvents,
   documentTemplates,
   openingRequests,
+  openingRequestVersions,
+  openingRequestVersionItems,
   organizationalUnits,
   planningAlerts,
   planningConsolidations,
@@ -19,6 +21,11 @@ import {
   privacyDecisions,
   privacyRisks,
   procurementProcesses,
+  procurementProcessItems,
+  procurementModalityChanges,
+  pcaDemandItems,
+  referenceListItems,
+  referenceLists,
   suppliers,
   supplierProposals,
   userProcessRoles,
@@ -61,6 +68,25 @@ export async function getUserProcessRoles(userId: number): Promise<ProcessRole[]
 
 export async function userCanAct(user: { id: number; role: "user" | "admin" }, requiredRole: string) {
   return canActOnWorkflowByRole(user.role, await getUserProcessRoles(user.id), requiredRole);
+}
+
+async function refreshPcaItemStatuses(db: Awaited<ReturnType<typeof dbOrThrow>>, pcaItemIds: number[]) {
+  const ids = Array.from(new Set(pcaItemIds));
+  if (!ids.length) return;
+  const [pcaRows, reservedRows, processRows] = await Promise.all([
+    db.select().from(pcaDemandItems).where(inArray(pcaDemandItems.id, ids)),
+    db.select({ pcaItemId: openingRequestVersionItems.pcaItemId, quantity: openingRequestVersionItems.quantityRequested }).from(openingRequestVersionItems).innerJoin(openingRequestVersions, eq(openingRequestVersionItems.versionId, openingRequestVersions.id)).where(and(inArray(openingRequestVersionItems.pcaItemId, ids), inArray(openingRequestVersions.status, ["presidency_review", "authorized"]))),
+    db.select({ pcaItemId: procurementProcessItems.pcaItemId, quantity: procurementProcessItems.quantityRequested, status: procurementProcesses.status, closureOutcome: procurementProcesses.closureOutcome }).from(procurementProcessItems).innerJoin(procurementProcesses, eq(procurementProcessItems.processId, procurementProcesses.id)).where(inArray(procurementProcessItems.pcaItemId, ids)),
+  ]);
+  for (const pcaRow of pcaRows) {
+    if (pcaRow.status === "cancelled") continue;
+    const reserved = reservedRows.filter(row => row.pcaItemId === pcaRow.id).reduce((sum, row) => sum + Number(row.quantity ?? 0), 0);
+    const consumed = processRows.filter(row => row.pcaItemId === pcaRow.id && ((row.status !== "archived" && !["cancelled", "annulled", "revoked"].includes(row.status)) || (row.status === "archived" && row.closureOutcome === "success"))).reduce((sum, row) => sum + Number(row.quantity ?? 0), 0);
+    const used = reserved + consumed;
+    const total = Number(pcaRow.quantity ?? 0);
+    const status = used <= 0.000001 ? "available" : used >= total - 0.000001 ? "completed" : "in_progress";
+    await db.update(pcaDemandItems).set({ status }).where(eq(pcaDemandItems.id, pcaRow.id));
+  }
 }
 
 async function writeAuditEvent(
@@ -304,7 +330,7 @@ export async function getProcessDetail(publicId: string) {
     .where(eq(procurementProcesses.publicId, publicId))
     .limit(1);
   if (!process) return null;
-  const [steps, checklists, decisions, documents, publications, tasks, events, alerts, proposals] = await Promise.all([
+  const [steps, checklists, decisions, documents, publications, tasks, events, alerts, proposals, processItems, modalityChanges] = await Promise.all([
     db.select().from(workflowSteps).where(eq(workflowSteps.processId, process.process.id)).orderBy(asc(workflowSteps.sequence)),
     db.select().from(workflowChecklists).where(eq(workflowChecklists.processId, process.process.id)),
     db.select().from(processDecisions).where(eq(processDecisions.processId, process.process.id)).orderBy(desc(processDecisions.createdAt)),
@@ -314,13 +340,68 @@ export async function getProcessDetail(publicId: string) {
     db.select().from(auditEvents).where(eq(auditEvents.processId, process.process.id)).orderBy(desc(auditEvents.createdAt)),
     db.select().from(processAlerts).where(eq(processAlerts.processId, process.process.id)).orderBy(desc(processAlerts.createdAt)),
     db.select({ proposal: supplierProposals, supplier: suppliers }).from(supplierProposals).innerJoin(suppliers, eq(supplierProposals.supplierId, suppliers.id)).where(eq(supplierProposals.processId, process.process.id)).orderBy(desc(supplierProposals.receivedAt)),
+    db.select({ item: procurementProcessItems, pcaItem: pcaDemandItems }).from(procurementProcessItems).innerJoin(pcaDemandItems, eq(procurementProcessItems.pcaItemId, pcaDemandItems.id)).where(eq(procurementProcessItems.processId, process.process.id)).orderBy(asc(procurementProcessItems.sequence)),
+    db.select().from(procurementModalityChanges).where(eq(procurementModalityChanges.processId, process.process.id)).orderBy(desc(procurementModalityChanges.createdAt)),
   ]);
-  return { ...process, steps, checklists, decisions, documents, publications, tasks, events, alerts, proposals };
+  return { ...process, steps, checklists, decisions, documents, publications, tasks, events, alerts, proposals, processItems, modalityChanges };
 }
 
 export async function listActiveSuppliers() {
   const db = await dbOrThrow();
   return db.select().from(suppliers).where(eq(suppliers.status, "active")).orderBy(asc(suppliers.legalName));
+}
+
+export async function listOfficialModalities() {
+  const db = await dbOrThrow();
+  const [list] = await db.select({ id: referenceLists.id, code: referenceLists.code, label: referenceLists.label }).from(referenceLists).where(and(eq(referenceLists.code, "MODALIDADES_CONTRATACAO"), eq(referenceLists.active, true))).limit(1);
+  if (!list) return [];
+  return db.select({ id: referenceListItems.id, value: referenceListItems.value, label: referenceListItems.label, sortOrder: referenceListItems.sortOrder }).from(referenceListItems).where(and(eq(referenceListItems.listId, list.id), eq(referenceListItems.active, true))).orderBy(asc(referenceListItems.sortOrder), asc(referenceListItems.label));
+}
+
+async function officialModality(db: Awaited<ReturnType<typeof dbOrThrow>>, value: string) {
+  const [list] = await db.select({ id: referenceLists.id }).from(referenceLists).where(and(eq(referenceLists.code, "MODALIDADES_CONTRATACAO"), eq(referenceLists.active, true))).limit(1);
+  if (!list) throw new Error("A lista oficial de modalidades ainda não foi cadastrada pela Administração.");
+  const [item] = await db.select({ value: referenceListItems.value, label: referenceListItems.label }).from(referenceListItems).where(and(eq(referenceListItems.listId, list.id), eq(referenceListItems.value, value.trim()), eq(referenceListItems.active, true))).limit(1);
+  if (!item) throw new Error("Selecione uma modalidade ativa da lista oficial.");
+  return item;
+}
+
+export async function proposeModalityChange(user: { id: number; role: "user" | "admin" }, input: { processPublicId: string; proposedWorkflowType: "direct_contracting" | "bidding"; proposedModality: string; justification: string }) {
+  const db = await dbOrThrow();
+  const roles = user.role === "admin" ? ["administrador"] : await getUserProcessRoles(user.id);
+  if (!roles.some(role => ["compras", "administrador"].includes(role))) throw new Error("A proposta de alteração de modalidade exige perfil ativo do Setor de Compras.");
+  const [process] = await db.select().from(procurementProcesses).where(eq(procurementProcesses.publicId, input.processPublicId)).limit(1);
+  if (!process || ["archived", "annulled", "revoked", "cancelled"].includes(process.status)) throw new Error("Somente processos ainda em tramitação podem receber proposta de alteração de modalidade.");
+  const previousModality = process.modality;
+  if (!previousModality) throw new Error("O processo não possui modalidade anterior registrada.");
+  const modality = await officialModality(db, input.proposedModality);
+  if (process.workflowType === input.proposedWorkflowType && previousModality === modality.value) throw new Error("A nova modalidade deve ser diferente da modalidade atual.");
+  if (!input.justification.trim()) throw new Error("A alteração de modalidade exige justificativa formal do Setor de Compras.");
+  return db.transaction(async tx => {
+    const result = await tx.insert(procurementModalityChanges).values({ processId: process.id, previousWorkflowType: process.workflowType, previousModality, proposedWorkflowType: input.proposedWorkflowType, proposedModality: modality.value, justification: input.justification.trim(), status: "presidency_review", requestedByUserId: user.id });
+    const id = Number(result[0].insertId);
+    await tx.insert(processAlerts).values({ processId: process.id, severity: "warning", title: "Alteração de modalidade aguardando decisão da Presidência.", status: "open" });
+    await writeAuditEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, process.id, user.id, "modality_change.proposed", `SPAC propôs alterar a modalidade do processo ${process.publicId}.`, { modalityChangeId: id, previousWorkflowType: process.workflowType, previousModality, proposedWorkflowType: input.proposedWorkflowType, proposedModality: modality.value, justification: input.justification.trim() });
+    return { id };
+  });
+}
+
+export async function decideModalityChange(user: { id: number; role: "user" | "admin" }, input: { modalityChangeId: number; action: "authorize" | "return" | "reject"; decisionNotes: string }) {
+  const db = await dbOrThrow();
+  const roles = user.role === "admin" ? ["administrador"] : await getUserProcessRoles(user.id);
+  if (!roles.some(role => role === "autoridade_competente")) throw new Error("A decisão de alteração de modalidade exige perfil da Presidência.");
+  const [change] = await db.select().from(procurementModalityChanges).where(eq(procurementModalityChanges.id, input.modalityChangeId)).limit(1);
+  if (!change || change.status !== "presidency_review") throw new Error("Esta alteração não está aguardando decisão da Presidência.");
+  if (!input.decisionNotes.trim()) throw new Error("Registre a motivação da decisão presidencial.");
+  const nextStatus = input.action === "authorize" ? "authorized" : input.action === "return" ? "returned" : "rejected";
+  if (input.action === "authorize") await officialModality(db, change.proposedModality);
+  await db.transaction(async tx => {
+    if (input.action === "authorize") await tx.update(procurementProcesses).set({ workflowType: change.proposedWorkflowType, modality: change.proposedModality }).where(eq(procurementProcesses.id, change.processId));
+    await tx.update(procurementModalityChanges).set({ status: nextStatus, decidedByUserId: user.id, decisionNotes: input.decisionNotes.trim(), decidedAt: new Date() }).where(eq(procurementModalityChanges.id, change.id));
+    await tx.update(processAlerts).set({ status: "resolved", resolvedAt: new Date() }).where(and(eq(processAlerts.processId, change.processId), eq(processAlerts.title, "Alteração de modalidade aguardando decisão da Presidência."), eq(processAlerts.status, "open")));
+    await writeAuditEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, change.processId, user.id, `modality_change.${input.action}d`, `Presidência registrou ${input.action} para a alteração de modalidade.`, { modalityChangeId: change.id, previousWorkflowType: change.previousWorkflowType, previousModality: change.previousModality, proposedWorkflowType: change.proposedWorkflowType, proposedModality: change.proposedModality, decisionNotes: input.decisionNotes.trim() });
+  });
+  return { success: true, status: nextStatus };
 }
 
 export async function addSupplierProposal(user: { id: number; role: "user" | "admin" }, input: { processPublicId: string; supplierId: number; offeredValue: string; notes?: string }) {
@@ -503,8 +584,13 @@ export async function transitionStep(
       } else {
         const closureOutcome = input.outcome ?? "success";
         await tx.update(procurementProcesses).set({ status: "archived", currentStepKey: null, currentResponsibleRole: null, closedAt: new Date(), closureOutcome, closureNote: input.note.trim() }).where(eq(procurementProcesses.id, detail.process.id));
-        await tx.insert(demandCaseEvents).values({ demandId: detail.demand.id, actorUserId: user.id, eventType: "procurement_completed", note: input.note.trim() });
-        await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: detail.demand.id, requesterUserId: detail.demand.requesterUserId, demandPublicId: detail.demand.publicId, title: closureOutcome === "success" ? "Contratação finalizada com sucesso" : "Contratação finalizada sem sucesso", body: `A contratação vinculada à DFD ${detail.demand.publicId} — ${detail.demand.title} foi finalizada por Compras com resultado: ${closureOutcome === "success" ? "sucesso" : "fracasso"}. Consulte a DFD e a TRILHA para ver o registro final.`, notificationType: "procurement_completed", idempotencyPrefix: `procurement-completed:${detail.process.publicId}` });
+        const groupDemandIds = Array.from(new Set([detail.demand.id, ...detail.processItems.map(entry => entry.item.demandId)]));
+        const groupDemands = await tx.select().from(demands).where(inArray(demands.id, groupDemandIds));
+        await refreshPcaItemStatuses(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, detail.processItems.map(entry => entry.item.pcaItemId));
+        for (const demand of groupDemands) {
+          await tx.insert(demandCaseEvents).values({ demandId: demand.id, actorUserId: user.id, eventType: "procurement_completed", note: input.note.trim() });
+          await notifyDemandAudience(tx as unknown as NotificationDb, { demandId: demand.id, requesterUserId: demand.requesterUserId, demandPublicId: demand.publicId, title: closureOutcome === "success" ? "Contratação finalizada com sucesso" : "Contratação finalizada sem sucesso", body: `A contratação vinculada à DFD ${demand.publicId} — ${demand.title} foi finalizada por Compras com resultado: ${closureOutcome === "success" ? "sucesso" : "fracasso"}. Consulte a DFD e a TRILHA para ver o registro final.`, notificationType: "procurement_completed", idempotencyPrefix: `procurement-completed:${detail.process.publicId}:${demand.publicId}` });
+        }
       }
       await writeAuditEvent(tx as unknown as Awaited<ReturnType<typeof dbOrThrow>>, detail.process.id, user.id, "workflow.completed", `Etapa concluída: ${current.title}`, { stepKey: current.stepKey, note: input.note.trim(), nextStepKey: next?.stepKey, outcome: next ? null : input.outcome ?? "success" });
     });
