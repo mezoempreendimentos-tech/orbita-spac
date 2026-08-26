@@ -170,7 +170,6 @@ export async function createDemand(actor: Actor, input: {
   const planningJustificationError = superveningPlanningJustificationError(input);
   const justificationError = detailedDemandJustificationError(input.justification);
   if (justificationError) throw new Error(justificationError);
-  if (!input.annualPlanItemId) throw new Error("Vincule a DFD a um item do planejamento anual antes de enviá-la.");
   if (planningJustificationError) throw new Error(planningJustificationError);
   const descriptionError = detailedDemandDescriptionError(input.objectDescription);
   if (descriptionError) throw new Error(descriptionError);
@@ -184,9 +183,6 @@ export async function createDemand(actor: Actor, input: {
   if (itemValidationError) throw new Error(itemValidationError);
   const [unit] = await db.select({ id: organizationalUnits.id }).from(organizationalUnits).where(and(eq(organizationalUnits.id, input.unitId), eq(organizationalUnits.active, true))).limit(1);
   if (!unit) throw new Error("A unidade requisitante não está disponível.");
-  const [planItem] = await db.select({ id: annualPlanItems.id, requestingUnitId: annualPlanItems.requestingUnitId, planStatus: annualPlans.status }).from(annualPlanItems).innerJoin(annualPlans, eq(annualPlanItems.planId, annualPlans.id)).where(eq(annualPlanItems.id, input.annualPlanItemId)).limit(1);
-  if (!planItem || planItem.planStatus === "closed") throw new Error("O item de planejamento anual selecionado não está disponível.");
-  if (planItem.requestingUnitId && planItem.requestingUnitId !== input.unitId) throw new Error("A DFD deve estar vinculada a um item do planejamento da mesma unidade demandante.");
   const existingDraftRows = input.draftPublicId ? await db.select().from(demands).where(and(eq(demands.publicId, input.draftPublicId), eq(demands.requesterUserId, actor.id), eq(demands.status, "draft"))).limit(1) : [];
   const existingDraft = existingDraftRows[0] ?? null;
   if (input.draftPublicId && !existingDraft) throw new Error("O rascunho da DFD não foi encontrado ou não pertence ao usuário autenticado.");

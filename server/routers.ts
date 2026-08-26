@@ -114,8 +114,8 @@ const demandItemInput = z.object({
 
 const createDemandInput = z.object({
   unitId: z.number().int().positive(),
-  title: z.string().min(5).max(500),
-  objectDescription: z.string().min(10),
+  title: z.string().min(5).max(60),
+  objectDescription: z.string().min(60),
   justification: z.string().min(1000, "A justificativa da DFD deve ter pelo menos 1.000 caracteres."),
   quantity: z.string().max(32).optional(),
   unitOfMeasure: z.string().max(100).optional(),

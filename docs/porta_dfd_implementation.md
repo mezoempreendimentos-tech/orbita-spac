@@ -21,7 +21,7 @@ Toda DFD submetida deve chegar à Presidência para decisão. A Diretoria pode a
 |---|---|
 | Unidade da DFD | Uma DFD corresponde a uma demanda e pode conter vários itens. |
 | Rascunhos | Rascunhos persistentes ficam na tela inicial dos demandantes; podem ser criados, retomados e enviados sem gerar uma nova DFD. |
-| Vínculo anual | O item do planejamento anual é obrigatório na submissão e deve pertencer à unidade demandante quando houver unidade vinculada. |
+| Vínculo ao PCA | O ano de referência e a natureza são informados na DFD; o item e os subitens do PCA nascem posteriormente na consolidação e preservam a origem de cada DFD. |
 | Justificativa | A justificativa geral deve ter no mínimo 1.000 caracteres. O backend também valida a regra; o texto de bloqueio é firme e institucional. |
 | Triagem | A Diretoria pode iniciar análise e devolver para complementação, mas não decide o mérito final. |
 | Prazo final | Toda DFD pendente é encaminhada à Presidência quando vence o prazo configurado, mesmo que o requisitante não tenha corrigido a demanda. |
@@ -44,7 +44,7 @@ Toda DFD submetida deve chegar à Presidência para decisão. A Diretoria pode a
 | Prazo | A rotina de atualização encaminha idempotentemente todas as DFDs submetidas, em análise ou devolvidas cujo prazo presidencial venceu. A elevação dos alertas continua funcionando como redundância. |
 | Avisos internos | Avisos são criados para a Diretoria e para o requisitante em decisões presidenciais e no encerramento da contratação. Há contador na campainha, listagem na ÁGUIA e marcação individual ou em lote como lido. |
 | Compras | O fechamento da última etapa aceita `success` ou `failure`, registra a escolha na contratação e cria evento auditável na DFD. |
-| PORTA | O vínculo anual e a justificativa mínima aparecem como requisitos claros no formulário. A tela de RASCUNHOS passa a ser a entrada dos usuários sem acesso à equipe de planejamento. |
+| PORTA | O ano de referência, a justificativa mínima e a orientação contextual aparecem no formulário. O item do PCA não é selecionado na PORTA; a tela de RASCUNHOS passa a ser a entrada dos usuários sem acesso à equipe de planejamento. |
 | Acesso | A consulta do painel completo da AGENDA foi restringida no backend aos perfis institucionais autorizados, além do redirecionamento visual de demandantes para RASCUNHOS. |
 | Migração | Foi gerada a migração Drizzle `0022_amused_luminals.sql` e seu snapshot correspondente. |
 
@@ -70,7 +70,13 @@ O endpoint de calendário deve ser publicado antes da criação do agendamento d
 | Suíte completa sem OAuth externo | 47 arquivos e 123 testes passaram, excluindo somente o teste que exige credenciais OAuth do Google Drive não disponíveis neste ambiente. |
 | Diff | `git diff --check` passou sem erros de whitespace. |
 
-## 7. Próxima discussão funcional
+## 7. Amostra visual da PORTA e da DFD
+
+A rota pública `/#porta-preview` foi adicionada como prévia de conteúdo e linguagem. Ela apresenta a finalidade da PORTA, a sequência de preenchimento, a regra de ouro contra textos genéricos, um bloco de campos com ícones de orientação e uma DFD visual de exemplo com `DFD nº 1/2027 · V01`. A prévia é explicitamente não oficial e não cria registros.
+
+Os tooltips dos campos da PORTA usam `title`, `aria-label` e `data-tooltip`, permitindo leitura por mouse, teclado e tecnologia assistiva. Os limites aparecem no próprio rótulo: objeto resumido até 60 caracteres, descrição detalhada com mínimo de 60 e justificativa com mínimo de 1.000.
+
+## 8. Próxima discussão funcional
 
 A PORTA/DFD está alinhada para o debate seguinte. A próxima decisão recomendada é a **AGENDA/PCA**, especialmente o critério de consolidação de demandas aprovadas parcialmente, a montagem do PCA anual a partir de uma ou mais consolidações e a autoridade de publicação antes da entrada do Setor de Compras.
 
