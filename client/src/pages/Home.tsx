@@ -228,12 +228,28 @@ function PlanningDeadlineAlerts({ alerts }: { alerts: { id: number; entityType: 
 }
 
 function BrandMark({ small = false }: { small?: boolean }) {
-  return <span className={small ? "brand-mark brand-mark-small" : "brand-mark"} role="img" aria-label="Símbolo orbital da ÓRBITA"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.7" fill="#35d5f6" /><circle cx="18" cy="18" r="6.1" fill="none" stroke="#9deafb" strokeWidth="0.7" opacity="0.72" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#a5e7f8" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#73cbe5" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#73cbe5" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.7" cy="16.1" r="1.65" fill="#34d1f3" /><circle cx="12" cy="30.15" r="1.65" fill="#34d1f3" /><circle cx="13.15" cy="7.3" r="1.65" fill="#34d1f3" /></svg></span>;
+  return <span className={small ? "brand-mark brand-mark-small" : "brand-mark"} role="img" aria-label="Símbolo orbital da ÓRBITA"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.7" fill="#E350EA" /><circle cx="18" cy="18" r="6.1" fill="none" stroke="#8A62FF" strokeWidth="0.7" opacity="0.72" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#5E82FF" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#8A62FF" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#E350EA" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.7" cy="16.1" r="1.65" fill="#E350EA" /><circle cx="12" cy="30.15" r="1.65" fill="#5E82FF" /><circle cx="13.15" cy="7.3" r="1.65" fill="#8A62FF" /></svg></span>;
+}
+
+function OrbitSphereArt() {
+  return <svg className="orbit-sphere-art" viewBox="0 0 600 420" role="presentation" aria-hidden="true">
+    <defs>
+      <linearGradient id="orbit-blue-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5E82FF" /><stop offset="1" stopColor="#8A62FF" /></linearGradient>
+      <linearGradient id="orbit-magenta-blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#E350EA" /><stop offset="1" stopColor="#5E82FF" /></linearGradient>
+      <filter id="orbit-controlled-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
+    </defs>
+    <circle cx="300" cy="210" r="116" fill="none" stroke="#8A62FF" strokeOpacity=".16" strokeWidth="1" />
+    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="url(#orbit-blue-violet)" strokeWidth="3" transform="rotate(-24 300 210)" filter="url(#orbit-controlled-glow)" />
+    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="#E350EA" strokeWidth="3" transform="rotate(16 300 210)" filter="url(#orbit-controlled-glow)" />
+    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="url(#orbit-magenta-blue)" strokeWidth="3" transform="rotate(68 300 210)" filter="url(#orbit-controlled-glow)" />
+    <circle cx="300" cy="210" r="10" fill="#F7F8FC" stroke="#5E82FF" strokeWidth="3" />
+    <g filter="url(#orbit-controlled-glow)"><circle cx="465" cy="194" r="9" fill="#E350EA" stroke="#F7F8FC" strokeWidth="2" /><circle cx="237" cy="65" r="8" fill="#5E82FF" stroke="#F7F8FC" strokeWidth="2" /><circle cx="204" cy="314" r="8" fill="#8A62FF" stroke="#F7F8FC" strokeWidth="2" /></g>
+  </svg>;
 }
 
 function LandingBrand() {
   return <button className="wordmark wordmark-on-dark landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="ÓRBITA, início">
-    <svg className="landing-brand-orbit" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.6" fill="#32d4f6" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#b8eafa" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#80c9e2" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#80c9e2" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.8" cy="16" r="1.65" fill="#2dcdf0" /><circle cx="12" cy="30.2" r="1.65" fill="#2dcdf0" /><circle cx="13.2" cy="7.3" r="1.65" fill="#2dcdf0" /></svg>
+    <svg className="landing-brand-orbit" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.6" fill="#E350EA" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#5E82FF" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#8A62FF" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#E350EA" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.8" cy="16" r="1.65" fill="#E350EA" /><circle cx="12" cy="30.2" r="1.65" fill="#5E82FF" /><circle cx="13.2" cy="7.3" r="1.65" fill="#8A62FF" /></svg>
     <span>ÓRBITA</span>
   </button>;
 }
@@ -258,7 +274,7 @@ function Landing({ authenticated, openWorkspace, openModule }: { authenticated: 
             <button className="button button-cyan button-lg" onClick={() => authenticated ? openWorkspace() : startLogin()}><LogIn size={18} /> {publicAccessLabel(authenticated)}</button>
           </div>
         </div>
-        <div className="hero-visual hero-visual-3d hero-visual-logo reveal" role="img" aria-label={publicLandingVisual.officialLogo.accessibleDescription}><img src={ASSETS.hero} alt="" /></div>
+        <div className="hero-visual hero-visual-3d hero-visual-logo reveal" role="img" aria-label={publicLandingVisual.officialLogo.accessibleDescription}><OrbitSphereArt /></div>
       </section>
       <section className="welcome-principles" aria-label="Princípios da plataforma">
         <article><CircleDot size={18} /><div><strong>{publicLandingContent.principles[0].title}</strong><span>{publicLandingContent.principles[0].description}</span></div></article>
@@ -277,7 +293,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
   const signOut = session.logout || logout;
   const [open, setOpen] = useState(false);
   const navigate = (screen: Exclude<Screen, "landing">) => { go(screen); setOpen(false); };
-  return <div className="app-screen"><aside className={`app-sidebar ${open ? "app-sidebar-open" : ""}`}>
+  return <div className={`app-screen app-screen-${active}`}><aside className={`app-sidebar ${open ? "app-sidebar-open" : ""}`}>
     <div className="sidebar-top"><button className="wordmark app-wordmark" onClick={() => window.location.hash = ""}><BrandMark small /><span>ÓRBITA</span></button><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div>
     <div className="sidebar-meta">Plataforma integrada · Ambiente operacional</div>
     <nav>

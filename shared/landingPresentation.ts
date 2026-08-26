@@ -12,16 +12,16 @@ export const publicLandingContent = {
 } as const;
 
 export const publicLandingVisual = {
-  heroAsset: "/manus-storage/logo-oficial-pedestal-fundo-preto_606c670b.png",
-  logoAsset: "/manus-storage/logo-oficial-pedestal-fundo-preto_606c670b.png",
+  heroAsset: "inline:orbit-sphere-art",
+  logoAsset: "inline:orbit-sphere-art",
   aspectRatio: "16:9",
-  treatment: "logotipo orbital tridimensional centralizado",
+  treatment: "esfera de órbitas vetorial com luminosidade controlada",
   officialLabel: "Sistema Órbita",
   officialLogo: {
     orbitCount: 3,
     satelliteCount: 3,
     satelliteOrbitAssignments: ["diagonal superior-esquerda", "horizontal direita", "diagonal inferior-esquerda"],
-    accessibleDescription: "Logotipo oficial do Sistema Órbita com três elipses, três satélites — um em cada elipse — e assinatura Sistema Órbita em azul.",
+    accessibleDescription: "Sistema Órbita: esfera de órbitas com três trajetórias cruzadas e três pontos de passagem, um em cada elipse, nas cores Azul Orbital, Violeta Conexão e Magenta Pulso.",
   },
 } as const;
 

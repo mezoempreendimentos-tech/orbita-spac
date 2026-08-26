@@ -18,14 +18,14 @@ describe("apresentação pública da ÓRBITA", () => {
     expect(publicAccessLabel(true)).toBe("Abrir área de trabalho");
   });
 
-  it("preserva o logotipo orbital 3D centralizado na composição de acesso", () => {
-    expect(publicLandingVisual.heroAsset).toContain("logo-oficial-pedestal-fundo-preto");
+  it("preserva a esfera de órbitas vetorial centralizada na composição de acesso", () => {
+    expect(publicLandingVisual.heroAsset).toBe("inline:orbit-sphere-art");
     expect(publicLandingVisual.aspectRatio).toBe("16:9");
-    expect(publicLandingVisual.treatment).toBe("logotipo orbital tridimensional centralizado");
+    expect(publicLandingVisual.treatment).toBe("esfera de órbitas vetorial com luminosidade controlada");
   });
 
   it("define a marca oficial do Sistema Órbita como ativo compartilhado", () => {
-    expect(publicLandingVisual.logoAsset).toContain("logo-oficial-pedestal-fundo-preto");
+    expect(publicLandingVisual.logoAsset).toBe("inline:orbit-sphere-art");
     expect(publicLandingVisual.officialLabel).toBe("Sistema Órbita");
   });
 

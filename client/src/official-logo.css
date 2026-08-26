@@ -1,54 +1,18 @@
-.welcome-hero .hero-visual-3d {
-  background: radial-gradient(circle at 50% 44%, rgba(24, 191, 232, 0.12), transparent 34%), #071a38;
-}
-
-.welcome-hero .hero-visual-3d img {
-  object-fit: contain !important;
-  object-position: center !important;
-  padding: clamp(8px, 1.4vw, 16px) !important;
-}
-
-.brand-mark {
-  object-fit: contain;
-  object-position: center;
-}
-
-.welcome-hero .hero-visual-3d img {
-  object-fit: cover !important;
-  object-position: center !important;
-  padding: 0 !important;
-}
-
 .welcome-hero .hero-visual-logo {
   width: min(100%, 640px);
   justify-self: center;
   aspect-ratio: 16 / 9;
   min-height: 0;
-  background: #000;
+  background: var(--deep-night);
+  border: 1px solid color-mix(in srgb, var(--orbit-violet) 32%, transparent);
 }
 
-.welcome-hero .hero-visual-logo img {
-  object-fit: contain !important;
-}
-
-.landing-brand {
-  gap: 9px;
-  letter-spacing: 0.12em;
-}
-
-.landing-brand-orbit {
-  width: 31px;
-  height: 31px;
-  filter: drop-shadow(0 0 7px rgba(50, 212, 246, 0.22));
-}
-
-/* Marca interna: símbolo orbital transparente, sem o pedestal da tela pública. */
 .brand-mark {
   display: inline-grid;
   place-items: center;
   padding: 0 !important;
   background: transparent !important;
-  color: #2dcff2;
+  color: var(--orbit-blue);
 }
 
 .brand-mark svg {
@@ -56,11 +20,11 @@
   height: 100%;
   display: block;
   overflow: visible;
-  filter: drop-shadow(0 2px 5px rgba(24, 191, 232, 0.22));
+  filter: drop-shadow(0 2px 5px color-mix(in srgb, var(--orbit-blue) 28%, transparent));
 }
 
 .app-wordmark {
-  color: #10213d;
+  color: var(--text);
   white-space: nowrap;
 }
 
@@ -79,7 +43,7 @@
 }
 
 .dark .app-wordmark {
-  color: #f3f9ff;
+  color: var(--text);
 }
 
 @media (max-width: 720px) {
@@ -94,7 +58,6 @@
   .form-grid input, .form-grid textarea, .form-grid select, .content-two-columns input, .content-two-columns textarea, .content-two-columns select { min-width: 0; max-width: 100%; }
   .checkbox-line { align-items: flex-start; line-height: 1.42; }
 }
-
 
 @media (max-width: 640px) {
   .landing-nav .wordmark {
