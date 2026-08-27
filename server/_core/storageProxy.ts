@@ -1,48 +1,19 @@
+/**
+ * Hosted-storage proxy (was: Manus Storage Proxy -> /manus-storage/{key}).
+ *
+ * Standalone (self-hosted) deployments use STORAGE_DRIVER=local, so this
+ * file is never imported at runtime in that mode. Kept only so the
+ * conditional import in `server/_core/index.ts` doesn't fail at parse time
+ * if someone sets STORAGE_DRIVER to anything other than "local".
+ *
+ * If a hosted mode is reintroduced, restore the original 307-redirect handler
+ * here (it forwarded `/manus-storage/{key}` to a Forge-presigned S3 URL).
+ */
 import type { Express } from "express";
-import { ENV } from "./env";
 
-export function registerStorageProxy(app: Express) {
-  app.get("/manus-storage/*", async (req, res) => {
-    const key = (req.params as Record<string, string>)[0];
-    if (!key) {
-      res.status(400).send("Missing storage key");
-      return;
-    }
-
-    if (!ENV.forgeApiUrl || !ENV.forgeApiKey) {
-      res.status(500).send("Storage proxy not configured");
-      return;
-    }
-
-    try {
-      const forgeUrl = new URL(
-        "v1/storage/presign/get",
-        ENV.forgeApiUrl.replace(/\/+$/, "") + "/",
-      );
-      forgeUrl.searchParams.set("path", key);
-
-      const forgeResp = await fetch(forgeUrl, {
-        headers: { Authorization: `Bearer ${ENV.forgeApiKey}` },
-      });
-
-      if (!forgeResp.ok) {
-        const body = await forgeResp.text().catch(() => "");
-        console.error(`[StorageProxy] forge error: ${forgeResp.status} ${body}`);
-        res.status(502).send("Storage backend error");
-        return;
-      }
-
-      const { url } = (await forgeResp.json()) as { url: string };
-      if (!url) {
-        res.status(502).send("Empty signed URL from backend");
-        return;
-      }
-
-      res.set("Cache-Control", "no-store");
-      res.redirect(307, url);
-    } catch (err) {
-      console.error("[StorageProxy] failed:", err);
-      res.status(502).send("Storage proxy error");
-    }
-  });
+export function registerStorageProxy(_app: Express): void {
+  throw new Error(
+    "Hosted storage proxy is not available in this build. Set " +
+      "STORAGE_DRIVER=local or restore the proxy in server/_core/storageProxy.ts."
+  );
 }

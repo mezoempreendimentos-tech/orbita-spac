@@ -7,6 +7,7 @@ LOCAL_ADMIN_PASSWORD=defina-uma-senha-forte-e-troque-apos-o-primeiro-acesso
 MYSQL_PASSWORD=defina-uma-senha-forte-para-o-banco
 MYSQL_ROOT_PASSWORD=defina-outra-senha-forte-para-o-root-do-banco
 BACKUP_REPORT_TOKEN=defina-um-segredo-exclusivo-para-o-relatorio-de-backup-local
+CRON_TOKEN=defina-um-segredo-para-o-endpoint-de-scheduler-em-/api/scheduled/planning-deadlines
 # Opcionais: necessários apenas para integração individual com Google Drive.
 GOOGLE_OAUTH_CLIENT_ID=
 GOOGLE_OAUTH_CLIENT_SECRET=

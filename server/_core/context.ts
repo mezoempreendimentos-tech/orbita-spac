@@ -14,11 +14,9 @@ export async function createContext(
   let user: User | null = null;
 
   try {
-    if (process.env.AUTH_MODE === "local") user = await authenticateLocalRequest(opts.req);
-    else {
-      const { sdk } = await import("./sdk");
-      user = await sdk.authenticateRequest(opts.req);
-    }
+    // Standalone build: only local auth. The legacy hosted-OAuth path was
+    // removed in the Manus rip-out (2026-08-27) along with _core/sdk.ts.
+    user = await authenticateLocalRequest(opts.req);
   } catch (error) {
     // Authentication is optional for public procedures.
     user = null;

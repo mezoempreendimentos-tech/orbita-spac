@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice" role="img" aria-label="Superfície clara institucional">
+  <defs>
+    <linearGradient id="g" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#dbeafe" />
+      <stop offset="50%" stop-color="#bfdbfe" />
+      <stop offset="100%" stop-color="#93c5fd" />
+    </linearGradient>
+    <radialGradient id="r" cx="0.7" cy="0.3" r="0.7">
+      <stop offset="0%" stop-color="rgba(255,255,255,0.55)" />
+      <stop offset="100%" stop-color="rgba(255,255,255,0)" />
+    </radialGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#g)" />
+  <rect width="1200" height="800" fill="url(#r)" />
+  <g opacity="0.18" stroke="#1e3a8a" stroke-width="1" fill="none">
+    <path d="M0 600 Q 300 540 600 600 T 1200 600" />
+    <path d="M0 660 Q 300 600 600 660 T 1200 660" />
+    <path d="M0 720 Q 300 660 600 720 T 1200 720" />
+  </g>
+</svg>

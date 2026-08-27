@@ -82,8 +82,10 @@ type StatusTone = "info" | "success" | "warning" | "danger" | "neutral";
 const ASSETS = {
   logo: publicLandingVisual.logoAsset,
   hero: publicLandingVisual.heroAsset,
-  lightSurface: "/manus-storage/orbita-light-process-surface_82a81227.png",
-  darkSurface: "/manus-storage/orbita-dark-control-surface_aa305fc8.png",
+  // Local SVG surfaces served by Vite from client/public. Replaces the old
+  // /manus-storage/{key} paths that pointed to Manus-hosted PNGs.
+  lightSurface: "/orbita/light-surface.svg",
+  darkSurface: "/orbita/dark-surface.svg",
 };
 
 const navItems: { label: string; screen: Exclude<Screen, "landing">; icon: typeof LayoutDashboard }[] = [
