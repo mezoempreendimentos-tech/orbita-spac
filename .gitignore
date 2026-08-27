@@ -101,10 +101,42 @@ jspm_packages/
 tmp/
 temp/
 
+# Debug artifacts
+check-fk-len.ps1
+build-*.log
+build-*.err
+rebuild-*.log
+rebuild-*.err
+standalone/build*.log
+standalone/build*.err
+standalone/manual.log
+standalone/manual.log.err
+standalone/tee.log
+standalone/tee.log.err
+standalone/run.log
+standalone/run.log.err
+standalone/up.log
+standalone/up.log.err
+standalone/Dockerfile.minimal
+
 # Database
 *.db
 *.sqlite
 *.sqlite3
+
+# Environment files (standalone)
+standalone/environment
+standalone/.env
+standalone/.env.local
+standalone/.env.*
+!.env.example
+!.env.template
+!.secrets.example.json
+
+# Generated secrets (do NOT commit)
+.secrets.json
+.secrets.*.json
+*-secrets.json
 
 # Webdev artifacts (checkpoint zips, migrations, etc.)
 .webdev/

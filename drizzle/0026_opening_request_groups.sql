@@ -128,7 +128,6 @@ CREATE TABLE `procurement_process_items` (
 	CONSTRAINT `procurement_process_items_uq` UNIQUE(`processId`,`pcaItemId`)
 );
 --> statement-breakpoint
-ALTER TABLE `opening_requests` DROP INDEX `opening_requests_demand_uq`;--> statement-breakpoint
 ALTER TABLE `opening_requests` MODIFY COLUMN `demandId` int;--> statement-breakpoint
 ALTER TABLE `annual_plan_items` ADD `quantity` decimal(14,4);--> statement-breakpoint
 ALTER TABLE `annual_plan_items` ADD `unitOfMeasure` varchar(100);--> statement-breakpoint
@@ -136,28 +135,33 @@ ALTER TABLE `opening_requests` ADD `activeVersionNumber` int DEFAULT 1 NOT NULL;
 ALTER TABLE `opening_requests` ADD `finalWorkflowType` enum('direct_contracting','bidding');--> statement-breakpoint
 ALTER TABLE `opening_requests` ADD `finalModality` varchar(120);--> statement-breakpoint
 ALTER TABLE `opening_requests` ADD `authorizedAt` timestamp;--> statement-breakpoint
-ALTER TABLE `opening_request_analyses` ADD CONSTRAINT `opening_request_analyses_versionId_opening_request_versions_id_fk` FOREIGN KEY (`versionId`) REFERENCES `opening_request_versions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+-- FIX: criar o indice substituto ANTES de dropar o UNIQUE,
+-- para que o MariaDB nao reclame que ha FKs dependendo do UNIQUE.
+-- Erro original: ERROR 1553 (HY000): Cannot drop index 'opening_requests_demand_uq': needed in a foreign key constraint
+CREATE INDEX `opening_requests_demand_idx` ON `opening_requests` (`demandId`);--> statement-breakpoint
+ALTER TABLE `opening_requests` DROP INDEX `opening_requests_demand_uq`;--> statement-breakpoint
+ALTER TABLE `opening_request_analyses` ADD CONSTRAINT `op_req_analyses_versionId_op_req_versions_id_fk` FOREIGN KEY (`versionId`) REFERENCES `opening_request_versions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_analyses` ADD CONSTRAINT `opening_request_analyses_executedByUserId_users_id_fk` FOREIGN KEY (`executedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `opening_request_analysis_matches` ADD CONSTRAINT `opening_request_analysis_matches_analysisId_opening_request_analyses_id_fk` FOREIGN KEY (`analysisId`) REFERENCES `opening_request_analyses`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `opening_request_analysis_matches` ADD CONSTRAINT `opening_request_analysis_matches_pcaItemId_pca_demand_items_id_fk` FOREIGN KEY (`pcaItemId`) REFERENCES `pca_demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `opening_request_analysis_matches` ADD CONSTRAINT `op_req_anl_matches_aid_op_req_analyses_id_fk` FOREIGN KEY (`analysisId`) REFERENCES `opening_request_analyses`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `opening_request_analysis_matches` ADD CONSTRAINT `op_req_anl_matches_pcaItemId_pca_demand_items_id_fk` FOREIGN KEY (`pcaItemId`) REFERENCES `pca_demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_analysis_matches` ADD CONSTRAINT `opening_request_analysis_matches_demandId_demands_id_fk` FOREIGN KEY (`demandId`) REFERENCES `demands`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `opening_request_version_items` ADD CONSTRAINT `opening_request_version_items_versionId_opening_request_versions_id_fk` FOREIGN KEY (`versionId`) REFERENCES `opening_request_versions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `opening_request_version_items` ADD CONSTRAINT `op_req_ver_items_versionId_op_req_versions_id_fk` FOREIGN KEY (`versionId`) REFERENCES `opening_request_versions`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_version_items` ADD CONSTRAINT `opening_request_version_items_pcaItemId_pca_demand_items_id_fk` FOREIGN KEY (`pcaItemId`) REFERENCES `pca_demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_version_items` ADD CONSTRAINT `opening_request_version_items_demandId_demands_id_fk` FOREIGN KEY (`demandId`) REFERENCES `demands`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_version_items` ADD CONSTRAINT `opening_request_version_items_demandItemId_demand_items_id_fk` FOREIGN KEY (`demandItemId`) REFERENCES `demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_versions` ADD CONSTRAINT `opening_request_versions_openingRequestId_opening_requests_id_fk` FOREIGN KEY (`openingRequestId`) REFERENCES `opening_requests`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_versions` ADD CONSTRAINT `opening_request_versions_pcaId_planning_consolidations_id_fk` FOREIGN KEY (`pcaId`) REFERENCES `planning_consolidations`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `opening_request_versions` ADD CONSTRAINT `opening_request_versions_analysisAcknowledgedByUserId_users_id_fk` FOREIGN KEY (`analysisAcknowledgedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `opening_request_versions` ADD CONSTRAINT `op_req_versions_aaUserId_users_id_fk` FOREIGN KEY (`analysisAcknowledgedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_versions` ADD CONSTRAINT `opening_request_versions_decidedByUserId_users_id_fk` FOREIGN KEY (`decidedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `opening_request_versions` ADD CONSTRAINT `opening_request_versions_createdByUserId_users_id_fk` FOREIGN KEY (`createdByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `pca_demand_items` ADD CONSTRAINT `pca_demand_items_pcaId_planning_consolidations_id_fk` FOREIGN KEY (`pcaId`) REFERENCES `planning_consolidations`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `pca_demand_items` ADD CONSTRAINT `pca_demand_items_demandId_demands_id_fk` FOREIGN KEY (`demandId`) REFERENCES `demands`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `pca_demand_items` ADD CONSTRAINT `pca_demand_items_demandItemId_demand_items_id_fk` FOREIGN KEY (`demandItemId`) REFERENCES `demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `procurement_modality_changes` ADD CONSTRAINT `procurement_modality_changes_processId_procurement_processes_id_fk` FOREIGN KEY (`processId`) REFERENCES `procurement_processes`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `procurement_modality_changes` ADD CONSTRAINT `proc_mod_changes_processId_proc_processes_id_fk` FOREIGN KEY (`processId`) REFERENCES `procurement_processes`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_modality_changes` ADD CONSTRAINT `procurement_modality_changes_requestedByUserId_users_id_fk` FOREIGN KEY (`requestedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_modality_changes` ADD CONSTRAINT `procurement_modality_changes_decidedByUserId_users_id_fk` FOREIGN KEY (`decidedByUserId`) REFERENCES `users`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_process_items` ADD CONSTRAINT `procurement_process_items_processId_procurement_processes_id_fk` FOREIGN KEY (`processId`) REFERENCES `procurement_processes`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
-ALTER TABLE `procurement_process_items` ADD CONSTRAINT `procurement_process_items_openingRequestVersionItemId_opening_request_version_items_id_fk` FOREIGN KEY (`openingRequestVersionItemId`) REFERENCES `opening_request_version_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE `procurement_process_items` ADD CONSTRAINT `proc_proc_items_oRVIId_op_req_ver_items_id_fk` FOREIGN KEY (`openingRequestVersionItemId`) REFERENCES `opening_request_version_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_process_items` ADD CONSTRAINT `procurement_process_items_pcaItemId_pca_demand_items_id_fk` FOREIGN KEY (`pcaItemId`) REFERENCES `pca_demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_process_items` ADD CONSTRAINT `procurement_process_items_demandId_demands_id_fk` FOREIGN KEY (`demandId`) REFERENCES `demands`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE `procurement_process_items` ADD CONSTRAINT `procurement_process_items_demandItemId_demand_items_id_fk` FOREIGN KEY (`demandItemId`) REFERENCES `demand_items`(`id`) ON DELETE no action ON UPDATE no action;--> statement-breakpoint
@@ -173,8 +177,6 @@ CREATE INDEX `pca_demand_items_demand_idx` ON `pca_demand_items` (`demandId`);--
 CREATE INDEX `procurement_modality_changes_process_idx` ON `procurement_modality_changes` (`processId`);--> statement-breakpoint
 CREATE INDEX `procurement_modality_changes_status_idx` ON `procurement_modality_changes` (`status`);--> statement-breakpoint
 CREATE INDEX `procurement_process_items_pca_idx` ON `procurement_process_items` (`pcaItemId`);--> statement-breakpoint
-CREATE INDEX `opening_requests_demand_idx` ON `opening_requests` (`demandId`);
---> statement-breakpoint
 /* Backfill dos itens dos PCAs existentes. A origem é composta pelas DFDs vinculadas ao PCA
    (por grupo ou diretamente) e pelas atualizações já publicadas. Itens não aprovados pela
    Presidência não entram no saldo operacional de abertura. */

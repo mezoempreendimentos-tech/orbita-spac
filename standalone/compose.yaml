@@ -15,10 +15,20 @@ services:
       LOCAL_STORAGE_DIR: /var/lib/orbita/files
     volumes:
       - orbita_files:/var/lib/orbita
+      # Volume mount do entrypoint - permite patch sem rebuild da imagem.
+      # A imagem ja vem com o entrypoint original (3 linhas), mas este
+      # aqui sobrepoe com a versao robusta (wait-for-db + tolerancia
+      # a exit code do drizzle + validacao por estado do banco).
+      # TODO longo prazo: bake no Dockerfile e remover o mount.
+      - ./entrypoint.sh:/app/standalone/entrypoint.sh:ro
     depends_on:
       mariadb:
         condition: service_healthy
     restart: unless-stopped
+    # Sobrescreve CMD/entrypoint do Dockerfile (apontando pro script
+    # que veio via volume mount)
+    entrypoint: ["sh", "/app/standalone/entrypoint.sh"]
+    command: []
   mariadb:
     image: mariadb:11
     environment:
