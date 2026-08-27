@@ -4,6 +4,7 @@ services:
       context: ..
       dockerfile: standalone/Dockerfile
     env_file: environment
+    image: standalone-orbita:latest
     ports:
       - "${APP_PORT:-8080}:8080"
     environment:
@@ -15,20 +16,19 @@ services:
       LOCAL_STORAGE_DIR: /var/lib/orbita/files
     volumes:
       - orbita_files:/var/lib/orbita
-      # Volume mount do entrypoint - permite patch sem rebuild da imagem.
-      # A imagem ja vem com o entrypoint original (3 linhas), mas este
-      # aqui sobrepoe com a versao robusta (wait-for-db + tolerancia
-      # a exit code do drizzle + validacao por estado do banco).
-      # TODO longo prazo: bake no Dockerfile e remover o mount.
-      - ./entrypoint.sh:/app/standalone/entrypoint.sh:ro
     depends_on:
       mariadb:
         condition: service_healthy
+    healthcheck:
+      # GET /api/health retorna 200 quando o app subiu E o DB responde a SELECT 1.
+      # Veja server/_core/health.ts. Intervalo conservador (15s) para nao martelar
+      # o DB; start_period de 60s cobre o pior caso de cold start + migrations.
+      test: ["CMD", "node", "-e", "require('http').get('http://127.0.0.1:8080/api/health', r => process.exit(r.statusCode === 200 ? 0 : 1)).on('error', () => process.exit(1))"]
+      interval: 15s
+      timeout: 5s
+      retries: 4
+      start_period: 60s
     restart: unless-stopped
-    # Sobrescreve CMD/entrypoint do Dockerfile (apontando pro script
-    # que veio via volume mount)
-    entrypoint: ["sh", "/app/standalone/entrypoint.sh"]
-    command: []
   mariadb:
     image: mariadb:11
     environment:

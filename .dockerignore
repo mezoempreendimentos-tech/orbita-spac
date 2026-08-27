@@ -1,0 +1,68 @@
+# Slim build context: skip everything not needed for the production image.
+# Saves ~700MB and a couple of minutes on the "transferring context" step.
+
+# Source-control noise
+.git
+.gitignore
+.github
+.gitattributes
+.dockerignore
+
+# Editor / IDE
+.vscode
+.idea
+*.swp
+*.swo
+
+# Logs and debug artifacts
+*.log
+*.err
+debug-*
+
+# Build outputs (rebuilt inside the image)
+dist
+build
+.cache
+.parcel-cache
+.next
+.nuxt
+.out
+.storybook-out
+*.dist
+*.tsbuildinfo
+
+# Dependencies (rebuilt inside the image)
+node_modules
+.pnpm-store
+.npm
+.yarn-integrity
+
+# Tests
+coverage
+.nyc_output
+
+# Environment files (NEVER bake secrets into the image)
+.env
+.env.local
+.env.*.local
+standalone/environment
+standalone/.env
+standalone/.env.*
+.secrets.json
+.secrets.*.json
+*.pem
+*.key
+
+# OS / runtime noise
+.DS_Store
+Thumbs.db
+ehthumbs.db
+tmp
+temp
+
+# Webdev artifacts and project-local state
+.webdev
+.project-config.json
+
+# This file itself
+standalone/Dockerfile.minimal

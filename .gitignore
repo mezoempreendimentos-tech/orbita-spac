@@ -109,6 +109,8 @@ rebuild-*.log
 rebuild-*.err
 standalone/build*.log
 standalone/build*.err
+standalone/*.log
+standalone/*.err
 standalone/manual.log
 standalone/manual.log.err
 standalone/tee.log
