@@ -12,6 +12,7 @@ import { registerDfdPdfVerificationRoutes } from "../dfdPdfVerificationRoutes";
 import { registerLocalAuthRoutes } from "../selfhost/localAuthRoutes";
 import { registerLocalStorageRoutes } from "../selfhost/localStorageRoutes";
 import { registerLocalBackupRoutes } from "../selfhost/localBackupRoutes";
+import { registerHealthRoute } from "./health";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -49,6 +50,7 @@ async function startServer() {
   if (process.env.AUTH_MODE === "local") registerLocalBackupRoutes(app);
   registerGoogleDriveOAuthRoutes(app);
   registerDfdPdfVerificationRoutes(app);
+  registerHealthRoute(app);
   app.post("/api/scheduled/planning-deadlines", runPlanningDeadlineScheduler);
   // tRPC API
   app.use(
