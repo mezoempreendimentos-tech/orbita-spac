@@ -3,15 +3,23 @@ import { COOKIE_NAME, ONE_YEAR_MS } from "@shared/const";
 export { COOKIE_NAME, ONE_YEAR_MS };
 
 /**
- * Start the local-account login flow. Navigates to /login, which renders the
- * institutional login form. The server is responsible for issuing the session
- * cookie via the local auth routes.
+ * Abre o modal de login local sobre a página atual. Disparado pelo botão
+ * "Entrar" da landing e pelo interceptador de erros tRPC (main.tsx) quando
+ * uma chamada volta UNAUTHORIZED.
  *
- * Hosted-OAuth (the original Manus path) was removed in the Manus rip-out
- * (2026-08-27); the runtime no longer carries the VITE_OAUTH_PORTAL_URL /
- * VITE_APP_ID env vars. Reintroduce the second branch if a hosted mode is
- * ever restored.
+ * Antes isso redirecionava para `/login` (página separada). Agora o
+ * dialog abre sobre a landing, mantendo o branding da ÓRBITA visível e
+ * dispensando a navegação. A URL permanece a mesma.
+ *
+ * O componente `LocalLoginDialog` (App.tsx) escuta o evento
+ * `orbita:open-login` no window e controla a abertura.
  */
 export const startLogin = () => {
-  window.location.href = "/login";
+  if (typeof window === "undefined") return;
+  // Normaliza a URL (caso esteja em /login por deep-link antigo) para
+  // que o dialog abra sobre a landing, e não sobre uma página morta.
+  if (window.location.pathname === "/login") {
+    window.history.replaceState(null, "", "/");
+  }
+  window.dispatchEvent(new CustomEvent("orbita:open-login"));
 };
