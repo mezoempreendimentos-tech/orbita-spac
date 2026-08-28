@@ -365,6 +365,39 @@ textarea:focus-visible {
 @media (max-width:580px) { .porta-presentation-main,.porta-presentation-side{padding:22px}.porta-steps{grid-template-columns:1fr}.porta-steps>div{min-height:0}.dfd-sample-wrap{padding:10px}.dfd-sample-toolbar{align-items:flex-start;flex-direction:column}.dfd-sample-meta,.dfd-sample-section dl,.dfd-sample-footer{grid-template-columns:1fr}.dfd-sample-meta>div{padding:0 0 10px;border-right:0;border-bottom:1px solid #e4e6ef}.dfd-sample-item{grid-template-columns:34px 1fr}.dfd-sample-item em{grid-column:2;text-align:left} }
 @media (prefers-reduced-motion:reduce) { .field-help::after{transition:none} }
 
+/* === Orientação visível e ações destrutivas (2026-08-27) === */
+
+/* Texto de ajuda permanente embaixo de cada input. Antes o help era só
+   tooltip, que somia assim que o user começava a digitar — a Debora
+   (sócio) perdeu o contexto várias vezes. */
+.field-helper { display:block; margin-top:5px; color:var(--muted-2); font-size:11.5px; line-height:1.4; font-weight:500; }
+
+/* Variant de FormPanel usada para blocos de ORIENTAÇÃO (não são campos).
+   Visual: borda tracejada, ícone de help, sem asterisco obrigatório. */
+.form-panel-guidance { background:color-mix(in srgb,var(--cyan) 6%,var(--surface)); border:1.5px dashed color-mix(in srgb,var(--cyan) 36%,var(--line)); }
+.form-panel-guidance-header { display:flex; align-items:center; gap:10px; margin-bottom:10px; color:var(--orbit-blue); }
+.form-panel-guidance-header h2 { font:700 15px var(--font-display); letter-spacing:-.02em; margin:0; color:var(--text); }
+.form-panel-guidance-body p { font-size:12.5px; color:var(--muted); line-height:1.55; margin:0 0 8px; }
+.form-panel-guidance-body p:last-of-type { margin-bottom:0; }
+.form-panel-guidance-body em { font-style:normal; font-weight:600; color:var(--text); }
+
+/* Display de erro do form — em vez de uma linha fina, vira um bloco com
+   explicação mais legível. */
+.form-error-block { background:color-mix(in srgb,var(--danger) 7%,var(--surface)); border:1px solid color-mix(in srgb,var(--danger) 30%,var(--line)); border-radius:12px; padding:14px 16px; margin:16px 0; color:var(--danger); font-size:12px; font-weight:500; white-space:pre-line; }
+.form-error-block p { margin:0 0 6px; }
+.form-error-block p:last-of-type { margin-bottom:0; }
+.form-error-block strong { color:var(--danger); font-weight:700; }
+
+/* Botão de ação destrutiva (ex: "Remover" item, "Excluir documento").
+   Mantém o estilo de text-button mas em vermelho. */
+.text-button-danger { color:var(--danger); }
+.text-button-danger:hover:not(:disabled) { background:color-mix(in srgb,var(--danger) 10%,transparent); }
+.text-button-danger:disabled { color:var(--muted-2); }
+
+/* Confirmação destrutiva no AlertDialog (ex: "Sim, remover"). */
+.alert-dialog-action-danger { background:var(--danger); color:#fff; }
+.alert-dialog-action-danger:hover { background:color-mix(in srgb,var(--danger) 88%,#000); }
+
 .porta-preview-page { min-height:100vh; background:var(--paper); }
 .porta-preview-header { display:flex; align-items:center; gap:22px; max-width:1260px; margin:0 auto; padding:38px clamp(20px,5vw,72px) 24px; }
 .porta-preview-header .brand-mark { width:64px; height:64px; }

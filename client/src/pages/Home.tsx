@@ -11,6 +11,7 @@ import {
   Archive,
   ArrowLeft,
   ArrowRight,
+  Trash2,
   Bell,
   Boxes,
   Building2,
@@ -70,6 +71,7 @@ import { SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH } from "@shared/superveni
 import { filterSuperveningDemands, superveningApprovalDeadlineAlerts } from "@shared/superveningAgenda";
 import { demandReviewState } from "@shared/demandReviewState";
 import { canIncludeNewDemandItem, demandItemValidationError, replaceConfirmedDemandItem, totalEstimatedValueOfDemandItems, type DemandItemInput } from "@shared/demandItems";
+import { formatTrpcError, normalizeDecimal, optionalNumber, parseLocalDate } from "@/lib/dfdForm";
 import { mapaCategories, mapaCategoryFor, mapaCategoryMeta, type MapaCategory } from "@shared/mapaCategories";
 import { processDriveFolderUrl } from "@shared/processDriveFolder";
 import { deadlineSummary, filterMapaItems, type MapaDateField } from "@shared/mapaFilters";
@@ -410,10 +412,14 @@ function EmptyState({ icon, title, text, action }: { icon: ReactNode; title: str
 type LocalDemandItem = DemandItemInput & { localId: string };
 const emptyDemandItem = (): DemandItemInput => ({ title: "", objectDescription: "", quantity: "", unitOfMeasure: "", estimatedValue: "", itemJustification: "", quantityJustification: "", estimatedValueJustification: "", priceResearchCertified: false });
 
+type Classification = "planned" | "supervening";
+type ObjetoTipo = "fornecimento_imediato" | "fornecimento_futuro" | "servico_continuo" | "servico_delimitado";
+
 function DemandItemsSequence({ items, isAdding, onItemsChange, onAddingChange }: { items: LocalDemandItem[]; isAdding: boolean; onItemsChange: (items: LocalDemandItem[]) => void; onAddingChange: (isAdding: boolean) => void }) {
   const [draft, setDraft] = useState<DemandItemInput>(emptyDemandItem);
   const [error, setError] = useState<string | null>(null);
   const [editingLocalId, setEditingLocalId] = useState<string | null>(null);
+  const [itemPendingRemoval, setItemPendingRemoval] = useState<LocalDemandItem | null>(null);
   const total = totalEstimatedValueOfDemandItems(items);
   const change = <K extends keyof DemandItemInput>(field: K, value: DemandItemInput[K]) => setDraft(current => ({ ...current, [field]: value }));
   const confirm = () => {
@@ -435,12 +441,20 @@ function DemandItemsSequence({ items, isAdding, onItemsChange, onAddingChange }:
     onAddingChange(true);
   };
   const cancelEditor = () => { setError(null); setDraft(emptyDemandItem()); setEditingLocalId(null); onAddingChange(false); };
+  const confirmRemoval = () => {
+    if (!itemPendingRemoval) return;
+    onItemsChange(items.filter(candidate => candidate.localId !== itemPendingRemoval.localId));
+    setItemPendingRemoval(null);
+  };
   const editingIndex = editingLocalId ? items.findIndex(item => item.localId === editingLocalId) + 1 : items.length + 1;
   return <FormPanel title="Itens da DFD" help="Registre um item por vez. Quantidade, valor e pesquisa prévia devem ser justificados individualmente.">
     <Field label="Composição confirmada" full container><div className="demand-items-sequence">
       {items.length ? <div className="demand-item-list">{items.map((item, index) => <article className={`demand-item-confirmed${editingLocalId === item.localId ? " demand-item-editing" : ""}`} key={item.localId}>
         <div className="demand-item-number">{String(index + 1).padStart(2, "0")}</div><div><strong>{item.title}</strong><small>{item.quantity ? `${item.quantity} ${item.unitOfMeasure || "unidade(s)"}` : "Quantidade não informada"}{item.estimatedValue ? ` · ${formatMoney(item.estimatedValue)}` : " · valor não informado"}</small><p>{item.objectDescription}</p><small>Justificativas individuais e pesquisa prévia certificadas.</small></div>
-        <div className="demand-item-actions"><button className="text-button" type="button" disabled={isAdding} onClick={() => startEdit(item)}><FileCog size={14} /> Editar</button><button className="text-button" type="button" disabled={isAdding} onClick={() => onItemsChange(items.filter(candidate => candidate.localId !== item.localId))}>Remover</button></div>
+        <div className="demand-item-actions">
+          <button className="text-button" type="button" disabled={isAdding && editingLocalId !== item.localId} onClick={() => startEdit(item)}><FileCog size={14} /> Editar</button>
+          <button className="text-button text-button-danger" type="button" disabled={isAdding} onClick={() => setItemPendingRemoval(item)}><Trash2 size={14} /> Remover</button>
+        </div>
       </article>)}</div> : <p className="task-empty">Nenhum item confirmado. Inclua e confirme ao menos um item para enviar a DFD.</p>}
       {isAdding ? <section className="demand-item-editor"><div className="demand-item-editor-header"><div><span className="panel-kicker">{editingLocalId ? "ITEM EM EDIÇÃO" : "ITEM EM PREENCHIMENTO"}</span><h3>Item {editingIndex}</h3></div><Status tone="info">{editingLocalId ? "Requer nova confirmação" : "Aguardando confirmação"}</Status></div>
         <div className="form-grid">
@@ -457,6 +471,20 @@ function DemandItemsSequence({ items, isAdding, onItemsChange, onAddingChange }:
       </section> : <button className="button button-outline button-sm" type="button" disabled={!canIncludeNewDemandItem(items, isAdding)} onClick={startNew}><Plus size={14} /> Incluir novo item</button>}
       <div className="demand-items-total"><span>{items.length} item(ns) confirmado(s)</span><strong>Estimativa consolidada: {total ? formatMoney(total) : "Não informada"}</strong></div>
     </div></Field>
+    <AlertDialog open={Boolean(itemPendingRemoval)} onOpenChange={open => { if (!open) setItemPendingRemoval(null); }}>
+      <AlertDialogContent>
+        <AlertDialogHeader>
+          <AlertDialogTitle>Remover este item da DFD?</AlertDialogTitle>
+          <AlertDialogDescription>
+            Esta ação não pode ser desfeita. O item <strong>{itemPendingRemoval?.title || "sem título"}</strong> será retirado da composição da DFD e não contará no total estimado.
+          </AlertDialogDescription>
+        </AlertDialogHeader>
+        <AlertDialogFooter>
+          <AlertDialogCancel>Manter item</AlertDialogCancel>
+          <AlertDialogAction onClick={confirmRemoval} className="alert-dialog-action-danger">Sim, remover</AlertDialogAction>
+        </AlertDialogFooter>
+      </AlertDialogContent>
+    </AlertDialog>
   </FormPanel>;
 }
 
@@ -531,18 +559,26 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
   const [supportingFile, setSupportingFile] = useState<File | null>(null);
   const uploadPlanningDocument = trpc.planning.uploadDocument.useMutation({ onSuccess: afterCreate });
   const availableUnits = useMemo(() => uniqueUnitOptions(units), [units]);
-  const [isSupervening, setIsSupervening] = useState(false);
+  const [classification, setClassification] = useState<Classification>("planned");
+  const [objetoTipo, setObjetoTipo] = useState<ObjetoTipo>("fornecimento_imediato");
   const [supplyLine, setSupplyLine] = useState<CnaeSupplyLine | null>(null);
   const [confirmedItems, setConfirmedItems] = useState<LocalDemandItem[]>([]);
-  const [isAddingItem, setIsAddingItem] = useState(true);
+  const [isAddingItem, setIsAddingItem] = useState(false);
   const [itemsError, setItemsError] = useState<string | null>(null);
+  const [itemToRemove, setItemToRemove] = useState<LocalDemandItem | null>(null);
   useEffect(() => {
     if (!draft.data) return;
-    setIsSupervening(draft.data.demand.isSupervening);
+    setClassification(draft.data.demand.isSupervening ? "supervening" : "planned");
+    // objetoTipo ainda não é persistido no schema — quando o rascunho é carregado
+    // sem esse campo, mantemos o default "fornecimento_imediato". TODO: criar
+    // migration 0027 para adicionar a coluna `objeto_tipo` e os prazos
+    // estruturados (delivery_days, service_duration_months, service_end_date).
+    setObjetoTipo("fornecimento_imediato");
     setSupplyLine(draft.data.demand.supplyLineCnaeCode && draft.data.demand.supplyLineCnaeDescription ? { code: draft.data.demand.supplyLineCnaeCode, description: draft.data.demand.supplyLineCnaeDescription } : null);
     if (draft.data.items.length) { setConfirmedItems(draft.data.items.map(item => ({ localId: `draft-${item.id}`, title: item.title, objectDescription: item.objectDescription, quantity: item.quantity ?? "", unitOfMeasure: item.unitOfMeasure ?? "", estimatedValue: item.estimatedValue ?? "", itemJustification: item.itemJustification ?? "", quantityJustification: item.quantityJustification ?? "", estimatedValueJustification: item.estimatedValueJustification ?? "", priceResearchCertified: Boolean(item.priceResearchCertifiedAt) }))); setIsAddingItem(false); }
   }, [draft.data]);
   const saveDraft = trpc.planning.saveDemandDraft.useMutation();
+  const createDemandDraft = trpc.planning.createDemandDraft.useMutation();
   const createDemand = trpc.planning.createDemand.useMutation({
     onSuccess: async result => {
       await utils.planning.board.invalidate();
@@ -555,7 +591,74 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
   const saveCurrentDraft = () => {
     if (!draftPublicId || !formRef.current) return;
     const data = new FormData(formRef.current);
-    saveDraft.mutate({ draftPublicId, unitId: Number(data.get("unitId")), annualPlanItemId: Number(data.get("annualPlanItemId")) || undefined, title: String(data.get("title") ?? ""), objectDescription: String(data.get("objectDescription") ?? ""), justification: String(data.get("justification") ?? ""), supplyLineCnaeCode: supplyLine?.code, supplyLineCnaeDescription: supplyLine?.description, desiredContractDate: String(data.get("desiredContractDate") ?? "") ? new Date(`${String(data.get("desiredContractDate"))}T12:00:00`) : undefined, deliveryPeriod: String(data.get("deliveryPeriod") ?? "") || undefined, hasFutureFiscalImpact: data.get("hasFutureFiscalImpact") === "on", isSupervening: data.get("isSupervening") === "on", planningJustification: String(data.get("planningJustification") ?? "") || undefined, containsPersonalData: data.get("containsPersonalData") === "on", containsSensitiveData: data.get("containsSensitiveData") === "on", privacyContext: String(data.get("privacyContext") ?? "") || undefined, items: confirmedItems.map(({ localId: _localId, ...item }) => ({ ...item, itemJustification: item.itemJustification ?? "", priceResearchCertified: Boolean(item.priceResearchCertified) })) });
+    const normalizedItems = confirmedItems.map(({ localId: _localId, ...item }) => ({
+      ...item,
+      estimatedValue: normalizeDecimal(item.estimatedValue ?? ""),
+      quantity: normalizeDecimal(item.quantity ?? ""),
+      itemJustification: item.itemJustification ?? "",
+      priceResearchCertified: Boolean(item.priceResearchCertified),
+    }));
+    saveDraft.mutate({
+      draftPublicId,
+      unitId: Number(data.get("unitId")),
+      annualPlanItemId: optionalNumber(String(data.get("annualPlanItemId") ?? "")),
+      title: String(data.get("title") ?? ""),
+      objectDescription: String(data.get("objectDescription") ?? ""),
+      justification: String(data.get("justification") ?? ""),
+      supplyLineCnaeCode: supplyLine?.code,
+      supplyLineCnaeDescription: supplyLine?.description,
+      desiredContractDate: parseLocalDate(String(data.get("desiredContractDate") ?? "")),
+      deliveryPeriod: String(data.get("deliveryPeriod") ?? "") || undefined,
+      hasFutureFiscalImpact: data.get("hasFutureFiscalImpact") === "on",
+      isSupervening: classification === "supervening",
+      planningJustification: String(data.get("planningJustification") ?? "") || undefined,
+      containsPersonalData: data.get("containsPersonalData") === "on",
+      containsSensitiveData: data.get("containsSensitiveData") === "on",
+      privacyContext: String(data.get("privacyContext") ?? "") || undefined,
+      items: normalizedItems,
+    });
+  };
+  // Cria um rascunho novo (se não tem draftPublicId) e já salva os dados
+  // atuais nele. O resultado é que o user sai da tela de Nova DFD e cai na
+  // lista de Rascunhos com o que ele preencheu até aqui preservado.
+  const createAndSaveDraft = () => {
+    if (!formRef.current) return;
+    const data = new FormData(formRef.current);
+    const unitId = Number(data.get("unitId"));
+    if (!unitId) { setItemsError("Selecione a unidade demandante antes de salvar como rascunho."); return; }
+    const normalizedItems = confirmedItems.map(({ localId: _localId, ...item }) => ({
+      ...item,
+      estimatedValue: normalizeDecimal(item.estimatedValue ?? ""),
+      quantity: normalizeDecimal(item.quantity ?? ""),
+      itemJustification: item.itemJustification ?? "",
+      priceResearchCertified: Boolean(item.priceResearchCertified),
+    }));
+    utils.planning.myDrafts.invalidate();
+    createDemandDraft.mutate({ unitId }, {
+      onSuccess: async (result) => {
+        await saveDraft.mutateAsync({
+          draftPublicId: result.publicId,
+          unitId,
+          annualPlanItemId: optionalNumber(String(data.get("annualPlanItemId") ?? "")),
+          title: String(data.get("title") ?? ""),
+          objectDescription: String(data.get("objectDescription") ?? ""),
+          justification: String(data.get("justification") ?? ""),
+          supplyLineCnaeCode: supplyLine?.code,
+          supplyLineCnaeDescription: supplyLine?.description,
+          desiredContractDate: parseLocalDate(String(data.get("desiredContractDate") ?? "")),
+          deliveryPeriod: String(data.get("deliveryPeriod") ?? "") || undefined,
+          hasFutureFiscalImpact: data.get("hasFutureFiscalImpact") === "on",
+          isSupervening: classification === "supervening",
+          planningJustification: String(data.get("planningJustification") ?? "") || undefined,
+          containsPersonalData: data.get("containsPersonalData") === "on",
+          containsSensitiveData: data.get("containsSensitiveData") === "on",
+          privacyContext: String(data.get("privacyContext") ?? "") || undefined,
+          items: normalizedItems,
+        });
+        await utils.planning.myDrafts.invalidate();
+        afterCreate();
+      },
+    });
   };
   const submit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -566,21 +669,34 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
     if (!supplyLine?.code || !supplyLine.description) { setItemsError("Selecione a linha principal de fornecimento pela consulta CNAE."); return; }
     const data = new FormData(event.currentTarget);
     if (data.get("requesterCertified") !== "on") { setItemsError("Confirme a assinatura institucional antes de enviar a DFD."); return; }
-    const desiredDate = String(data.get("desiredContractDate") ?? "");
+    if (classification === "supervening") {
+      const justification = String(data.get("planningJustification") ?? "").trim();
+      if (justification.length < SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH) {
+        setItemsError(`A justificativa do planejamento é obrigatória para necessidade superveniente (mínimo ${SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH} caracteres).`);
+        return;
+      }
+    }
+    const normalizedItems = confirmedItems.map(({ localId: _localId, ...item }) => ({
+      ...item,
+      estimatedValue: normalizeDecimal(item.estimatedValue ?? ""),
+      quantity: normalizeDecimal(item.quantity ?? ""),
+      itemJustification: item.itemJustification ?? "",
+      priceResearchCertified: Boolean(item.priceResearchCertified),
+    }));
     createDemand.mutate({
       unitId: Number(data.get("unitId")),
-      annualPlanItemId: Number(data.get("annualPlanItemId")),
+      annualPlanItemId: optionalNumber(String(data.get("annualPlanItemId") ?? "")),
       title: String(data.get("title") ?? ""),
       objectDescription: String(data.get("objectDescription") ?? ""),
       justification: String(data.get("justification") ?? ""),
       supplyLineCnaeCode: supplyLine.code,
       supplyLineCnaeDescription: supplyLine.description,
       requesterCertified: true,
-      items: confirmedItems.map(({ localId: _localId, ...item }) => ({ ...item, itemJustification: item.itemJustification ?? "", priceResearchCertified: Boolean(item.priceResearchCertified) })),
-      desiredContractDate: desiredDate ? new Date(`${desiredDate}T12:00:00`) : undefined,
+      items: normalizedItems,
+      desiredContractDate: parseLocalDate(String(data.get("desiredContractDate") ?? "")),
       deliveryPeriod: String(data.get("deliveryPeriod") ?? "") || undefined,
       hasFutureFiscalImpact: data.get("hasFutureFiscalImpact") === "on",
-      isSupervening: data.get("isSupervening") === "on",
+      isSupervening: classification === "supervening",
       planningJustification: String(data.get("planningJustification") ?? "") || undefined,
       containsPersonalData: data.get("containsPersonalData") === "on",
       containsSensitiveData: data.get("containsSensitiveData") === "on",
@@ -594,13 +710,79 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
     <form ref={formRef} className="form-stack" onSubmit={submit}>      <FormPanel title="Identificação da DFD" help="Os campos abaixo compõem o Documento de Formalização da Demanda e serão enviados primeiro ao Financeiro para rubrica e ciência do gasto; depois seguem à Diretoria de Administração para triagem, decisão presidencial e consolidação no PCA."><Field label="Unidade demandante" help="Escolha a unidade que está pedindo a contratação. Se você estiver pedindo para outra unidade, não escolha a sua: use a opção de setor destinatário quando ela estiver disponível."><select name="unitId" required defaultValue={String(draft.data?.demand.requestingUnitId ?? availableUnits[0]?.id ?? "")}>{availableUnits.map(unit => <option key={unitOptionKey(unit)} value={unit.id}>{unit.name} · {unit.code}</option>)}</select></Field><div className="field-guidance-banner"><GitBranch size={16} /><div><strong>O item do PCA será criado depois</strong><span>Na PORTA, informe apenas o ano de referência. A Administração definirá o item e os subitens quando consolidar as DFDs.</span></div></div><CnaeSupplyLineSelector value={supplyLine?.code ? supplyLine : null} onSelect={item => setSupplyLine(item.code ? item : null)} /><Field label="Objeto resumido (até 60 caracteres)" full help="Resuma o que precisa ser obtido. Escreva o nome da solução, não a história inteira. Não informe modalidade, fornecedor ou marca neste campo."><input name="title" required minLength={5} maxLength={60} defaultValue={draft.data?.demand.title === "Rascunho sem título" ? "" : draft.data?.demand.title ?? ""} placeholder="Descreva a necessidade em uma frase objetiva" /><small>A DFD não seleciona modalidade nem instaura processo de contratação.</small></Field><Field label="Descrição detalhada (mínimo de 60 caracteres)" full help="Explique o que será feito, para quem, onde e qual resultado deve ser entregue. Não escreva apenas ‘comprar material’ ou ‘contratar serviço’."><textarea name="objectDescription" required minLength={60} defaultValue={draft.data?.demand.objectDescription ?? ""} placeholder="Descreva o escopo, as características e o resultado esperado, sem quantitativos." /><small>Não informe quantidades aqui. Registre cada quantitativo no respectivo item, com sua justificativa.</small></Field><Field label="Justificativa da necessidade (mínimo de 1.000 caracteres)" full help="Explique por que a demanda existe, qual é o interesse público, o que acontece se ela não for atendida, quais quantidades serão necessárias e como a estimativa foi obtida."><textarea name="justification" required minLength={1000} defaultValue={draft.data?.demand.justification ?? ""} placeholder="Escreva pelo menos 1.000 caracteres: necessidade, interesse público, consequência da não contratação, quantitativos e estimativa." /><small>Obrigatória: no mínimo 1.000 caracteres. Justificativas genéricas ou superficiais não serão aceitas.</small></Field></FormPanel>
       <DfdGuidance />
       <DemandItemsSequence items={confirmedItems} isAdding={isAddingItem} onItemsChange={items => { setConfirmedItems(items); setItemsError(null); }} onAddingChange={isAdding => { setIsAddingItem(isAdding); setItemsError(null); }} />
-      <FormPanel title="Estimativa dos itens por exercício" help="Referência obrigatória para o planejamento anual."><p className="trilha-current-copy">O valor estimado informado em cada item da DFD deve corresponder apenas ao exercício financeiro em que o PCA está sendo elaborado. Gastos de exercícios posteriores não devem ser somados à estimativa do item.</p></FormPanel>
+      <GuidancePanel title="Estimativa dos itens por exercício"><p className="trilha-current-copy">O valor estimado informado em cada item da DFD deve corresponder apenas ao exercício financeiro em que o PCA está sendo elaborado. Gastos de exercícios posteriores não devem ser somados à estimativa do item.</p><p className="trilha-current-copy">A soma dos valores dos itens confirmados aparece automaticamente no campo <em>Estimativa consolidada</em> acima.</p></GuidancePanel>
       <FormPanel title="Impacto em exercícios futuros" help="Controle de despesas que ultrapassam o exercício de elaboração do PCA."><Field label="Indicação financeira" full container><label className="checkbox-line planning-supervening-option"><input name="hasFutureFiscalImpact" type="checkbox" defaultChecked={draft.data?.demand.hasFutureFiscalImpact ?? false} /> <span>Esta demanda acarretará em gastos nos demais exercícios financeiros?</span></label><small>Marque quando a contratação tiver efeitos financeiros previstos para exercícios posteriores.</small></Field></FormPanel>
-      <FormPanel title="Planejamento e prazo" help="A estimativa consolidada é calculada automaticamente a partir dos itens confirmados. Estes dados serão refinados durante o ETP, a pesquisa de preços e o TR."><Field label="Data desejada" help="Informe quando a solução precisa estar disponível. Não escolha uma data impossível: considere análise, PCA, contratação e entrega."><input name="desiredContractDate" type="date" defaultValue={draft.data?.demand.desiredContractDate ? new Date(draft.data.demand.desiredContractDate).toISOString().slice(0, 10) : ""} /></Field><Field label="Prazo pretendido" help="Informe por quanto tempo a solução deve ser entregue, executada ou mantida. Exemplo: 60 dias para entregar ou 12 meses de vigência."><input name="deliveryPeriod" defaultValue={draft.data?.demand.deliveryPeriod ?? ""} placeholder="Ex.: 60 dias após o empenho" /></Field><Field label="Classificação da necessidade"><select name="classification"><option value="planned">Item previsto no planejamento</option><option value="supervening">Necessidade superveniente</option></select></Field><Field label="Necessidade superveniente" full container><div className="planning-supervening-control"><label className="checkbox-line planning-supervening-option"><input name="isSupervening" type="checkbox" checked={isSupervening} onChange={event => setIsSupervening(event.target.checked)} /> <span>Esta demanda não consta do planejamento anual.</span></label><details className="planning-supervening-guidance"><summary><CircleHelp size={15} aria-hidden="true" /> Quando devo marcar esta opção?</summary><p>Use-a somente quando a necessidade não estava prevista no planejamento anual e não puder aguardar o próximo ciclo de planejamento.</p><p>Ao marcar, registre na justificativa o motivo, a urgência e o impacto da inclusão. A demanda seguirá para análise da Administração antes de integrar ou atualizar o PCA.</p></details></div></Field><Field label="Justificativa do planejamento" full help="Só é obrigatória para uma necessidade superveniente. Explique o fato novo, a urgência e por que a demanda não entrou no ciclo normal."><textarea name="planningJustification" defaultValue={draft.data?.demand.planningJustification ?? ""} required={isSupervening} minLength={isSupervening ? SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH : undefined} aria-describedby="supervening-justification-help" placeholder="Obrigatória para necessidade superveniente ou alteração relevante do planejamento." /><small id="supervening-justification-help">{isSupervening ? `Obrigatória: informe ao menos ${SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH} caracteres.` : "Obrigatória somente para necessidade superveniente."}</small></Field></FormPanel>
+      <FormPanel title="Planejamento e prazo" help="A estimativa consolidada é calculada automaticamente a partir dos itens confirmados. Estes dados serão refinados durante o ETP, a pesquisa de preços e o TR.">
+        <Field label="Tipo de objeto" full help="Define quais campos de prazo aparecem abaixo. Escolha conforme a natureza do que está sendo demandado.">
+          <select name="objetoTipo" value={objetoTipo} onChange={event => setObjetoTipo(event.target.value as ObjetoTipo)}>
+            <option value="fornecimento_imediato">Fornecimento — entrega imediata (compra de material ou equipamento)</option>
+            <option value="fornecimento_futuro">Fornecimento com data futura (entrega em data específica futura)</option>
+            <option value="servico_continuo">Serviço de natureza contínua (limpeza, vigilância, manutenção mensal…)</option>
+            <option value="servico_delimitado">Serviço com escopo delimitado (não contínuo, com prazo final)</option>
+          </select>
+        </Field>
+        {objetoTipo === "fornecimento_imediato" ? (
+          <Field label="Prazo de entrega (em dias após a contratação)" help="Em quantos dias após a assinatura do contrato/empenho o material deve ser entregue. Ex.: 30 dias.">
+            <input name="deliveryPeriod" inputMode="numeric" pattern="[0-9]*" placeholder="Ex.: 30 dias" defaultValue={draft.data?.demand.deliveryPeriod ?? ""} />
+          </Field>
+        ) : null}
+        {objetoTipo === "fornecimento_futuro" ? (
+          <Field label="Data desejada de entrega" help="Informe a data em que o material deve ser entregue. Não escolha uma data impossível: considere análise, PCA, contratação e produção.">
+            <input name="desiredContractDate" type="date" defaultValue={draft.data?.demand.desiredContractDate ? new Date(draft.data.demand.desiredContractDate).toISOString().slice(0, 10) : ""} />
+          </Field>
+        ) : null}
+        {objetoTipo === "servico_continuo" ? (
+          <>
+            <Field label="Data de início do serviço" help="A partir de quando o serviço deve começar a ser prestado.">
+              <input name="desiredContractDate" type="date" defaultValue={draft.data?.demand.desiredContractDate ? new Date(draft.data.demand.desiredContractDate).toISOString().slice(0, 10) : ""} />
+            </Field>
+            <Field label="Duração (em meses) + justificativa" full help="Por quantos meses o serviço deve permanecer ativo e por que é contínuo. Ex.: 12 meses — vigilância patrimonial ininterrupta, sem substituto disponível.">
+              <textarea name="deliveryPeriod" rows={3} placeholder="Ex.: 12 meses — vigilância patrimonial ininterrupta, sem substituto disponível." defaultValue={draft.data?.demand.deliveryPeriod ?? ""} />
+            </Field>
+          </>
+        ) : null}
+        {objetoTipo === "servico_delimitado" ? (
+          <>
+            <Field label="Data de início do serviço" help="A partir de quando o serviço deve começar a ser prestado.">
+              <input name="desiredContractDate" type="date" defaultValue={draft.data?.demand.desiredContractDate ? new Date(draft.data.demand.desiredContractDate).toISOString().slice(0, 10) : ""} />
+            </Field>
+            <Field label="Duração estimada (em dias)" help="Quantos dias entre o início e a conclusão. Ex.: 120 dias para uma obra.">
+              <input name="deliveryPeriod" inputMode="numeric" pattern="[0-9]*" placeholder="Ex.: 120 dias" defaultValue={draft.data?.demand.deliveryPeriod ?? ""} />
+            </Field>
+          </>
+        ) : null}
+        <Field label="Classificação da necessidade" full help="Define se a demanda é prospectada para o próximo PCA, se está em planejamento em curso, ou se é superveniente.">
+          <select name="classification" value={classification} onChange={event => { const value = event.target.value as Classification; setClassification(value); }}>
+            <option value="planned">Item previsto no planejamento em elaboração</option>
+            <option value="supervening">Necessidade superveniente (urgente, fora do PCA vigente)</option>
+          </select>
+        </Field>
+        {classification === "supervening" ? (
+          <Field label="Justificativa do planejamento" full help="Obrigatória quando a demanda é superveniente. Explique o motivo, a urgência e por que não pode aguardar o próximo ciclo de planejamento.">
+            <textarea name="planningJustification" defaultValue={draft.data?.demand.planningJustification ?? ""} required minLength={SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH} placeholder={`Obrigatório: informe ao menos ${SUPERVENING_PLANNING_JUSTIFICATION_MIN_LENGTH} caracteres explicando o motivo, a urgência e o impacto da inclusão fora do PCA vigente.`} />
+          </Field>
+        ) : null}
+      </FormPanel>
       <FormPanel title="Triagem transversal de privacidade" help="A sinalização organiza a revisão de compatibilidade com a LGPD; ela não decide a licitude do tratamento nem substitui o encarregado ou o jurídico."><Field label="Sinais de atenção" full container><div className="checklist-box privacy-attention-options"><label className="checkbox-line"><input name="containsPersonalData" type="checkbox" defaultChecked={draft.data?.demand.containsPersonalData ?? false} /> <span>A necessidade pode envolver dados pessoais</span></label><label className="checkbox-line"><input name="containsSensitiveData" type="checkbox" defaultChecked={draft.data?.demand.containsSensitiveData ?? false} /> <span>A necessidade pode envolver dados pessoais sensíveis</span></label></div></Field><Field label="Contexto de privacidade" full><textarea name="privacyContext" defaultValue={draft.data?.demand.privacyContext ?? ""} placeholder="Se aplicável, descreva de modo sucinto o tratamento previsto, os titulares ou a razão para encaminhar a análise LGPD." /></Field></FormPanel>
       <FormPanel title="Documentos de apoio" help="Anexe uma memória, desenho técnico, levantamento ou outro documento necessário para compreender a demanda. A anexação não substitui os campos obrigatórios da DFD."><Field label="Arquivo de apoio" full optional help="Anexe somente documentos que ajudem a entender a demanda. O arquivo não substitui o preenchimento dos campos obrigatórios."><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" onChange={event => setSupportingFile(event.target.files?.[0] ?? null)} /><small>{supportingFile ? `Será anexado: ${supportingFile.name}` : "Opcional · máximo de 8 MB"}</small></Field></FormPanel>
       <FormPanel title="Assinatura institucional" help="Declaração eletrônica vinculada à conta autenticada que encaminha a DFD."><Field label="Confirmação do solicitante" full container><label className="checkbox-line planning-supervening-option"><input name="requesterCertified" type="checkbox" /><span>Declaro que as informações da DFD, seus itens, justificativas, quantitativos e pesquisas prévias são de minha responsabilidade.</span></label><small>A identificação do solicitante será registrada automaticamente no documento e na trilha de auditoria.</small></Field></FormPanel>
-      {itemsError || createDemand.error || saveDraft.error || uploadPlanningDocument.error ? <p className="form-error">{itemsError ?? createDemand.error?.message ?? saveDraft.error?.message ?? uploadPlanningDocument.error?.message}</p> : null}<div className="form-footer"><button type="button" className="button button-ghost" onClick={() => go(draftPublicId ? "rascunhos" : "dashboard")}>Cancelar</button>{draftPublicId ? <button type="button" className="button button-ghost" onClick={saveCurrentDraft} disabled={saveDraft.isPending}>{saveDraft.isPending ? "Salvando…" : "Salvar rascunho"}</button> : null}<button className="button button-ink" type="submit" disabled={createDemand.isPending || isAddingItem || !confirmedItems.length}>{createDemand.isPending ? "Enviando DFD…" : "Enviar DFD à Administração"} <Send size={16} /></button></div>
+      {(itemsError || createDemand.error || saveDraft.error || uploadPlanningDocument.error) ? (
+        <div className="form-error form-error-block" role="alert" aria-live="polite">
+          {itemsError ? <p>{itemsError}</p> : null}
+          {createDemand.error ? <p><strong>Não foi possível enviar a DFD:</strong>{"\n"}{formatTrpcError(createDemand.error)}</p> : null}
+          {saveDraft.error ? <p><strong>Não foi possível salvar o rascunho:</strong>{"\n"}{formatTrpcError(saveDraft.error)}</p> : null}
+          {uploadPlanningDocument.error ? <p><strong>Não foi possível anexar o documento:</strong>{"\n"}{formatTrpcError(uploadPlanningDocument.error)}</p> : null}
+        </div>
+      ) : null}
+      <div className="form-footer">
+        <button type="button" className="button button-ghost" onClick={() => go(draftPublicId ? "rascunhos" : "dashboard")}>Cancelar</button>
+        <button type="button" className="button button-ghost" onClick={draftPublicId ? saveCurrentDraft : createAndSaveDraft} disabled={saveDraft.isPending || createDemandDraft.isPending}>
+          <FileText size={14} /> {saveDraft.isPending || createDemandDraft.isPending ? "Salvando…" : (draftPublicId ? "Salvar rascunho" : "Salvar como rascunho")}
+        </button>
+        <button className="button button-ink" type="submit" disabled={createDemand.isPending || isAddingItem || !confirmedItems.length}>
+          {createDemand.isPending ? "Enviando DFD…" : "Enviar DFD à Administração"} <Send size={16} />
+        </button>
+      </div>
     </form>
   </AppShell>;
 }
@@ -611,8 +793,31 @@ function FormPanel({ title, help, children }: { title: string; help?: string; ch
 
 function Field({ label, full, container = false, optional = false, help, children }: { label: string; full?: boolean; container?: boolean; optional?: boolean; help?: string; children: ReactNode }) {
   const className = `field ${full ? "field-full" : ""}`;
-  const content = <><span className="field-label">{label} {!optional ? <b>*</b> : null}{help ? <span className="field-help" title={help} aria-label={`Orientação: ${help}`} data-tooltip={help}><CircleHelp size={14} aria-hidden="true" /></span> : null}</span>{children}</>;
+  // O help vira (a) ícone CircleHelp com tooltip (acessível via teclado/foco)
+  // e (b) parágrafo "field-helper" visível permanentemente abaixo do input.
+  // Antes era só tooltip, que somia assim que o user começava a digitar.
+  const content = <>
+    <span className="field-label">{label} {!optional ? <b>*</b> : null}{help ? <span className="field-help" title={help} aria-label={`Orientação: ${help}`} data-tooltip={help}><CircleHelp size={14} aria-hidden="true" /></span> : null}</span>
+    {children}
+    {help ? <small className="field-helper">{help}</small> : null}
+  </>;
   return container ? <div className={className}>{content}</div> : <label className={className}>{content}</label>;
+}
+
+/**
+ * Painel de orientação. Diferencia-se visualmente dos FormPanel de
+ * preenchimento: ícone de help, borda tracejada, fundo neutro, sem `*`
+ * obrigatórios. Usado para blocos que são SÓ orientação (ex: "Estimativa
+ * dos itens por exercício") e não campos de input.
+ */
+function GuidancePanel({ title, children }: { title: string; children: ReactNode }) {
+  return <section className="form-panel form-panel-guidance" aria-label={`Orientação: ${title}`}>
+    <div className="form-panel-guidance-header">
+      <CircleHelp size={16} aria-hidden="true" />
+      <h2>{title}</h2>
+    </div>
+    <div className="form-panel-guidance-body">{children}</div>
+  </section>;
 }
 
 function Trilha({ go, processId }: { go: (screen: Exclude<Screen, "landing">) => void; processId: string | null }) {

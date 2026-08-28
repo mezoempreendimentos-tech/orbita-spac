@@ -146,3 +146,8 @@ standalone/.env.*
 # Manus version file (auto-generated, not part of source)
 client/public/__manus__/version.json
 .project-config.json
+
+standalone/.tunnel-url.txt
+standalone/tunnel-watchdog.log
+standalone/tunnel-watchdog.log.stdout
+standalone/tunnel-watchdog.log.stderr
