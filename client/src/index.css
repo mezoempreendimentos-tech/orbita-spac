@@ -407,6 +407,7 @@ textarea:focus-visible {
 
 /* Wizard multi-step da PORTA (item #10 do feedback da Debora).
    3 passos: Identificação → Itens e prazos → Revisão e envio. */
+.wizard-step-panel[hidden] { display:none; }
 .porta-wizard-stepper { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 24px; display:grid; gap:16px; }
 .porta-wizard-progress { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; counter-reset:wizard; }
 .porta-wizard-step { display:grid; grid-template-columns:36px 1fr; gap:12px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface-alt); transition:border-color .15s ease, background .15s ease; }
@@ -484,4 +485,16 @@ textarea:focus-visible {
 .opening-revision-banner small { color:var(--muted); line-height:1.4; }
 .opening-revision-banner textarea { min-height:86px; }
 .dialog-actions { display:flex; justify-content:flex-end; gap:10px; margin-top:18px; }
+
+/* Dialog do Radix (Modal global de login e outros). O componente base usa
+   `bg-background` (Tailwind) que nao resolve em CSS puro — o conteudo
+   ficava transparente e praticamente invisivel sobre o overlay escuro.
+   Aqui forco fundo solido, borda e sombra consistentes com a linguagem
+   visual do restante do app. */
+[data-slot="dialog-content"] { background:var(--paper) !important; color:var(--text) !important; border:1px solid var(--line) !important; box-shadow:0 24px 60px rgba(6,19,43,.28) !important; max-height:90vh; overflow-y:auto; }
+[data-slot="dialog-content"] .field span { color:var(--muted); }
+[data-slot="dialog-content"] .field input { background:var(--surface); color:var(--text); border:1px solid var(--line); }
+[data-slot="dialog-content"] [data-slot="dialog-close"] { color:var(--muted) !important; }
+[data-slot="dialog-content"] [data-slot="dialog-close"]:hover { color:var(--text) !important; }
+[data-slot="dialog-overlay"] { background:rgba(6,19,43,.6) !important; }
 @media (max-width:760px) { .pca-opening-item { grid-template-columns:20px minmax(0,1fr); } .pca-opening-item input[type="number"] { grid-column:2; width:128px; } .dialog-actions { flex-direction:column-reverse; } .dialog-actions .button { width:100%; justify-content:center; } }

@@ -863,14 +863,12 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
       saveDraftPending={saveDraft.isPending || createDemandDraft.isPending}
     />
     <form ref={formRef} className="form-stack" onSubmit={submit}>
-      {step === "identificacao" ? (
-        <>
+      <div className="wizard-step-panel" hidden={step !== "identificacao"}>
           <FormPanel title="Identificação da DFD" help="Os campos abaixo compõem o Documento de Formalização da Demanda e serão enviados primeiro ao Financeiro para rubrica e ciência do gasto; depois seguem à Diretoria de Administração para triagem, decisão presidencial e consolidação no PCA."><Field label="Unidade demandante" help="Escolha a unidade que está pedindo a contratação. Se você estiver pedindo para outra unidade, não escolha a sua: use a opção de setor destinatário quando ela estiver disponível."><select name="unitId" required defaultValue={String(draft.data?.demand.requestingUnitId ?? availableUnits[0]?.id ?? "")}>{availableUnits.map(unit => <option key={unitOptionKey(unit)} value={unit.id}>{unit.name} · {unit.code}</option>)}</select></Field><CnaeSupplyLineSelector value={supplyLine?.code ? supplyLine : null} onSelect={item => setSupplyLine(item.code ? item : null)} /><Field label="Objeto resumido (até 60 caracteres)" full help="Resuma o que precisa ser obtido. Escreva o nome da solução, não a história inteira. Não informe modalidade, fornecedor ou marca neste campo."><input name="title" required minLength={5} maxLength={60} onInput={bumpValidation} defaultValue={draft.data?.demand.title === "Rascunho sem título" ? "" : draft.data?.demand.title ?? ""} placeholder="Descreva a necessidade em uma frase objetiva" /><small>A DFD não seleciona modalidade nem instaura processo de contratação.</small></Field><Field label="Descrição detalhada (mínimo de 60 caracteres)" full help="Explique o que será feito, para quem, onde e qual resultado deve ser entregue. Não escreva apenas ‘comprar material’ ou ‘contratar serviço’."><textarea name="objectDescription" required minLength={60} onInput={bumpValidation} defaultValue={draft.data?.demand.objectDescription ?? ""} placeholder="Descreva o escopo, as características e o resultado esperado, sem quantitativos." /><small>Não informe quantidades aqui. Registre cada quantitativo no respectivo item, com sua justificativa.</small></Field><Field label="Justificativa da necessidade (mínimo de 1.000 caracteres)" full help="Explique por que a demanda existe, qual é o interesse público, o que acontece se ela não for atendida, quais quantidades serão necessárias e como a estimativa foi obtida."><textarea name="justification" required minLength={1000} onInput={bumpValidation} defaultValue={draft.data?.demand.justification ?? ""} placeholder="Escreva pelo menos 1.000 caracteres: necessidade, interesse público, consequência da não contratação, quantitativos e estimativa." /><small>Obrigatória: no mínimo 1.000 caracteres. Justificativas genéricas ou superficiais não serão aceitas.</small></Field></FormPanel>
           <DfdGuidance />
-        </>
-      ) : null}
-      {step === "itens" ? (
-        <>
+        </div>
+
+      <div className="wizard-step-panel" hidden={step !== "itens"}>
           <DemandItemsSequence items={confirmedItems} isAdding={isAddingItem} onItemsChange={items => { setConfirmedItems(items); setItemsError(null); }} onAddingChange={isAdding => { setIsAddingItem(isAdding); setItemsError(null); }} />
       <GuidancePanel title="Estimativa dos itens por exercício"><p className="trilha-current-copy">O valor estimado informado em cada item da DFD deve corresponder apenas ao exercício financeiro em que o PCA está sendo elaborado. Gastos de exercícios posteriores não devem ser somados à estimativa do item.</p><p className="trilha-current-copy">A soma dos valores dos itens confirmados aparece automaticamente no campo <em>Estimativa consolidada</em> acima.</p></GuidancePanel>
       <FormPanel title="Impacto em exercícios futuros" help="Controle de despesas que ultrapassam o exercício de elaboração do PCA."><Field label="Indicação financeira" full container><label className="checkbox-line planning-supervening-option"><input name="hasFutureFiscalImpact" type="checkbox" defaultChecked={draft.data?.demand.hasFutureFiscalImpact ?? false} /> <span>Esta demanda acarretará em gastos nos demais exercícios financeiros?</span></label><small>Marque quando a contratação tiver efeitos financeiros previstos para exercícios posteriores.</small></Field></FormPanel>
@@ -925,10 +923,9 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
           </Field>
         ) : null}
       </FormPanel>
-        </>
-      ) : null}
-      {step === "revisao" ? (
-        <>
+        </div>
+
+      <div className="wizard-step-panel" hidden={step !== "revisao"}>
           <PortaWizardReview
             formRef={formRef}
             confirmedItems={confirmedItems}
@@ -955,8 +952,8 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
           {createDemand.isPending ? "Enviando DFD…" : "Enviar DFD à Administração"} <Send size={16} />
         </button>
       </div>
-        </>
-      ) : null}
+        </div>
+
     </form>
   </AppShell>;
 }
