@@ -177,6 +177,27 @@ export const appRouter = router({
         success: true,
       } as const;
     }),
+    updateMyProfile: protectedProcedure.input(z.object({
+      name: z.string().trim().min(3, "Informe um nome com ao menos 3 caracteres.").max(255),
+      email: z.string().trim().toLowerCase().email("Informe um e-mail válido.").max(320),
+    })).mutation(async ({ ctx, input }) => {
+      const { eq } = await import("drizzle-orm");
+      const { getDb } = await import("./db");
+      const { users } = await import("../drizzle/schema");
+      const db = await getDb();
+      if (!db) throw new TRPCError({ code: "INTERNAL_SERVER_ERROR", message: "Banco de dados indisponível." });
+      const [taken] = await db.select({ id: users.id }).from(users).where(eq(users.email, input.email)).limit(1);
+      if (taken && taken.id !== ctx.user.id) {
+        throw new TRPCError({ code: "CONFLICT", message: "Já existe uma conta cadastrada para este e-mail." });
+      }
+      await db.update(users).set({
+        name: input.name,
+        email: input.email,
+        openId: `local:${input.email}`,
+      }).where(eq(users.id, ctx.user.id));
+      const [updated] = await db.select().from(users).where(eq(users.id, ctx.user.id)).limit(1);
+      return { id: updated.id, name: updated.name, email: updated.email, role: updated.role };
+    }),
   }),
   workspace: router({
     status: protectedProcedure.query(({ ctx }) => getWorkspaceStatus(ctx.user.id)),

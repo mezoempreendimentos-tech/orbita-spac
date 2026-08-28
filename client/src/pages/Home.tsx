@@ -551,6 +551,95 @@ function PortaPreviewPage() {
   return <main className="porta-preview-page"><header className="porta-preview-header"><BrandMark /><div><span className="panel-kicker">ÓRBITA / LEITURA VISUAL</span><h1>Amostra da PORTA e da DFD</h1><p>Protótipo de conteúdo e linguagem. Nada nesta página gera uma DFD oficial.</p></div></header><div className="porta-preview-content"><PortaPresentation onShowExample={() => undefined} /><PortaFieldsPreview /><DfdSamplePreview onClose={() => undefined} /></div></main>;
 }
 
+type PortaStep = "identificacao" | "itens" | "revisao";
+
+const PORTA_STEPS: { key: PortaStep; label: string; title: string; help: string }[] = [
+  { key: "identificacao", label: "Passo 1", title: "Identificação da DFD", help: "Descreva a unidade, a atividade econômica, o objeto e a justificativa da demanda." },
+  { key: "itens", label: "Passo 2", title: "Itens, prazos e classificação", help: "Confirme cada item, defina o tipo de objeto, os prazos e a classificação no planejamento." },
+  { key: "revisao", label: "Passo 3", title: "Revisão e envio", help: "Revise o resumo, sinalize privacidade, anexe documento de apoio e confirme a assinatura institucional." },
+];
+
+const PORTA_STEP_ORDER: PortaStep[] = PORTA_STEPS.map(step => step.key);
+
+type PortaStepValidation = { canAdvance: boolean; issues: string[] };
+
+/**
+ * Stepper do wizard multi-step da PORTA (item #10 do feedback da Debora).
+ * Mostra o progresso, o título do passo atual e a navegação Voltar/Próximo.
+ * A validação é externa (calculada pelo `Porta` a partir do estado do form)
+ * e o botão "Próximo" fica desabilitado enquanto o passo atual não estiver
+ * completo. O `stepValidation.issues` é exibido inline para que o usuário
+ * saiba exatamente o que precisa corrigir antes de avançar.
+ */
+function PortaWizardStepper({ currentStep, onStepChange, validation, onNext, draftPublicId, onSaveDraft, saveDraftPending }: { currentStep: PortaStep; onStepChange: (step: PortaStep) => void; validation: PortaStepValidation; onNext: () => void; draftPublicId: string | null; onSaveDraft: () => void; saveDraftPending: boolean }) {
+  const currentIndex = PORTA_STEP_ORDER.indexOf(currentStep);
+  return <section className="porta-wizard-stepper" aria-label="Progresso do preenchimento da DFD">
+    <ol className="porta-wizard-progress" role="list">
+      {PORTA_STEPS.map((step, index) => {
+        const isActive = step.key === currentStep;
+        const isComplete = index < currentIndex;
+        const isBlocked = isActive && !validation.canAdvance;
+        const className = `porta-wizard-step${isActive ? " is-active" : ""}${isComplete ? " is-complete" : ""}${isBlocked ? " is-blocked" : ""}`;
+        return <li key={step.key} className={className} aria-current={isActive ? "step" : undefined}>
+          <span className="porta-wizard-step-number" aria-hidden="true">{isComplete ? <Check size={16} /> : index + 1}</span>
+          <div className="porta-wizard-step-body">
+            <span className="porta-wizard-step-label">{step.label}</span>
+            <span className="porta-wizard-step-title">{step.title}</span>
+          </div>
+        </li>;
+      })}
+    </ol>
+    <p className="porta-wizard-step-help">{PORTA_STEPS[currentIndex].help}</p>
+    <div className="porta-wizard-actions">
+      <span className={`porta-wizard-status${!validation.canAdvance ? " is-blocked" : ""}`}>
+        {!validation.canAdvance && validation.issues.length ? <><AlertTriangle size={14} aria-hidden="true" /> {validation.issues[0]}</> : `Pronto para avançar — Passo ${currentIndex + 1} de ${PORTA_STEPS.length}`}
+      </span>
+      <button type="button" className="button button-ghost button-sm" onClick={onSaveDraft} disabled={saveDraftPending}>
+        <FileText size={14} /> {saveDraftPending ? "Salvando…" : (draftPublicId ? "Salvar rascunho" : "Salvar como rascunho")}
+      </button>
+      {currentIndex > 0 ? <button type="button" className="button button-ghost button-sm" onClick={() => onStepChange(PORTA_STEP_ORDER[currentIndex - 1])}><ArrowLeft size={14} /> Voltar</button> : null}
+      {currentIndex < PORTA_STEPS.length - 1 ? <button type="button" className="button button-ink button-sm" onClick={onNext} disabled={!validation.canAdvance}>Próximo <ArrowRight size={14} /></button> : null}
+    </div>
+  </section>;
+}
+
+/**
+ * Resumo do passo 3 (revisão) — mostra os dados que já foram preenchidos
+ * nos passos anteriores para que o usuário confira antes de enviar. Os
+ * valores são lidos do FormData (igual ao submit) para garantir coerência
+ * com o que vai de fato para a criação da DFD.
+ */
+function PortaWizardReview({ formRef, confirmedItems, objetoTipo, classification, supplyLine, availableUnits, supportingFileName }: { formRef: React.RefObject<HTMLFormElement | null>; confirmedItems: LocalDemandItem[]; objetoTipo: ObjetoTipo; classification: Classification; supplyLine: CnaeSupplyLine | null; availableUnits: { id: number; name: string; code: string }[]; supportingFileName: string | null }) {
+  const data = formRef.current ? new FormData(formRef.current) : null;
+  const title = String(data?.get("title") ?? "").trim();
+  const objectDescription = String(data?.get("objectDescription") ?? "").trim();
+  const unitId = Number(data?.get("unitId") ?? 0);
+  const unit = availableUnits.find(candidate => candidate.id === unitId);
+  const total = totalEstimatedValueOfDemandItems(confirmedItems);
+  const objetoLabel: Record<ObjetoTipo, string> = {
+    fornecimento_imediato: "Fornecimento — entrega imediata",
+    fornecimento_futuro: "Fornecimento com data futura",
+    servico_continuo: "Serviço de natureza contínua",
+    servico_delimitado: "Serviço com escopo delimitado",
+  };
+  return <section className="porta-wizard-review" aria-label="Resumo da DFD antes do envio">
+    <div className="porta-wizard-review-header">
+      <FileCheck2 size={20} aria-hidden="true" />
+      <h2>Resumo da DFD</h2>
+    </div>
+    <dl>
+      <div className="porta-wizard-review-wide"><dt>Objeto resumido</dt><dd>{title || "Não informado"}</dd></div>
+      <div><dt>Unidade demandante</dt><dd>{unit ? `${unit.name} · ${unit.code}` : "Não selecionada"}</dd></div>
+      <div><dt>Linha de fornecimento</dt><dd>{supplyLine ? `${supplyLine.code} · ${supplyLine.description}` : "Não selecionada"}</dd></div>
+      <div><dt>Tipo de objeto</dt><dd>{objetoLabel[objetoTipo]}</dd></div>
+      <div><dt>Classificação</dt><dd>{classification === "supervening" ? "Necessidade superveniente" : "Item previsto no planejamento em elaboração"}</dd></div>
+      <div><dt>Itens confirmados</dt><dd>{confirmedItems.length} item(ns) · estimativa consolidada {total ? formatMoney(total) : "não informada"}</dd></div>
+      <div className="porta-wizard-review-wide"><dt>Descrição detalhada</dt><dd>{objectDescription || "Não informada"}</dd></div>
+      <div className="porta-wizard-review-wide"><dt>Documento de apoio</dt><dd>{supportingFileName ? `Anexar: ${supportingFileName}` : "Nenhum documento selecionado"}</dd></div>
+    </dl>
+  </section>;
+}
+
 function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude<Screen, "landing">) => void; units: { id: number; name: string; code: string }[]; draftPublicId: string | null; afterCreate: () => void }) {
   const utils = trpc.useUtils();
   const draft = trpc.planning.demandDraft.useQuery({ demandPublicId: draftPublicId ?? "" }, { enabled: Boolean(draftPublicId) });
@@ -566,6 +655,63 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
   const [isAddingItem, setIsAddingItem] = useState(false);
   const [itemsError, setItemsError] = useState<string | null>(null);
   const [itemToRemove, setItemToRemove] = useState<LocalDemandItem | null>(null);
+  // Wizard multi-step (item #10 do feedback da Debora). Cada passo agrupa
+  // um conjunto coerente de campos; o "Próximo" só avança quando o passo
+  // atual está válido, e o botão "Enviar DFD" só aparece no último passo.
+  const [step, setStep] = useState<PortaStep>("identificacao");
+  // Bate-papo entre os fields do passo 1 e a validação do wizard: o form
+  // guarda os valores em defaultValue (não controlado), então lemos do
+  // FormData na hora de validar. O contador de tentativas força uma
+  // re-leitura após o usuário digitar (cada campo dispara um tick).
+  const [validationTick, setValidationTick] = useState(0);
+  const bumpValidation = () => setValidationTick(tick => tick + 1);
+
+  // Validação por passo do wizard. Roda a cada render (lightweight) e
+  // também após bumpValidation(). O passo 3 sempre permite avançar
+  // (a trava de fato é feita no submit, que valida assinatura e itens).
+  const stepValidation = useMemo<PortaStepValidation>(() => {
+    const formData = formRef.current ? new FormData(formRef.current) : null;
+    if (step === "identificacao") {
+      const issues: string[] = [];
+      if (!supplyLine?.code) issues.push("Selecione a linha de fornecimento (CNAE).");
+      const title = String(formData?.get("title") ?? "").trim();
+      if (title.length < 5) issues.push("Informe o objeto resumido (mínimo 5 caracteres).");
+      const objectDescription = String(formData?.get("objectDescription") ?? "").trim();
+      if (objectDescription.length < 60) issues.push("Detalhe a descrição (mínimo 60 caracteres).");
+      const justification = String(formData?.get("justification") ?? "").trim();
+      if (justification.length < 1000) issues.push("Expanda a justificativa (mínimo 1000 caracteres).");
+      return { canAdvance: issues.length === 0, issues };
+    }
+    if (step === "itens") {
+      const issues: string[] = [];
+      if (isAddingItem) issues.push("Confirme ou cancele o item em preenchimento antes de avançar.");
+      if (!confirmedItems.length) issues.push("Inclua e confirme ao menos um item antes de avançar.");
+      return { canAdvance: issues.length === 0, issues };
+    }
+    return { canAdvance: true, issues: [] };
+  // validationTick força re-leitura do form a cada digitação.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [step, supplyLine, confirmedItems, isAddingItem, validationTick]);
+  const goNext = () => {
+    if (!stepValidation.canAdvance) {
+      setItemsError(stepValidation.issues[0] ?? "Complete os campos obrigatórios antes de avançar.");
+      return;
+    }
+    setItemsError(null);
+    const currentIndex = PORTA_STEP_ORDER.indexOf(step);
+    const nextStep = PORTA_STEP_ORDER[currentIndex + 1];
+    if (nextStep) setStep(nextStep);
+  };
+  const goToStep = (target: PortaStep) => {
+    const targetIndex = PORTA_STEP_ORDER.indexOf(target);
+    const currentIndex = PORTA_STEP_ORDER.indexOf(step);
+    // Só permite voltar para passos anteriores; avançar continua exigindo
+    // validação (caminho feliz é "Próximo", não clicar em um número).
+    if (targetIndex < currentIndex) {
+      setItemsError(null);
+      setStep(target);
+    }
+  };
   useEffect(() => {
     if (!draft.data) return;
     setClassification(draft.data.demand.isSupervening ? "supervening" : "planned");
@@ -707,9 +853,25 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
   if (draftPublicId && draft.isLoading) return <LoadingPanel message="Carregando o rascunho da DFD…" />;
   if (draftPublicId && draft.error) return <AppShell active="porta" go={go} userName="" alertCount={0} logout={() => undefined}><EmptyState icon={<AlertTriangle size={28} />} title="Rascunho indisponível" text={draft.error.message} action={<button className="button button-ghost button-sm" type="button" onClick={() => go("rascunhos")}>Voltar aos rascunhos</button>} /></AppShell>;
   return <AppShell active="porta" go={go} userName="" alertCount={0} logout={() => undefined}><PageHeading eyebrow="Planejamento / Porta" title="PORTA — Nova DFD" subtitle="Formalize a necessidade do setor requisitante. A modalidade será tratada somente após o PCA publicado e a autorização de abertura." actions={<button className="button button-ghost button-sm" onClick={() => go(draftPublicId ? "rascunhos" : "dashboard")}><ArrowLeft size={15} /> Voltar</button>} /><PortaPresentation onShowExample={() => setShowExample(current => !current)} />{showExample ? <DfdSamplePreview onClose={() => setShowExample(false)} /> : null}
-    <form ref={formRef} className="form-stack" onSubmit={submit}>      <FormPanel title="Identificação da DFD" help="Os campos abaixo compõem o Documento de Formalização da Demanda e serão enviados primeiro ao Financeiro para rubrica e ciência do gasto; depois seguem à Diretoria de Administração para triagem, decisão presidencial e consolidação no PCA."><Field label="Unidade demandante" help="Escolha a unidade que está pedindo a contratação. Se você estiver pedindo para outra unidade, não escolha a sua: use a opção de setor destinatário quando ela estiver disponível."><select name="unitId" required defaultValue={String(draft.data?.demand.requestingUnitId ?? availableUnits[0]?.id ?? "")}>{availableUnits.map(unit => <option key={unitOptionKey(unit)} value={unit.id}>{unit.name} · {unit.code}</option>)}</select></Field><div className="field-guidance-banner"><GitBranch size={16} /><div><strong>O item do PCA será criado depois</strong><span>Na PORTA, informe apenas o ano de referência. A Administração definirá o item e os subitens quando consolidar as DFDs.</span></div></div><CnaeSupplyLineSelector value={supplyLine?.code ? supplyLine : null} onSelect={item => setSupplyLine(item.code ? item : null)} /><Field label="Objeto resumido (até 60 caracteres)" full help="Resuma o que precisa ser obtido. Escreva o nome da solução, não a história inteira. Não informe modalidade, fornecedor ou marca neste campo."><input name="title" required minLength={5} maxLength={60} defaultValue={draft.data?.demand.title === "Rascunho sem título" ? "" : draft.data?.demand.title ?? ""} placeholder="Descreva a necessidade em uma frase objetiva" /><small>A DFD não seleciona modalidade nem instaura processo de contratação.</small></Field><Field label="Descrição detalhada (mínimo de 60 caracteres)" full help="Explique o que será feito, para quem, onde e qual resultado deve ser entregue. Não escreva apenas ‘comprar material’ ou ‘contratar serviço’."><textarea name="objectDescription" required minLength={60} defaultValue={draft.data?.demand.objectDescription ?? ""} placeholder="Descreva o escopo, as características e o resultado esperado, sem quantitativos." /><small>Não informe quantidades aqui. Registre cada quantitativo no respectivo item, com sua justificativa.</small></Field><Field label="Justificativa da necessidade (mínimo de 1.000 caracteres)" full help="Explique por que a demanda existe, qual é o interesse público, o que acontece se ela não for atendida, quais quantidades serão necessárias e como a estimativa foi obtida."><textarea name="justification" required minLength={1000} defaultValue={draft.data?.demand.justification ?? ""} placeholder="Escreva pelo menos 1.000 caracteres: necessidade, interesse público, consequência da não contratação, quantitativos e estimativa." /><small>Obrigatória: no mínimo 1.000 caracteres. Justificativas genéricas ou superficiais não serão aceitas.</small></Field></FormPanel>
-      <DfdGuidance />
-      <DemandItemsSequence items={confirmedItems} isAdding={isAddingItem} onItemsChange={items => { setConfirmedItems(items); setItemsError(null); }} onAddingChange={isAdding => { setIsAddingItem(isAdding); setItemsError(null); }} />
+    <PortaWizardStepper
+      currentStep={step}
+      onStepChange={goToStep}
+      validation={stepValidation}
+      onNext={goNext}
+      draftPublicId={draftPublicId}
+      onSaveDraft={draftPublicId ? saveCurrentDraft : createAndSaveDraft}
+      saveDraftPending={saveDraft.isPending || createDemandDraft.isPending}
+    />
+    <form ref={formRef} className="form-stack" onSubmit={submit}>
+      {step === "identificacao" ? (
+        <>
+          <FormPanel title="Identificação da DFD" help="Os campos abaixo compõem o Documento de Formalização da Demanda e serão enviados primeiro ao Financeiro para rubrica e ciência do gasto; depois seguem à Diretoria de Administração para triagem, decisão presidencial e consolidação no PCA."><Field label="Unidade demandante" help="Escolha a unidade que está pedindo a contratação. Se você estiver pedindo para outra unidade, não escolha a sua: use a opção de setor destinatário quando ela estiver disponível."><select name="unitId" required defaultValue={String(draft.data?.demand.requestingUnitId ?? availableUnits[0]?.id ?? "")}>{availableUnits.map(unit => <option key={unitOptionKey(unit)} value={unit.id}>{unit.name} · {unit.code}</option>)}</select></Field><div className="field-guidance-banner"><GitBranch size={16} /><div><strong>O item do PCA será criado depois</strong><span>Na PORTA, informe apenas o ano de referência. A Administração definirá o item e os subitens quando consolidar as DFDs.</span></div></div><CnaeSupplyLineSelector value={supplyLine?.code ? supplyLine : null} onSelect={item => setSupplyLine(item.code ? item : null)} /><Field label="Objeto resumido (até 60 caracteres)" full help="Resuma o que precisa ser obtido. Escreva o nome da solução, não a história inteira. Não informe modalidade, fornecedor ou marca neste campo."><input name="title" required minLength={5} maxLength={60} onInput={bumpValidation} defaultValue={draft.data?.demand.title === "Rascunho sem título" ? "" : draft.data?.demand.title ?? ""} placeholder="Descreva a necessidade em uma frase objetiva" /><small>A DFD não seleciona modalidade nem instaura processo de contratação.</small></Field><Field label="Descrição detalhada (mínimo de 60 caracteres)" full help="Explique o que será feito, para quem, onde e qual resultado deve ser entregue. Não escreva apenas ‘comprar material’ ou ‘contratar serviço’."><textarea name="objectDescription" required minLength={60} onInput={bumpValidation} defaultValue={draft.data?.demand.objectDescription ?? ""} placeholder="Descreva o escopo, as características e o resultado esperado, sem quantitativos." /><small>Não informe quantidades aqui. Registre cada quantitativo no respectivo item, com sua justificativa.</small></Field><Field label="Justificativa da necessidade (mínimo de 1.000 caracteres)" full help="Explique por que a demanda existe, qual é o interesse público, o que acontece se ela não for atendida, quais quantidades serão necessárias e como a estimativa foi obtida."><textarea name="justification" required minLength={1000} onInput={bumpValidation} defaultValue={draft.data?.demand.justification ?? ""} placeholder="Escreva pelo menos 1.000 caracteres: necessidade, interesse público, consequência da não contratação, quantitativos e estimativa." /><small>Obrigatória: no mínimo 1.000 caracteres. Justificativas genéricas ou superficiais não serão aceitas.</small></Field></FormPanel>
+          <DfdGuidance />
+        </>
+      ) : null}
+      {step === "itens" ? (
+        <>
+          <DemandItemsSequence items={confirmedItems} isAdding={isAddingItem} onItemsChange={items => { setConfirmedItems(items); setItemsError(null); }} onAddingChange={isAdding => { setIsAddingItem(isAdding); setItemsError(null); }} />
       <GuidancePanel title="Estimativa dos itens por exercício"><p className="trilha-current-copy">O valor estimado informado em cada item da DFD deve corresponder apenas ao exercício financeiro em que o PCA está sendo elaborado. Gastos de exercícios posteriores não devem ser somados à estimativa do item.</p><p className="trilha-current-copy">A soma dos valores dos itens confirmados aparece automaticamente no campo <em>Estimativa consolidada</em> acima.</p></GuidancePanel>
       <FormPanel title="Impacto em exercícios futuros" help="Controle de despesas que ultrapassam o exercício de elaboração do PCA."><Field label="Indicação financeira" full container><label className="checkbox-line planning-supervening-option"><input name="hasFutureFiscalImpact" type="checkbox" defaultChecked={draft.data?.demand.hasFutureFiscalImpact ?? false} /> <span>Esta demanda acarretará em gastos nos demais exercícios financeiros?</span></label><small>Marque quando a contratação tiver efeitos financeiros previstos para exercícios posteriores.</small></Field></FormPanel>
       <FormPanel title="Planejamento e prazo" help="A estimativa consolidada é calculada automaticamente a partir dos itens confirmados. Estes dados serão refinados durante o ETP, a pesquisa de preços e o TR.">
@@ -763,7 +925,20 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
           </Field>
         ) : null}
       </FormPanel>
-      <FormPanel title="Triagem transversal de privacidade" help="A sinalização organiza a revisão de compatibilidade com a LGPD; ela não decide a licitude do tratamento nem substitui o encarregado ou o jurídico."><Field label="Sinais de atenção" full container><div className="checklist-box privacy-attention-options"><label className="checkbox-line"><input name="containsPersonalData" type="checkbox" defaultChecked={draft.data?.demand.containsPersonalData ?? false} /> <span>A necessidade pode envolver dados pessoais</span></label><label className="checkbox-line"><input name="containsSensitiveData" type="checkbox" defaultChecked={draft.data?.demand.containsSensitiveData ?? false} /> <span>A necessidade pode envolver dados pessoais sensíveis</span></label></div></Field><Field label="Contexto de privacidade" full><textarea name="privacyContext" defaultValue={draft.data?.demand.privacyContext ?? ""} placeholder="Se aplicável, descreva de modo sucinto o tratamento previsto, os titulares ou a razão para encaminhar a análise LGPD." /></Field></FormPanel>
+        </>
+      ) : null}
+      {step === "revisao" ? (
+        <>
+          <PortaWizardReview
+            formRef={formRef}
+            confirmedItems={confirmedItems}
+            objetoTipo={objetoTipo}
+            classification={classification}
+            supplyLine={supplyLine}
+            availableUnits={availableUnits}
+            supportingFileName={supportingFile?.name ?? null}
+          />
+          <FormPanel title="Triagem transversal de privacidade" help="A sinalização organiza a revisão de compatibilidade com a LGPD; ela não decide a licitude do tratamento nem substitui o encarregado ou o jurídico."><Field label="Sinais de atenção" full container><div className="checklist-box privacy-attention-options"><label className="checkbox-line"><input name="containsPersonalData" type="checkbox" defaultChecked={draft.data?.demand.containsPersonalData ?? false} /> <span>A necessidade pode envolver dados pessoais</span></label><label className="checkbox-line"><input name="containsSensitiveData" type="checkbox" defaultChecked={draft.data?.demand.containsSensitiveData ?? false} /> <span>A necessidade pode envolver dados pessoais sensíveis</span></label></div></Field><Field label="Contexto de privacidade" full><textarea name="privacyContext" defaultValue={draft.data?.demand.privacyContext ?? ""} placeholder="Se aplicável, descreva de modo sucinto o tratamento previsto, os titulares ou a razão para encaminhar a análise LGPD." /></Field></FormPanel>
       <FormPanel title="Documentos de apoio" help="Anexe uma memória, desenho técnico, levantamento ou outro documento necessário para compreender a demanda. A anexação não substitui os campos obrigatórios da DFD."><Field label="Arquivo de apoio" full optional help="Anexe somente documentos que ajudem a entender a demanda. O arquivo não substitui o preenchimento dos campos obrigatórios."><input type="file" accept=".pdf,.doc,.docx,.xls,.xlsx,.png,.jpg,.jpeg" onChange={event => setSupportingFile(event.target.files?.[0] ?? null)} /><small>{supportingFile ? `Será anexado: ${supportingFile.name}` : "Opcional · máximo de 8 MB"}</small></Field></FormPanel>
       <FormPanel title="Assinatura institucional" help="Declaração eletrônica vinculada à conta autenticada que encaminha a DFD."><Field label="Confirmação do solicitante" full container><label className="checkbox-line planning-supervening-option"><input name="requesterCertified" type="checkbox" /><span>Declaro que as informações da DFD, seus itens, justificativas, quantitativos e pesquisas prévias são de minha responsabilidade.</span></label><small>A identificação do solicitante será registrada automaticamente no documento e na trilha de auditoria.</small></Field></FormPanel>
       {(itemsError || createDemand.error || saveDraft.error || uploadPlanningDocument.error) ? (
@@ -776,13 +951,12 @@ function Porta({ go, units, draftPublicId, afterCreate }: { go: (screen: Exclude
       ) : null}
       <div className="form-footer">
         <button type="button" className="button button-ghost" onClick={() => go(draftPublicId ? "rascunhos" : "dashboard")}>Cancelar</button>
-        <button type="button" className="button button-ghost" onClick={draftPublicId ? saveCurrentDraft : createAndSaveDraft} disabled={saveDraft.isPending || createDemandDraft.isPending}>
-          <FileText size={14} /> {saveDraft.isPending || createDemandDraft.isPending ? "Salvando…" : (draftPublicId ? "Salvar rascunho" : "Salvar como rascunho")}
-        </button>
         <button className="button button-ink" type="submit" disabled={createDemand.isPending || isAddingItem || !confirmedItems.length}>
           {createDemand.isPending ? "Enviando DFD…" : "Enviar DFD à Administração"} <Send size={16} />
         </button>
       </div>
+        </>
+      ) : null}
     </form>
   </AppShell>;
 }

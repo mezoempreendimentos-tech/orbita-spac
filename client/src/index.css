@@ -398,6 +398,39 @@ textarea:focus-visible {
 .alert-dialog-action-danger { background:var(--danger); color:#fff; }
 .alert-dialog-action-danger:hover { background:color-mix(in srgb,var(--danger) 88%,#000); }
 
+/* Wizard multi-step da PORTA (item #10 do feedback da Debora).
+   3 passos: Identificação → Itens e prazos → Revisão e envio. */
+.porta-wizard-stepper { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:20px 24px; display:grid; gap:16px; }
+.porta-wizard-progress { display:grid; grid-template-columns:repeat(3,1fr); gap:12px; counter-reset:wizard; }
+.porta-wizard-step { display:grid; grid-template-columns:36px 1fr; gap:12px; align-items:center; padding:10px 12px; border:1px solid var(--line); border-radius:12px; background:var(--surface-alt); transition:border-color .15s ease, background .15s ease; }
+.porta-wizard-step-number { width:36px; height:36px; border-radius:50%; display:grid; place-items:center; background:color-mix(in srgb,var(--muted-2) 18%,transparent); color:var(--muted); font:700 14px var(--font-display); border:1px solid var(--line); }
+.porta-wizard-step-body { display:grid; gap:2px; min-width:0; }
+.porta-wizard-step-label { font:600 10.5px var(--font-display); letter-spacing:.08em; text-transform:uppercase; color:var(--muted-2); }
+.porta-wizard-step-title { font:600 14px var(--font-display); letter-spacing:-.01em; color:var(--text); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.porta-wizard-step.is-active { border-color:color-mix(in srgb,var(--cyan) 60%,var(--line)); background:color-mix(in srgb,var(--cyan) 7%,var(--surface-alt)); }
+.porta-wizard-step.is-active .porta-wizard-step-number { background:var(--cyan); color:#fff; border-color:var(--cyan); }
+.porta-wizard-step.is-active .porta-wizard-step-label { color:var(--cyan); }
+.porta-wizard-step.is-complete .porta-wizard-step-number { background:var(--success); color:#fff; border-color:var(--success); }
+.porta-wizard-step.is-complete .porta-wizard-step-title { color:var(--text); }
+.porta-wizard-step.is-blocked .porta-wizard-step-number { color:var(--danger); border-color:color-mix(in srgb,var(--danger) 50%,var(--line)); }
+.porta-wizard-actions { display:flex; align-items:center; gap:10px; flex-wrap:wrap; padding-top:14px; border-top:1px solid var(--line); }
+.porta-wizard-actions .porta-wizard-status { font-size:12px; color:var(--muted); margin-right:auto; display:inline-flex; align-items:center; gap:6px; }
+.porta-wizard-actions .porta-wizard-status.is-blocked { color:var(--danger); }
+.porta-wizard-step-help { font-size:12px; color:var(--muted); line-height:1.5; margin:0; }
+.porta-wizard-review { background:var(--surface); border:1px solid var(--line); border-radius:16px; padding:24px; }
+.porta-wizard-review-header { display:flex; align-items:center; gap:10px; margin-bottom:16px; }
+.porta-wizard-review-header h2 { font:700 18px var(--font-display); letter-spacing:-.02em; margin:0; }
+.porta-wizard-review dl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:14px; margin:0; }
+.porta-wizard-review dl > div { display:grid; gap:4px; padding:10px 12px; background:var(--surface-alt); border-radius:10px; }
+.porta-wizard-review dt { font-size:10.5px; font-weight:600; color:var(--muted-2); letter-spacing:.06em; text-transform:uppercase; }
+.porta-wizard-review dd { font-size:13px; color:var(--text); margin:0; line-height:1.45; word-break:break-word; }
+.porta-wizard-review .porta-wizard-review-wide { grid-column:1/-1; }
+@media (max-width:720px) { .porta-wizard-progress { grid-template-columns:1fr; } .porta-wizard-review dl { grid-template-columns:1fr; } }
+
+/* Botao "Editar perfil" no rodape do sidebar. Discreto, ao lado do Sair. */
+.sidebar-edit-profile { background:transparent; color:var(--muted-2); font-size:11px; padding:4px 6px; display:inline-flex; align-items:center; gap:4px; }
+.sidebar-edit-profile:hover { color:var(--orbit-blue); }
+
 .porta-preview-page { min-height:100vh; background:var(--paper); }
 .porta-preview-header { display:flex; align-items:center; gap:22px; max-width:1260px; margin:0 auto; padding:38px clamp(20px,5vw,72px) 24px; }
 .porta-preview-header .brand-mark { width:64px; height:64px; }

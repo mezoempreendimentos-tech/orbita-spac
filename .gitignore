@@ -151,3 +151,11 @@ standalone/.tunnel-url.txt
 standalone/tunnel-watchdog.log
 standalone/tunnel-watchdog.log.stdout
 standalone/tunnel-watchdog.log.stderr
+standalone/tunnel-watchdog.ps1
+
+# Documentos operacionais locais (gerados durante a sessão, não versionados)
+RELATORIO.md
+environment
+
+# Scripts one-shot de dev (prefixo _ ou sufixo .cjs) — não versionar
+standalone/*.cjs
