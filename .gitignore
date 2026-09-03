@@ -159,3 +159,7 @@ environment
 
 # Scripts one-shot de dev (prefixo _ ou sufixo .cjs) — não versionar
 standalone/*.cjs
+scripts/_archive/
+
+# Pacote de marca original (zip de origem, extraído em client/public/orbita/)
+_brand_inbox/
