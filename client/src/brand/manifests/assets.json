@@ -1,0 +1,1701 @@
+{
+  "version": "1.0.0",
+  "generated": "2026-08-26",
+  "fileCountExcludingGeneratedIndexes": 337,
+  "brandSvg": 9,
+  "subsystems": 3,
+  "modules": 20,
+  "modulePngSizes": [
+    16,
+    20,
+    24,
+    32
+  ],
+  "files": [
+    {
+      "path": "CHANGELOG.md",
+      "bytes": 450,
+      "sha256": "70030bfb9be58d00ff17fa812b0a3bfd33a06764a80e5238af3edc098e2d26ab"
+    },
+    {
+      "path": "README.md",
+      "bytes": 2284,
+      "sha256": "f7b001cce4a4f8a60fdbca8715b556405e6b92a59a94a45fb23b30962e259529"
+    },
+    {
+      "path": "assets/brand/pdf/signature-horizontal-negative.pdf",
+      "bytes": 16163,
+      "sha256": "d684d91bec2b4c6d4cb9a2eb27b9ca21a0b25c82e405d17ec231fc04957011d0"
+    },
+    {
+      "path": "assets/brand/pdf/signature-horizontal.pdf",
+      "bytes": 16180,
+      "sha256": "1db0e0471bc500a9f7c79b2988ce55bf92fcd7b6eb9e1f1097bae8425a550040"
+    },
+    {
+      "path": "assets/brand/pdf/signature-intermediate-mono-dark.pdf",
+      "bytes": 4092,
+      "sha256": "79a62f0d948430fc465abea3f6cc1ee3f8c33876ffc3f756645221ed7467b031"
+    },
+    {
+      "path": "assets/brand/pdf/signature-intermediate-mono-white.pdf",
+      "bytes": 4073,
+      "sha256": "e82010fd18d98cc8ff6e092b5dbb875ae108291daba5c75227f4d5f7bb9927f6"
+    },
+    {
+      "path": "assets/brand/pdf/signature-intermediate-negative.pdf",
+      "bytes": 4126,
+      "sha256": "9a040481b7364738930093f13ffcb050e5bda73f61292fdbb4f554bbfe60d5f1"
+    },
+    {
+      "path": "assets/brand/pdf/signature-intermediate.pdf",
+      "bytes": 4143,
+      "sha256": "7ca1a12633e6a64c3d6fe5221a726eb9ad7b42e986be25f894001329eae61f20"
+    },
+    {
+      "path": "assets/brand/pdf/symbol-color.pdf",
+      "bytes": 1876,
+      "sha256": "01b663dea57e793b0acce17e52add0cf55dca395a511ec6f3dc154d829775261"
+    },
+    {
+      "path": "assets/brand/pdf/symbol-mono-dark.pdf",
+      "bytes": 1848,
+      "sha256": "2458b428fa1524db5efb58095842b5e06ad8ef1b36cb999692af331ba8603166"
+    },
+    {
+      "path": "assets/brand/pdf/symbol-mono-white.pdf",
+      "bytes": 1827,
+      "sha256": "c401f5f5d0d1c73cf86cdee9f708acf969dd5be2449ab9b6d1c2a9282fdfcc1f"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-horizontal-negative.png",
+      "bytes": 75307,
+      "sha256": "c72ca69196521c375af84f08342b1f0b50eef8327d74dee6874ee654b8aa70d7"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-horizontal.png",
+      "bytes": 83051,
+      "sha256": "cd36be38df915b540843094f5b23e2ca06f42fc4a671413c7c71af64fc81faaa"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-intermediate-mono-dark.png",
+      "bytes": 68321,
+      "sha256": "c9a398437b2569768d3c117865fef818e4e7f119039949359fda76171ce81064"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-intermediate-mono-white.png",
+      "bytes": 47786,
+      "sha256": "4ce78f9a98de0fe73171f6b600fe5a708a7ab875c04362263ae8ffc8350f4773"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-intermediate-negative.png",
+      "bytes": 67221,
+      "sha256": "8ad36d31b45f7aedaf6f2668f744a63979104a6eb6510469204376be65c31226"
+    },
+    {
+      "path": "assets/brand/png/1280px/signature-intermediate.png",
+      "bytes": 71653,
+      "sha256": "457509e5a8877a861b82fe6fe149008717a442d84d817d20f571ef0c9fa9f128"
+    },
+    {
+      "path": "assets/brand/png/128px/symbol-color.png",
+      "bytes": 8931,
+      "sha256": "e67ee3e39597f54bf18a2be97b85d1cade718c2d7722398786e8fd0f8ec8f9ef"
+    },
+    {
+      "path": "assets/brand/png/128px/symbol-mono-dark.png",
+      "bytes": 8557,
+      "sha256": "5ace644f47d2d02960f368edb22dcb73f00bbda5a4b97bbbc5c67fa6b528529a"
+    },
+    {
+      "path": "assets/brand/png/128px/symbol-mono-white.png",
+      "bytes": 5629,
+      "sha256": "4d5771ed33b12c371a47340e32813c13dbc1ad06b84695c031a206fcc1babf3b"
+    },
+    {
+      "path": "assets/brand/png/256px/symbol-color.png",
+      "bytes": 21590,
+      "sha256": "00106fa8843ae8ebd12a6fe938471f28707da2b106c975a0f634db2502e4c30d"
+    },
+    {
+      "path": "assets/brand/png/256px/symbol-mono-dark.png",
+      "bytes": 20866,
+      "sha256": "9fad4608353bbe4081a772fe300984aba240960f9fd64c32413ed52601e9fe5c"
+    },
+    {
+      "path": "assets/brand/png/256px/symbol-mono-white.png",
+      "bytes": 14252,
+      "sha256": "a26a060690339337ba3de2de6f260f32fb6a3d543aed7a259fbae4dd60f7c17f"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-horizontal-negative.png",
+      "bytes": 14759,
+      "sha256": "d69231708e560397f58b409ef8f4c5ffea3fb7e2c36ae61486564a158a1910f5"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-horizontal.png",
+      "bytes": 16547,
+      "sha256": "490270ece2a46020e68dc43aab9ec0fbe2fc836501b3692223f54c0a0ad66e81"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-intermediate-mono-dark.png",
+      "bytes": 13402,
+      "sha256": "c317cf9af3bd90541c2c62f51b2234acfcb24d0d2e836fc783534d51f07987c0"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-intermediate-mono-white.png",
+      "bytes": 9129,
+      "sha256": "0520aac3c2e2da352361f5d3c445625a376ce1bccbb5c4198c01d89688912eb3"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-intermediate-negative.png",
+      "bytes": 13080,
+      "sha256": "e6b4fd1b8faf8142387ac0247fe273b1f3f1de66a7172d88d53dd02129d52c0b"
+    },
+    {
+      "path": "assets/brand/png/320px/signature-intermediate.png",
+      "bytes": 14082,
+      "sha256": "9cbdad6dea346233e5b0078f70f73b8d64d56c0ed541dc06e8848da98821d2c8"
+    },
+    {
+      "path": "assets/brand/png/512px/symbol-color.png",
+      "bytes": 47732,
+      "sha256": "db60f6428d3dcadc098f58a6881152d7419e0017619c37d063f5d10bd9fcb0f9"
+    },
+    {
+      "path": "assets/brand/png/512px/symbol-mono-dark.png",
+      "bytes": 45978,
+      "sha256": "14b50d894e2ad29917beb26fee9a71115b915424eb3df5bc119bd515729413b8"
+    },
+    {
+      "path": "assets/brand/png/512px/symbol-mono-white.png",
+      "bytes": 31882,
+      "sha256": "dcf99f58e379f94e6f5ae1f06f4949c08e138a8779c4cd9426943d499dadda18"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-horizontal-negative.png",
+      "bytes": 34900,
+      "sha256": "b90bd4c5b8ea364b99372a43a41d05b2e097e9a3ae9126395458d6c77f4632c6"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-horizontal.png",
+      "bytes": 39038,
+      "sha256": "659df8436a6e7fdfb7a3ebab5e02dfcaadcd00ea2a68912f3ec2b1d3682da831"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-intermediate-mono-dark.png",
+      "bytes": 31572,
+      "sha256": "37aa1778418980b972211522b70e129ca4ef505ab32a2029aa616c83db55eef4"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-intermediate-mono-white.png",
+      "bytes": 21973,
+      "sha256": "643d965af18f05561f623456137065bc7d0107a60774c1e8c8ed4a5ff0d5bdd3"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-intermediate-negative.png",
+      "bytes": 31099,
+      "sha256": "98a06179b5ab320784b9c4d2d2378e4d66956552c3654026f1f528aee1026517"
+    },
+    {
+      "path": "assets/brand/png/640px/signature-intermediate.png",
+      "bytes": 32996,
+      "sha256": "4a803d86b9b5f7b53e8de2ba74faa76933e17b74eb233e8a3b181075ed05efb0"
+    },
+    {
+      "path": "assets/brand/png/64px/symbol-color.png",
+      "bytes": 3683,
+      "sha256": "0aa47b667895cbbdf7af94fbaff444db725c5641f30cf96b0e2cf9a71b6848c8"
+    },
+    {
+      "path": "assets/brand/png/64px/symbol-mono-dark.png",
+      "bytes": 3456,
+      "sha256": "31a994c02d39e76ec9365e4fa46a4c8b67eb4135a6b13d9b193244fe2d7d0332"
+    },
+    {
+      "path": "assets/brand/png/64px/symbol-mono-white.png",
+      "bytes": 2291,
+      "sha256": "e4979cbf664c9d8407ec1418f916ec4115381bd3c7010e851b58432cee38a5d6"
+    },
+    {
+      "path": "assets/brand/svg/signature-horizontal-negative.svg",
+      "bytes": 24909,
+      "sha256": "e2743f2cbca6c678e527dea83d01086b34801ce7e81617fa2ef50f6430214b42"
+    },
+    {
+      "path": "assets/brand/svg/signature-horizontal.svg",
+      "bytes": 24909,
+      "sha256": "bd69ac3deb402a8095ff621880de0ff24e3476e885de91c416c7d8c6ce3e25df"
+    },
+    {
+      "path": "assets/brand/svg/signature-intermediate-mono-dark.svg",
+      "bytes": 4016,
+      "sha256": "27b919c2e8500a556049edffde6b84f910b608c4d9be3437b132808c7e506fd0"
+    },
+    {
+      "path": "assets/brand/svg/signature-intermediate-mono-white.svg",
+      "bytes": 4016,
+      "sha256": "ff5332e6c85aa67d4a0e73bf682e76471b8bfa0153c8fe161a1869569b145f94"
+    },
+    {
+      "path": "assets/brand/svg/signature-intermediate-negative.svg",
+      "bytes": 4016,
+      "sha256": "ea7d6f67e2ee12f970b6d7ee04630bde4d12fcf5f14f0a74880c4f27ef78d66a"
+    },
+    {
+      "path": "assets/brand/svg/signature-intermediate.svg",
+      "bytes": 4016,
+      "sha256": "1aa5f6effe8f0a597f0bbbfa83df843160976108633b7dad69e1d77f241a1ec1"
+    },
+    {
+      "path": "assets/brand/svg/symbol-color.svg",
+      "bytes": 1370,
+      "sha256": "84a8e5371eff658c65869e1b071e69e5c93b801eb4c71cb7ac215741a32f9ed3"
+    },
+    {
+      "path": "assets/brand/svg/symbol-mono-dark.svg",
+      "bytes": 1370,
+      "sha256": "f9121e8e809d670a53cdef8cb802861fae10a5912a5eb8010b5c1eb7577f8e68"
+    },
+    {
+      "path": "assets/brand/svg/symbol-mono-white.svg",
+      "bytes": 1370,
+      "sha256": "f2db6d333ed88e62f214a06a75a9f15072c43f8e5f48031c7e43b17d6176f958"
+    },
+    {
+      "path": "assets/favicons/favicon-16.png",
+      "bytes": 688,
+      "sha256": "f43c046cec242263604b41afdf5a058be232edf2a5daa5df91882c30e38a88a3"
+    },
+    {
+      "path": "assets/favicons/favicon-180.png",
+      "bytes": 13689,
+      "sha256": "8d4d2d6a6f097c32670092dabb40c93d3659054507e096b815a7b8da5c42000e"
+    },
+    {
+      "path": "assets/favicons/favicon-192.png",
+      "bytes": 14868,
+      "sha256": "688747bf943cb029d6a9f9cab59b8404adcf8fc9675e58993e2305a9e0fa0566"
+    },
+    {
+      "path": "assets/favicons/favicon-32.png",
+      "bytes": 1536,
+      "sha256": "e969dce1dc2dfdcb6c4ba61e45cf8a79e34ff94abaa174e3e4bbab7204e1748c"
+    },
+    {
+      "path": "assets/favicons/favicon-48.png",
+      "bytes": 2578,
+      "sha256": "e3e9888e0e6278a0f8dac7599f7cb0c3042b1a5161edc32703e199e00f4d7f91"
+    },
+    {
+      "path": "assets/favicons/favicon-512.png",
+      "bytes": 47732,
+      "sha256": "db60f6428d3dcadc098f58a6881152d7419e0017619c37d063f5d10bd9fcb0f9"
+    },
+    {
+      "path": "assets/favicons/favicon.ico",
+      "bytes": 5273,
+      "sha256": "b650ec87b1875a19095394266b081fe058bb7b21b189a3a607609952a8f9b7aa"
+    },
+    {
+      "path": "assets/favicons/favicon.svg",
+      "bytes": 1370,
+      "sha256": "84a8e5371eff658c65869e1b071e69e5c93b801eb4c71cb7ac215741a32f9ed3"
+    },
+    {
+      "path": "assets/modules/agenda/icone.pdf",
+      "bytes": 1269,
+      "sha256": "6a9d79f9555adbc9c65cb568abf02eaf7b346b17ee6124dfeeb7c9fefa4b1d4d"
+    },
+    {
+      "path": "assets/modules/agenda/icone.png",
+      "bytes": 17306,
+      "sha256": "352ae01a42978c97c14e968aca17174639e92280c1ed5e16709026baf4e26739"
+    },
+    {
+      "path": "assets/modules/agenda/icone.svg",
+      "bytes": 739,
+      "sha256": "b5fbd4346c46fbaecaf987111086e358b9fd09d4935a4fa79139acf3ac565ed9"
+    },
+    {
+      "path": "assets/modules/aguia/icone.pdf",
+      "bytes": 1549,
+      "sha256": "1bd75db93ad05b80d387284a12069bdc2fd771eae1ebb45479995c604506e8cc"
+    },
+    {
+      "path": "assets/modules/aguia/icone.png",
+      "bytes": 58153,
+      "sha256": "972c63526675db7dcba3072ea1448ed8f2e812b7823fd73637569db16153a80d"
+    },
+    {
+      "path": "assets/modules/aguia/icone.svg",
+      "bytes": 2016,
+      "sha256": "2f2bed77930f97c2cec9f9de2aafcccc1528c599b7fb6f6c1e28c1078a68bd75"
+    },
+    {
+      "path": "assets/modules/atlas/icone.pdf",
+      "bytes": 1453,
+      "sha256": "2f220e8ef9618abf7e02f9762b5644814e50bbc83916063076d8e1f5c210f08f"
+    },
+    {
+      "path": "assets/modules/atlas/icone.png",
+      "bytes": 43455,
+      "sha256": "8f34d4559bbb980c6459d3ba45d105abb1efbdc71fb9e35a21f0ee94bf682430"
+    },
+    {
+      "path": "assets/modules/atlas/icone.svg",
+      "bytes": 1567,
+      "sha256": "4ab98d3b4423eaa531c1c113fa67066972e0e72fdd1c6ba107ce76f7297a470a"
+    },
+    {
+      "path": "assets/modules/bussola/icone.pdf",
+      "bytes": 1312,
+      "sha256": "0dfaa491d5f5635ffe2850afbd3b9b1346b16df3d2d49116c3517054d703ff45"
+    },
+    {
+      "path": "assets/modules/bussola/icone.png",
+      "bytes": 43701,
+      "sha256": "9ffaae030279da14d58585b796f9d1f425c714b39f4c5d178374a9cea28de84e"
+    },
+    {
+      "path": "assets/modules/bussola/icone.svg",
+      "bytes": 666,
+      "sha256": "147c4fa616ec7951e4574dbc30ec7586f1a7d21da3628f23d3e1ef761ebe0858"
+    },
+    {
+      "path": "assets/modules/eco/icone.pdf",
+      "bytes": 1253,
+      "sha256": "1631f1163b59b1f35876e38b62a8297243d2a6b09c71ecc5c76ef5d547fc4d6d"
+    },
+    {
+      "path": "assets/modules/eco/icone.png",
+      "bytes": 25762,
+      "sha256": "02f0e33f9ce5aa044b7287cb8553dea0035ea42052f9459fc0344275b2d475df"
+    },
+    {
+      "path": "assets/modules/eco/icone.svg",
+      "bytes": 829,
+      "sha256": "8eec180722ed341b61a6eba32118a4915b72c471b18deca1f19b55207efad444"
+    },
+    {
+      "path": "assets/modules/elo/icone.pdf",
+      "bytes": 1273,
+      "sha256": "323703db8c08ba33391b006880dcaf508aa0cc2e32456bb55a56eb4057eb4501"
+    },
+    {
+      "path": "assets/modules/elo/icone.png",
+      "bytes": 29593,
+      "sha256": "701f4ff8e735cced2c1bcb07ef8f65598fa255182dc59bcbf9e979cc08849b11"
+    },
+    {
+      "path": "assets/modules/elo/icone.svg",
+      "bytes": 659,
+      "sha256": "c684b5d5caa9d0dbd91a6f66fd8db58780095e7cc8f97eeacdadaff445facefe"
+    },
+    {
+      "path": "assets/modules/farol/icone.pdf",
+      "bytes": 1300,
+      "sha256": "140ad84b54aa738e8b631578cce93d42c41c182cf75ffac029b42c6ebbd36b6d"
+    },
+    {
+      "path": "assets/modules/farol/icone.png",
+      "bytes": 23966,
+      "sha256": "bee023f903302a74981d521109c3f24588f6408467c666efdaea8708ad9ac6f1"
+    },
+    {
+      "path": "assets/modules/farol/icone.svg",
+      "bytes": 714,
+      "sha256": "435bcd066777312b65db278d16e8738ad3da9d2a7432e5e2fc03c32d6d3418d4"
+    },
+    {
+      "path": "assets/modules/ima/icone.pdf",
+      "bytes": 1329,
+      "sha256": "aa4f19063e550752c3ef01b305f104421671b0ca8e8a69e595f35ff7ae9d8c00"
+    },
+    {
+      "path": "assets/modules/ima/icone.png",
+      "bytes": 29674,
+      "sha256": "b9bd46678c722d29ae96e3c15d6ad3c93cfbc2f857ddb91d524354409a9a59f1"
+    },
+    {
+      "path": "assets/modules/ima/icone.svg",
+      "bytes": 672,
+      "sha256": "d16902930b8f32d5e3e4792d76aafbf8ac9e0ccee8c20f1eb11efc66b0627d6c"
+    },
+    {
+      "path": "assets/modules/lastro/icone.pdf",
+      "bytes": 2494,
+      "sha256": "4f92465b1fb309ba45fed320c99fbda5b5c0c94df0bd00e1b6dff4f23a2cee69"
+    },
+    {
+      "path": "assets/modules/lastro/icone.png",
+      "bytes": 33515,
+      "sha256": "a04ce840829e72f7e605277b4b45cec157d461105ecb4dfbb875323a9f5fffe2"
+    },
+    {
+      "path": "assets/modules/lastro/icone.svg",
+      "bytes": 2033,
+      "sha256": "e93667cc93c249decd3460056a88d4612c9924b0658a880b0266fe320af89b28"
+    },
+    {
+      "path": "assets/modules/lupa/icone.pdf",
+      "bytes": 1231,
+      "sha256": "1c684b0fe3efe10b13e3bb3a750c420a4b0ae1094f582c9f219feba9961c3ac3"
+    },
+    {
+      "path": "assets/modules/lupa/icone.png",
+      "bytes": 22831,
+      "sha256": "9a344424a81b9b0c34ef6024483099fbdd005da3f1a02e336f897a73db4e4ee8"
+    },
+    {
+      "path": "assets/modules/lupa/icone.svg",
+      "bytes": 523,
+      "sha256": "9fd910ad4a5e0e7ce658c1394968c71c5d62e629366feb4f64b6ae4937f00056"
+    },
+    {
+      "path": "assets/modules/maestro/icone.pdf",
+      "bytes": 1367,
+      "sha256": "c9dd9356ad6cc3040d5bd7921f820da760366bfd9b433ed36099dade94289f76"
+    },
+    {
+      "path": "assets/modules/maestro/icone.png",
+      "bytes": 26190,
+      "sha256": "9b58bb8a268de6c3346cc4ec83d1d3a3a4bdec82c9f81ac0dc31f5e7e2ce52a3"
+    },
+    {
+      "path": "assets/modules/maestro/icone.svg",
+      "bytes": 701,
+      "sha256": "1695289b1584cff4c37e6a301da2a8a1f34b159149610c619e4a0ff3f260298d"
+    },
+    {
+      "path": "assets/modules/mapa/icone.pdf",
+      "bytes": 1281,
+      "sha256": "b17e4c05625dd1366186dd0be8ddfb660c9dfdc4fa442935c10087259d24a830"
+    },
+    {
+      "path": "assets/modules/mapa/icone.png",
+      "bytes": 19234,
+      "sha256": "463351cc63e60656064fd214ba3986cc2f036cd625cc10469ab8df335d13eac4"
+    },
+    {
+      "path": "assets/modules/mapa/icone.svg",
+      "bytes": 800,
+      "sha256": "51e71a49b6168efcad70a712e598403c8018ae9ff3af7e23de483feaaacba9a9"
+    },
+    {
+      "path": "assets/modules/memoria/icone.pdf",
+      "bytes": 1313,
+      "sha256": "18b7099d398d9c86c4c3ffef8bc49f5bd7a7e8b6a3d52e64d567b7f3298b394c"
+    },
+    {
+      "path": "assets/modules/memoria/icone.png",
+      "bytes": 39237,
+      "sha256": "aa5e6781fd1dfadfaf3c8ec3238173d5e0d7a9bb15f0f093b361e0d44dd8d1a2"
+    },
+    {
+      "path": "assets/modules/memoria/icone.svg",
+      "bytes": 679,
+      "sha256": "db9f66ceb0be9162eb6a3b8612f71b97bb9e09eea0215e6301b05fc0ec1c1477"
+    },
+    {
+      "path": "assets/modules/oficina/icone.pdf",
+      "bytes": 1729,
+      "sha256": "e6d09f63b86feb34b3273d225913d6faeb776fcc77739c1c3016638b28c37c01"
+    },
+    {
+      "path": "assets/modules/oficina/icone.png",
+      "bytes": 40861,
+      "sha256": "41e86abe12dd50bf8e1ef9452cf7740a3c865f07a86c265aa2a43b08ba1768da"
+    },
+    {
+      "path": "assets/modules/oficina/icone.svg",
+      "bytes": 2896,
+      "sha256": "376f127b1b6e8c00b3543810c78aa75c40301865d0956d54af0802ea39f57b7c"
+    },
+    {
+      "path": "assets/modules/oraculo/icone.pdf",
+      "bytes": 1394,
+      "sha256": "ba28a8d06df8e36b4e66693600205a269cc02cb203b8e9b2b1bd21f2abe4f498"
+    },
+    {
+      "path": "assets/modules/oraculo/icone.png",
+      "bytes": 19792,
+      "sha256": "d128ea724f1d5c8ef3f8c513070e67143009547ffe12ad959df8890f3a1b6eff"
+    },
+    {
+      "path": "assets/modules/oraculo/icone.svg",
+      "bytes": 1283,
+      "sha256": "e4a9e6cd43b7bd76eb20d1b8ade10423c567ea7fdde8f912446fac7c1765415f"
+    },
+    {
+      "path": "assets/modules/png-16/agenda.png",
+      "bytes": 392,
+      "sha256": "1d671b7609dbbe62f3bfabee313197c1984cc2221b7e2b0807a48a624ef6a024"
+    },
+    {
+      "path": "assets/modules/png-16/aguia.png",
+      "bytes": 541,
+      "sha256": "75638ce70fdf0d2f0dbb4c74defac4d9849db8d1f962dea6f85926a931109830"
+    },
+    {
+      "path": "assets/modules/png-16/atlas.png",
+      "bytes": 548,
+      "sha256": "445e2fbe1b1227951d7d3e868ff1460cd75013582592cc37273263e14afe68ca"
+    },
+    {
+      "path": "assets/modules/png-16/bussola.png",
+      "bytes": 507,
+      "sha256": "ba9d87e16e1024f23dfe63ff2b05e33d40792f02865b9ebb03b2fcdb14bc0b84"
+    },
+    {
+      "path": "assets/modules/png-16/eco.png",
+      "bytes": 405,
+      "sha256": "d3e4711f2108e2c24d23db38b8b21ee7210f31807e84369c3ad3ec2e1f148856"
+    },
+    {
+      "path": "assets/modules/png-16/elo.png",
+      "bytes": 469,
+      "sha256": "b01ba803b51821ce107d8b0fa61f3d433d23f576104c7d6eeb25e3dd89a1e2d2"
+    },
+    {
+      "path": "assets/modules/png-16/farol.png",
+      "bytes": 386,
+      "sha256": "8f52d23642d1f8f61968ac4d7ff742cd0a71da185959cbfa5d86ac12a7a0bde1"
+    },
+    {
+      "path": "assets/modules/png-16/ima.png",
+      "bytes": 423,
+      "sha256": "773a3220857eb888bcc674d854740a361b04ccdf23d8dab50f3521bbc2bad238"
+    },
+    {
+      "path": "assets/modules/png-16/lastro.png",
+      "bytes": 463,
+      "sha256": "93cf218ecf5acece5d5aa9e3bb81b56c728c720797819d3029fb6a3cabb23c53"
+    },
+    {
+      "path": "assets/modules/png-16/lupa.png",
+      "bytes": 358,
+      "sha256": "88dc05de7fc4950715c04ceed412e2bc697acbc6295d412fa303da5d8b36efb0"
+    },
+    {
+      "path": "assets/modules/png-16/maestro.png",
+      "bytes": 348,
+      "sha256": "416c6b0c40cb422e868d43be0e17067ef588e45829bfe1017a0ef6ed0edbd03f"
+    },
+    {
+      "path": "assets/modules/png-16/mapa.png",
+      "bytes": 404,
+      "sha256": "639c06fa54f51a64d48c01054964886fdd8a0314de26323ab6691c4a476ef765"
+    },
+    {
+      "path": "assets/modules/png-16/memoria.png",
+      "bytes": 463,
+      "sha256": "608e655b7a195f750ca0e0bfe6e63905e1ca62e6cfacaeb52a71b53617a9580e"
+    },
+    {
+      "path": "assets/modules/png-16/oficina.png",
+      "bytes": 522,
+      "sha256": "361d86f59547b92516a6cbec2716d18798175ab34edd429892120fddc202c8c3"
+    },
+    {
+      "path": "assets/modules/png-16/oraculo.png",
+      "bytes": 387,
+      "sha256": "52385927fd318084b45ea160cfd19487582c76f73b2e61b9dcb752c257ceb086"
+    },
+    {
+      "path": "assets/modules/png-16/porta.png",
+      "bytes": 288,
+      "sha256": "fbcad2fa7f1f8631984c945745eb7a415887cc75c3f851c0936c7852c0714718"
+    },
+    {
+      "path": "assets/modules/png-16/regua.png",
+      "bytes": 327,
+      "sha256": "bea678a8322e6fda50a1693c834d69a4844ac4e5b3db3f2971227f028d31291d"
+    },
+    {
+      "path": "assets/modules/png-16/termometro.png",
+      "bytes": 330,
+      "sha256": "b7dc177c2c5cc2c90e6bbcdaaf33c2e47b4ee3df484ed2cdcd63bd4ebf0b224d"
+    },
+    {
+      "path": "assets/modules/png-16/vigia.png",
+      "bytes": 352,
+      "sha256": "d51f6c4f705a041ec3c14e20eb416ef010c9bf4559f1647b2bb327d177d3e798"
+    },
+    {
+      "path": "assets/modules/png-16/vitrine.png",
+      "bytes": 462,
+      "sha256": "8ce7a6748934d91a45ecc9877df37e1a43a7a32d97821175509a0446f7f6b02c"
+    },
+    {
+      "path": "assets/modules/png-20/agenda.png",
+      "bytes": 469,
+      "sha256": "66538b362ab84b5a60386856d7d35b1c7eed05f8de3d265f1d429629737b428c"
+    },
+    {
+      "path": "assets/modules/png-20/aguia.png",
+      "bytes": 678,
+      "sha256": "fd2534189ea490dcf4255cd917758bef02e0124241c157a834b524c9d8bd2b7b"
+    },
+    {
+      "path": "assets/modules/png-20/atlas.png",
+      "bytes": 655,
+      "sha256": "11fc594871f7bcb7e2ea53209aa5fa36cbaed8a40153a414c366a1a81921bde2"
+    },
+    {
+      "path": "assets/modules/png-20/bussola.png",
+      "bytes": 544,
+      "sha256": "71762f56b09513ac63d4e31a9accfe29f293ea3c4def7545cc1b58925ccc6ad2"
+    },
+    {
+      "path": "assets/modules/png-20/eco.png",
+      "bytes": 457,
+      "sha256": "66cd4dab7a1d30d83d18e5805ec588bc3d0a05dd6d8fe80e2d8b0a0dbf53ad4a"
+    },
+    {
+      "path": "assets/modules/png-20/elo.png",
+      "bytes": 535,
+      "sha256": "13c395c0a7bcba56120c0c4d40d3063acd372b667efb73df2ea8b2ab4d16ff3d"
+    },
+    {
+      "path": "assets/modules/png-20/farol.png",
+      "bytes": 471,
+      "sha256": "7b255dcda7deb6b6b1a1f404233c4e6c27ac63caaa82e1724a4dde6a459a9cfb"
+    },
+    {
+      "path": "assets/modules/png-20/ima.png",
+      "bytes": 505,
+      "sha256": "86c23c0d4d2b39b2562edeb7993a759375cb852dd18776810fce2eb269081059"
+    },
+    {
+      "path": "assets/modules/png-20/lastro.png",
+      "bytes": 543,
+      "sha256": "350035ee557ba3eb8d8cc1502a3f4f599f93dba69fddf04420e4b39f6ea8e916"
+    },
+    {
+      "path": "assets/modules/png-20/lupa.png",
+      "bytes": 429,
+      "sha256": "cb7906019f025cfccbe2c71dcaad2b243f612cde00028a76b7f81e64d4001d0f"
+    },
+    {
+      "path": "assets/modules/png-20/maestro.png",
+      "bytes": 404,
+      "sha256": "c922aa4bec3092a2afd5d33e6a81e02a6ef3895cb0b8f6844f079f0e073c9102"
+    },
+    {
+      "path": "assets/modules/png-20/mapa.png",
+      "bytes": 523,
+      "sha256": "ae04ba1390f9b3c01e86dd8535d3ec18c8977f920c42d92013ff407b8947d1b1"
+    },
+    {
+      "path": "assets/modules/png-20/memoria.png",
+      "bytes": 564,
+      "sha256": "31013fa77dbac57e529e8d70f740461e632bed77098a0a7d17e35575eb8b33c4"
+    },
+    {
+      "path": "assets/modules/png-20/oficina.png",
+      "bytes": 656,
+      "sha256": "27b9a06b81b4478a4ee115578a60d1a337ed4123bf1d763b088b3b478fb611c7"
+    },
+    {
+      "path": "assets/modules/png-20/oraculo.png",
+      "bytes": 468,
+      "sha256": "c96e575815c0509d8f71685f48c5d1f386f85ff6b3e58f94af75b50a964e79e2"
+    },
+    {
+      "path": "assets/modules/png-20/porta.png",
+      "bytes": 353,
+      "sha256": "c9c6448a2848e036a0e7a627de075cf0a14aaa48074cedb5923505115a5e4f64"
+    },
+    {
+      "path": "assets/modules/png-20/regua.png",
+      "bytes": 393,
+      "sha256": "eb369ec89467f93aa084d53f0a3a3346a1feebd2dc2bcc35bb5c8b205307cfdb"
+    },
+    {
+      "path": "assets/modules/png-20/termometro.png",
+      "bytes": 380,
+      "sha256": "e396b386a667e7751d973cf6262ca334aff8f4f74c4412240ed7296c39a5923e"
+    },
+    {
+      "path": "assets/modules/png-20/vigia.png",
+      "bytes": 438,
+      "sha256": "505bb776d26bb537c85b597c4af2e548f20dc297ed5954e3b6b0b3d366d96f6e"
+    },
+    {
+      "path": "assets/modules/png-20/vitrine.png",
+      "bytes": 531,
+      "sha256": "1a50b3fd629e161218c5d35496f0e9cc27c60d3f5c161f997795d3576166f005"
+    },
+    {
+      "path": "assets/modules/png-24/agenda.png",
+      "bytes": 498,
+      "sha256": "a72cfb147d68d779dad7b45d34801cc40fb74e90436f1aee4ac1315ef8be056c"
+    },
+    {
+      "path": "assets/modules/png-24/aguia.png",
+      "bytes": 866,
+      "sha256": "1a2e98284c1042f6920af95bc057c663ad2be7bbf5eaa6bf8480dfe46abff19e"
+    },
+    {
+      "path": "assets/modules/png-24/atlas.png",
+      "bytes": 835,
+      "sha256": "5c95fa53d3c06f7874e7b313861aaa30613857582fb58b64cc3089da558d17bd"
+    },
+    {
+      "path": "assets/modules/png-24/bussola.png",
+      "bytes": 712,
+      "sha256": "5bbb63632da9e7032b95ac12d36ed925d315dfe41f5b5b0c78dd3f96f6ef8db3"
+    },
+    {
+      "path": "assets/modules/png-24/eco.png",
+      "bytes": 559,
+      "sha256": "5b70588ebe7786932d110a515179f30b08ce526f3cbd63ce2100b4cda15ec429"
+    },
+    {
+      "path": "assets/modules/png-24/elo.png",
+      "bytes": 633,
+      "sha256": "2f704181e2ed8ec32e707501d504931e7b30d99f6536ee6b0fc3904ad028060d"
+    },
+    {
+      "path": "assets/modules/png-24/farol.png",
+      "bytes": 533,
+      "sha256": "29b3cf5fb72fb88a35ce6ce4bf86d8ed6636321600d3f3a38255958eaad70561"
+    },
+    {
+      "path": "assets/modules/png-24/ima.png",
+      "bytes": 629,
+      "sha256": "7eeba3ec65f3a5aba4d8ae9e671262936498ad267a64177bda2229b604d01b42"
+    },
+    {
+      "path": "assets/modules/png-24/lastro.png",
+      "bytes": 655,
+      "sha256": "e717a7e736c9b30277ccf299187cc8800009d20f7685b09fbe5a574b5a3749a5"
+    },
+    {
+      "path": "assets/modules/png-24/lupa.png",
+      "bytes": 534,
+      "sha256": "90892facc42e25b45d9db2e7beb68fa4b8ee7ae41bdaa291b786d01657d91787"
+    },
+    {
+      "path": "assets/modules/png-24/maestro.png",
+      "bytes": 470,
+      "sha256": "e567a4bc2b42fc7c65fa1db2d6328f29f0c618a0fef1ec36b044c227d2265b79"
+    },
+    {
+      "path": "assets/modules/png-24/mapa.png",
+      "bytes": 597,
+      "sha256": "48588c256714c7662f44368b19eaeaa4c9950e98531e9d3efa3c1c2428eb5cd2"
+    },
+    {
+      "path": "assets/modules/png-24/memoria.png",
+      "bytes": 695,
+      "sha256": "da5ac61c54692932a34a43e2da1132de876463fcc89daaf982e1ecdd5d594dca"
+    },
+    {
+      "path": "assets/modules/png-24/oficina.png",
+      "bytes": 802,
+      "sha256": "df18952b2d12dc13da7d65ba883fc41704a0342037649b5fe2e2533aebdd6bb3"
+    },
+    {
+      "path": "assets/modules/png-24/oraculo.png",
+      "bytes": 561,
+      "sha256": "9563d76aa2de468e30ea88104aa4382254c8d3541e97103eb15f7f3f1dcdc301"
+    },
+    {
+      "path": "assets/modules/png-24/porta.png",
+      "bytes": 369,
+      "sha256": "1a026aa63cb6c8ddedb2de1073cbf995745b1e70ba4ef8354354cd85439b1851"
+    },
+    {
+      "path": "assets/modules/png-24/regua.png",
+      "bytes": 486,
+      "sha256": "fa8078894c106755ae177818ebdb8984dc275962bc1fe13380caaa9bce9d8985"
+    },
+    {
+      "path": "assets/modules/png-24/termometro.png",
+      "bytes": 463,
+      "sha256": "fbe43e80caaebde74e5072197827122d496a7790a8667fcffac79cc5e04dfe41"
+    },
+    {
+      "path": "assets/modules/png-24/vigia.png",
+      "bytes": 493,
+      "sha256": "598d0d6a8b5663609c5802652c613b86e7e41a31a85b566e437bd5477748f431"
+    },
+    {
+      "path": "assets/modules/png-24/vitrine.png",
+      "bytes": 549,
+      "sha256": "f55cdf8a5089ffeca7edf44df867de448b18c9084f32831ebef7177c1de7ede5"
+    },
+    {
+      "path": "assets/modules/png-32/agenda.png",
+      "bytes": 650,
+      "sha256": "66d58cbfbdcd86864bc1caaeac1a4f7ca7009b345f6eabba393c35d6920a6f22"
+    },
+    {
+      "path": "assets/modules/png-32/aguia.png",
+      "bytes": 1217,
+      "sha256": "e03435fb5706744b84e5104a76f4dce1fe5d9bcc830b1a8f675c4e757de843ff"
+    },
+    {
+      "path": "assets/modules/png-32/atlas.png",
+      "bytes": 1200,
+      "sha256": "7e1d060f92f36b5993d80a9c8634acdb77ab080be88b6187d1a4b458a98dc288"
+    },
+    {
+      "path": "assets/modules/png-32/bussola.png",
+      "bytes": 997,
+      "sha256": "7649cdfbab803d2b5e830c6a3c08dfdab10c1ca658dd27ec6fc97a6fdf939eb9"
+    },
+    {
+      "path": "assets/modules/png-32/eco.png",
+      "bytes": 724,
+      "sha256": "9b2d5b6f525f08119f58e7ef921900dfaea6450e07f53de9a0463ee57ba15b5d"
+    },
+    {
+      "path": "assets/modules/png-32/elo.png",
+      "bytes": 833,
+      "sha256": "572eafcfd6739441499d493db427935a6c23a11692fc8aab6773d042479aa95b"
+    },
+    {
+      "path": "assets/modules/png-32/farol.png",
+      "bytes": 686,
+      "sha256": "06c96635bb821b3544f2de729687e878cef6bb1c1dd279ad20edb9db411127be"
+    },
+    {
+      "path": "assets/modules/png-32/ima.png",
+      "bytes": 782,
+      "sha256": "1ec0726d9533dd95fe4f230a1ba92661e9362f9f49ef2528d8696134cefdaea5"
+    },
+    {
+      "path": "assets/modules/png-32/lastro.png",
+      "bytes": 954,
+      "sha256": "771d12d0159d33cdedcae5fb44b9ce001282b9764c476e90fcc82ab908794b3e"
+    },
+    {
+      "path": "assets/modules/png-32/lupa.png",
+      "bytes": 681,
+      "sha256": "5c8dbacc6c926fe0e328d6cb49e41bb968586f20e25d28f3ca3527e2d486a96f"
+    },
+    {
+      "path": "assets/modules/png-32/maestro.png",
+      "bytes": 614,
+      "sha256": "bd8bf83697c6538fe4037fac8424fba757e8df0d253913f605187e7ef759624f"
+    },
+    {
+      "path": "assets/modules/png-32/mapa.png",
+      "bytes": 760,
+      "sha256": "aca272566bef77e1fa88753dca1d6bcd86465a61d605cc97d3fb15d2782ca16e"
+    },
+    {
+      "path": "assets/modules/png-32/memoria.png",
+      "bytes": 916,
+      "sha256": "127586662e2118549d444e9852d80ff60c1835d03acbcf1b96ed073ef3ba54a5"
+    },
+    {
+      "path": "assets/modules/png-32/oficina.png",
+      "bytes": 1151,
+      "sha256": "f77820814f05936adece2fbbfa8b3ad7b54329349b06ba681467b288311cbcc5"
+    },
+    {
+      "path": "assets/modules/png-32/oraculo.png",
+      "bytes": 735,
+      "sha256": "aea3001b1428c343d1929a11536777c9919f1adad0722bb31617ba54d57c7fbd"
+    },
+    {
+      "path": "assets/modules/png-32/porta.png",
+      "bytes": 446,
+      "sha256": "db58d8f4711794e3b3e599ef281ae6fda4ba75a36559e0f539793d9573fbfe6d"
+    },
+    {
+      "path": "assets/modules/png-32/regua.png",
+      "bytes": 521,
+      "sha256": "52282426c1f10ba9717e2898a580b89422f1a1b9a5185d41ee07a0511d8fd9c8"
+    },
+    {
+      "path": "assets/modules/png-32/termometro.png",
+      "bytes": 578,
+      "sha256": "ebcc9d9a1bae32e1e4e1c4f272f10dcef89920953869bc67968e6ca03a75cc8b"
+    },
+    {
+      "path": "assets/modules/png-32/vigia.png",
+      "bytes": 724,
+      "sha256": "9622bcfd6c6d9026d784a0dc286cdb10162f18179b1f788f27942ac2bb12cdf5"
+    },
+    {
+      "path": "assets/modules/png-32/vitrine.png",
+      "bytes": 688,
+      "sha256": "2fc00f19adbb30c0e0d2920bcfcc0bfd77fe98e8e06b078335b51d1aaf2289c7"
+    },
+    {
+      "path": "assets/modules/porta/icone.pdf",
+      "bytes": 1246,
+      "sha256": "94c3d4d30067f88d8fa42c4982ad64447c60f5d5b8396f4ded935ba80bc6004b"
+    },
+    {
+      "path": "assets/modules/porta/icone.png",
+      "bytes": 11623,
+      "sha256": "cf5667f6263ec2207bd66876a35e8737972b2a3973d2fa65df15b66ff8bc1549"
+    },
+    {
+      "path": "assets/modules/porta/icone.svg",
+      "bytes": 508,
+      "sha256": "252b1473695f6adbb073d67ce8f3a62784b6452de642daae47c602c538a1a121"
+    },
+    {
+      "path": "assets/modules/regua/icone.pdf",
+      "bytes": 1306,
+      "sha256": "96c6b0e67377a318e0efc45d92551ea615b751f086985b656d001f394d9dac56"
+    },
+    {
+      "path": "assets/modules/regua/icone.png",
+      "bytes": 11672,
+      "sha256": "8d04251cde8d339e9ea1c5451866fc9713571284fff701aa7e67023db8f57808"
+    },
+    {
+      "path": "assets/modules/regua/icone.svg",
+      "bytes": 1069,
+      "sha256": "3e6c077aa9e6be5b886c7c619d789be220ef1e75509a88f84d43dc46b0fa9046"
+    },
+    {
+      "path": "assets/modules/termometro/icone.pdf",
+      "bytes": 1303,
+      "sha256": "37002e0ae7a18703e03db1e850d3428ae8999a8750c6e1049c9e7c4b97ca88d6"
+    },
+    {
+      "path": "assets/modules/termometro/icone.png",
+      "bytes": 18352,
+      "sha256": "fde24f08b61aa222e51027e73399e2b1cdb77711d5c06711263f7f6be5cb095b"
+    },
+    {
+      "path": "assets/modules/termometro/icone.svg",
+      "bytes": 847,
+      "sha256": "7eb1e6420fdb3450eaa1211ff4f17b5181f6e01b93e4a8e57a00bd1e5025a31d"
+    },
+    {
+      "path": "assets/modules/vigia/icone.pdf",
+      "bytes": 1268,
+      "sha256": "8b40d894c72c15b74d776f8981b2bb2bd6cfbc51fc0f2a675d075239822ed8ab"
+    },
+    {
+      "path": "assets/modules/vigia/icone.png",
+      "bytes": 32873,
+      "sha256": "ef1273fca84c0f87e8269003761d4b340781e971a0830d4b30c5906fbaaf7224"
+    },
+    {
+      "path": "assets/modules/vigia/icone.svg",
+      "bytes": 482,
+      "sha256": "0642476d00c942fadb046fbc54292bfceac027782a061a811fb1cd0dc96754e4"
+    },
+    {
+      "path": "assets/modules/vitrine/icone.pdf",
+      "bytes": 1474,
+      "sha256": "a466841bd737682ec3ea2d728df400e2d1efc8912c39ff2de32b8c34d98527f9"
+    },
+    {
+      "path": "assets/modules/vitrine/icone.png",
+      "bytes": 20527,
+      "sha256": "b6d47716d2401008cb5558ca64dd2c058f05b5fbfc18ad0e60faa77fbc1596f7"
+    },
+    {
+      "path": "assets/modules/vitrine/icone.svg",
+      "bytes": 948,
+      "sha256": "e028270d3f1f42a745d91c26f994ecff13df9fa87cc4980e94ff816a032b5a8b"
+    },
+    {
+      "path": "assets/modules-current-color/agenda.svg",
+      "bytes": 764,
+      "sha256": "326a5afba3930e8fe37e650f7c3f699481abb35eafbdfb03027b9c950201c7a4"
+    },
+    {
+      "path": "assets/modules-current-color/aguia.svg",
+      "bytes": 2046,
+      "sha256": "344e85fd00590c95c80f0166e5b8d3afd2cb603a9386518accf348048dbe601a"
+    },
+    {
+      "path": "assets/modules-current-color/atlas.svg",
+      "bytes": 1617,
+      "sha256": "a972171aa6783205b59fe6e1f7dfed9c73919ff0dbc1484834e1b83a9f1b7175"
+    },
+    {
+      "path": "assets/modules-current-color/bussola.svg",
+      "bytes": 691,
+      "sha256": "7d0a6d0f9a628a7837a12a0840546ded5ac569abeb4a7ff4ee8d22cff80c4a73"
+    },
+    {
+      "path": "assets/modules-current-color/eco.svg",
+      "bytes": 849,
+      "sha256": "0cd15069652826ccf976e17a95e7d8d82921c7f77b8d27dab58ffbbf9186c1b2"
+    },
+    {
+      "path": "assets/modules-current-color/elo.svg",
+      "bytes": 669,
+      "sha256": "0d346448d4f22ffe9cc9f56a2e86175ff923545feffaa35952baacf661d16783"
+    },
+    {
+      "path": "assets/modules-current-color/farol.svg",
+      "bytes": 734,
+      "sha256": "659efa8e233850e4d7651484a02006089ba58059c5f2cc916d3fd21faf6c1edb"
+    },
+    {
+      "path": "assets/modules-current-color/ima.svg",
+      "bytes": 687,
+      "sha256": "2a948399950bbfab40f1213a0e974e6a5a3c52985287f30a4e0e72a9babc9bd6"
+    },
+    {
+      "path": "assets/modules-current-color/lastro.svg",
+      "bytes": 2093,
+      "sha256": "71879f054894dbdfa02b34a64591c775f73ee6ebcd1d9185f650ac5828c86963"
+    },
+    {
+      "path": "assets/modules-current-color/lupa.svg",
+      "bytes": 543,
+      "sha256": "9ed938e6401d0f01abf68fef175b4001bb0cc3b50b9148f7758ba9f5257733a1"
+    },
+    {
+      "path": "assets/modules-current-color/maestro.svg",
+      "bytes": 726,
+      "sha256": "f04ebf902c6df1961a531974d19a008e8000c09d58078b13e2a6db41c37c8e78"
+    },
+    {
+      "path": "assets/modules-current-color/mapa.svg",
+      "bytes": 825,
+      "sha256": "247d7defce475885286d870fc6937474638ce43179bcd6dae729b9dcc9f59e58"
+    },
+    {
+      "path": "assets/modules-current-color/memoria.svg",
+      "bytes": 689,
+      "sha256": "d6d729dcd7d1be8b8ad1571d5e90eece6143be587fa41c904202797d9595ec71"
+    },
+    {
+      "path": "assets/modules-current-color/oficina.svg",
+      "bytes": 2991,
+      "sha256": "8c2dcc881f826ea5dc35cf273fb9e62e4e945cd6293849c773ec8e5ae347aab4"
+    },
+    {
+      "path": "assets/modules-current-color/oraculo.svg",
+      "bytes": 1333,
+      "sha256": "70cc91f034f8ff0d187a1e9eff8e52583036c92b786944cf0ad2725691ce6660"
+    },
+    {
+      "path": "assets/modules-current-color/porta.svg",
+      "bytes": 523,
+      "sha256": "e94a4cb0e7edb905676a2040b87771c33267b3dd914a6f356c07788565c16e08"
+    },
+    {
+      "path": "assets/modules-current-color/regua.svg",
+      "bytes": 1109,
+      "sha256": "671362846df68646d2dbae93a230e1a9b934a54fe23c20d07a5aaf164ed9c88a"
+    },
+    {
+      "path": "assets/modules-current-color/termometro.svg",
+      "bytes": 877,
+      "sha256": "bb409c503b7ccd31dbdff8d8ae6cc0f4feab5eb882a9cca25f6f8958f3a51dc2"
+    },
+    {
+      "path": "assets/modules-current-color/vigia.svg",
+      "bytes": 497,
+      "sha256": "1f697705d1dcd9dc3e49248c0c6a5da020cffc5b9275f2f9d6765df3047901dc"
+    },
+    {
+      "path": "assets/modules-current-color/vitrine.svg",
+      "bytes": 978,
+      "sha256": "83e3535a5cf990fe7e3bd5806f1aded28be46154f7e2847f3c6fc89acce3b9da"
+    },
+    {
+      "path": "assets/modules-png/16px/agenda.png",
+      "bytes": 392,
+      "sha256": "1d671b7609dbbe62f3bfabee313197c1984cc2221b7e2b0807a48a624ef6a024"
+    },
+    {
+      "path": "assets/modules-png/16px/aguia.png",
+      "bytes": 541,
+      "sha256": "75638ce70fdf0d2f0dbb4c74defac4d9849db8d1f962dea6f85926a931109830"
+    },
+    {
+      "path": "assets/modules-png/16px/atlas.png",
+      "bytes": 548,
+      "sha256": "445e2fbe1b1227951d7d3e868ff1460cd75013582592cc37273263e14afe68ca"
+    },
+    {
+      "path": "assets/modules-png/16px/bussola.png",
+      "bytes": 507,
+      "sha256": "ba9d87e16e1024f23dfe63ff2b05e33d40792f02865b9ebb03b2fcdb14bc0b84"
+    },
+    {
+      "path": "assets/modules-png/16px/eco.png",
+      "bytes": 405,
+      "sha256": "d3e4711f2108e2c24d23db38b8b21ee7210f31807e84369c3ad3ec2e1f148856"
+    },
+    {
+      "path": "assets/modules-png/16px/elo.png",
+      "bytes": 469,
+      "sha256": "b01ba803b51821ce107d8b0fa61f3d433d23f576104c7d6eeb25e3dd89a1e2d2"
+    },
+    {
+      "path": "assets/modules-png/16px/farol.png",
+      "bytes": 386,
+      "sha256": "8f52d23642d1f8f61968ac4d7ff742cd0a71da185959cbfa5d86ac12a7a0bde1"
+    },
+    {
+      "path": "assets/modules-png/16px/ima.png",
+      "bytes": 423,
+      "sha256": "773a3220857eb888bcc674d854740a361b04ccdf23d8dab50f3521bbc2bad238"
+    },
+    {
+      "path": "assets/modules-png/16px/lastro.png",
+      "bytes": 463,
+      "sha256": "93cf218ecf5acece5d5aa9e3bb81b56c728c720797819d3029fb6a3cabb23c53"
+    },
+    {
+      "path": "assets/modules-png/16px/lupa.png",
+      "bytes": 358,
+      "sha256": "88dc05de7fc4950715c04ceed412e2bc697acbc6295d412fa303da5d8b36efb0"
+    },
+    {
+      "path": "assets/modules-png/16px/maestro.png",
+      "bytes": 348,
+      "sha256": "416c6b0c40cb422e868d43be0e17067ef588e45829bfe1017a0ef6ed0edbd03f"
+    },
+    {
+      "path": "assets/modules-png/16px/mapa.png",
+      "bytes": 404,
+      "sha256": "639c06fa54f51a64d48c01054964886fdd8a0314de26323ab6691c4a476ef765"
+    },
+    {
+      "path": "assets/modules-png/16px/memoria.png",
+      "bytes": 463,
+      "sha256": "608e655b7a195f750ca0e0bfe6e63905e1ca62e6cfacaeb52a71b53617a9580e"
+    },
+    {
+      "path": "assets/modules-png/16px/oficina.png",
+      "bytes": 522,
+      "sha256": "361d86f59547b92516a6cbec2716d18798175ab34edd429892120fddc202c8c3"
+    },
+    {
+      "path": "assets/modules-png/16px/oraculo.png",
+      "bytes": 387,
+      "sha256": "52385927fd318084b45ea160cfd19487582c76f73b2e61b9dcb752c257ceb086"
+    },
+    {
+      "path": "assets/modules-png/16px/porta.png",
+      "bytes": 288,
+      "sha256": "fbcad2fa7f1f8631984c945745eb7a415887cc75c3f851c0936c7852c0714718"
+    },
+    {
+      "path": "assets/modules-png/16px/regua.png",
+      "bytes": 327,
+      "sha256": "bea678a8322e6fda50a1693c834d69a4844ac4e5b3db3f2971227f028d31291d"
+    },
+    {
+      "path": "assets/modules-png/16px/termometro.png",
+      "bytes": 330,
+      "sha256": "b7dc177c2c5cc2c90e6bbcdaaf33c2e47b4ee3df484ed2cdcd63bd4ebf0b224d"
+    },
+    {
+      "path": "assets/modules-png/16px/vigia.png",
+      "bytes": 352,
+      "sha256": "d51f6c4f705a041ec3c14e20eb416ef010c9bf4559f1647b2bb327d177d3e798"
+    },
+    {
+      "path": "assets/modules-png/16px/vitrine.png",
+      "bytes": 462,
+      "sha256": "8ce7a6748934d91a45ecc9877df37e1a43a7a32d97821175509a0446f7f6b02c"
+    },
+    {
+      "path": "assets/modules-png/20px/agenda.png",
+      "bytes": 469,
+      "sha256": "66538b362ab84b5a60386856d7d35b1c7eed05f8de3d265f1d429629737b428c"
+    },
+    {
+      "path": "assets/modules-png/20px/aguia.png",
+      "bytes": 678,
+      "sha256": "fd2534189ea490dcf4255cd917758bef02e0124241c157a834b524c9d8bd2b7b"
+    },
+    {
+      "path": "assets/modules-png/20px/atlas.png",
+      "bytes": 655,
+      "sha256": "11fc594871f7bcb7e2ea53209aa5fa36cbaed8a40153a414c366a1a81921bde2"
+    },
+    {
+      "path": "assets/modules-png/20px/bussola.png",
+      "bytes": 544,
+      "sha256": "71762f56b09513ac63d4e31a9accfe29f293ea3c4def7545cc1b58925ccc6ad2"
+    },
+    {
+      "path": "assets/modules-png/20px/eco.png",
+      "bytes": 457,
+      "sha256": "66cd4dab7a1d30d83d18e5805ec588bc3d0a05dd6d8fe80e2d8b0a0dbf53ad4a"
+    },
+    {
+      "path": "assets/modules-png/20px/elo.png",
+      "bytes": 535,
+      "sha256": "13c395c0a7bcba56120c0c4d40d3063acd372b667efb73df2ea8b2ab4d16ff3d"
+    },
+    {
+      "path": "assets/modules-png/20px/farol.png",
+      "bytes": 471,
+      "sha256": "7b255dcda7deb6b6b1a1f404233c4e6c27ac63caaa82e1724a4dde6a459a9cfb"
+    },
+    {
+      "path": "assets/modules-png/20px/ima.png",
+      "bytes": 505,
+      "sha256": "86c23c0d4d2b39b2562edeb7993a759375cb852dd18776810fce2eb269081059"
+    },
+    {
+      "path": "assets/modules-png/20px/lastro.png",
+      "bytes": 543,
+      "sha256": "350035ee557ba3eb8d8cc1502a3f4f599f93dba69fddf04420e4b39f6ea8e916"
+    },
+    {
+      "path": "assets/modules-png/20px/lupa.png",
+      "bytes": 429,
+      "sha256": "cb7906019f025cfccbe2c71dcaad2b243f612cde00028a76b7f81e64d4001d0f"
+    },
+    {
+      "path": "assets/modules-png/20px/maestro.png",
+      "bytes": 404,
+      "sha256": "c922aa4bec3092a2afd5d33e6a81e02a6ef3895cb0b8f6844f079f0e073c9102"
+    },
+    {
+      "path": "assets/modules-png/20px/mapa.png",
+      "bytes": 523,
+      "sha256": "ae04ba1390f9b3c01e86dd8535d3ec18c8977f920c42d92013ff407b8947d1b1"
+    },
+    {
+      "path": "assets/modules-png/20px/memoria.png",
+      "bytes": 564,
+      "sha256": "31013fa77dbac57e529e8d70f740461e632bed77098a0a7d17e35575eb8b33c4"
+    },
+    {
+      "path": "assets/modules-png/20px/oficina.png",
+      "bytes": 656,
+      "sha256": "27b9a06b81b4478a4ee115578a60d1a337ed4123bf1d763b088b3b478fb611c7"
+    },
+    {
+      "path": "assets/modules-png/20px/oraculo.png",
+      "bytes": 468,
+      "sha256": "c96e575815c0509d8f71685f48c5d1f386f85ff6b3e58f94af75b50a964e79e2"
+    },
+    {
+      "path": "assets/modules-png/20px/porta.png",
+      "bytes": 353,
+      "sha256": "c9c6448a2848e036a0e7a627de075cf0a14aaa48074cedb5923505115a5e4f64"
+    },
+    {
+      "path": "assets/modules-png/20px/regua.png",
+      "bytes": 393,
+      "sha256": "eb369ec89467f93aa084d53f0a3a3346a1feebd2dc2bcc35bb5c8b205307cfdb"
+    },
+    {
+      "path": "assets/modules-png/20px/termometro.png",
+      "bytes": 380,
+      "sha256": "e396b386a667e7751d973cf6262ca334aff8f4f74c4412240ed7296c39a5923e"
+    },
+    {
+      "path": "assets/modules-png/20px/vigia.png",
+      "bytes": 438,
+      "sha256": "505bb776d26bb537c85b597c4af2e548f20dc297ed5954e3b6b0b3d366d96f6e"
+    },
+    {
+      "path": "assets/modules-png/20px/vitrine.png",
+      "bytes": 531,
+      "sha256": "1a50b3fd629e161218c5d35496f0e9cc27c60d3f5c161f997795d3576166f005"
+    },
+    {
+      "path": "assets/modules-png/24px/agenda.png",
+      "bytes": 498,
+      "sha256": "a72cfb147d68d779dad7b45d34801cc40fb74e90436f1aee4ac1315ef8be056c"
+    },
+    {
+      "path": "assets/modules-png/24px/aguia.png",
+      "bytes": 866,
+      "sha256": "1a2e98284c1042f6920af95bc057c663ad2be7bbf5eaa6bf8480dfe46abff19e"
+    },
+    {
+      "path": "assets/modules-png/24px/atlas.png",
+      "bytes": 835,
+      "sha256": "5c95fa53d3c06f7874e7b313861aaa30613857582fb58b64cc3089da558d17bd"
+    },
+    {
+      "path": "assets/modules-png/24px/bussola.png",
+      "bytes": 712,
+      "sha256": "5bbb63632da9e7032b95ac12d36ed925d315dfe41f5b5b0c78dd3f96f6ef8db3"
+    },
+    {
+      "path": "assets/modules-png/24px/eco.png",
+      "bytes": 559,
+      "sha256": "5b70588ebe7786932d110a515179f30b08ce526f3cbd63ce2100b4cda15ec429"
+    },
+    {
+      "path": "assets/modules-png/24px/elo.png",
+      "bytes": 633,
+      "sha256": "2f704181e2ed8ec32e707501d504931e7b30d99f6536ee6b0fc3904ad028060d"
+    },
+    {
+      "path": "assets/modules-png/24px/farol.png",
+      "bytes": 533,
+      "sha256": "29b3cf5fb72fb88a35ce6ce4bf86d8ed6636321600d3f3a38255958eaad70561"
+    },
+    {
+      "path": "assets/modules-png/24px/ima.png",
+      "bytes": 629,
+      "sha256": "7eeba3ec65f3a5aba4d8ae9e671262936498ad267a64177bda2229b604d01b42"
+    },
+    {
+      "path": "assets/modules-png/24px/lastro.png",
+      "bytes": 655,
+      "sha256": "e717a7e736c9b30277ccf299187cc8800009d20f7685b09fbe5a574b5a3749a5"
+    },
+    {
+      "path": "assets/modules-png/24px/lupa.png",
+      "bytes": 534,
+      "sha256": "90892facc42e25b45d9db2e7beb68fa4b8ee7ae41bdaa291b786d01657d91787"
+    },
+    {
+      "path": "assets/modules-png/24px/maestro.png",
+      "bytes": 470,
+      "sha256": "e567a4bc2b42fc7c65fa1db2d6328f29f0c618a0fef1ec36b044c227d2265b79"
+    },
+    {
+      "path": "assets/modules-png/24px/mapa.png",
+      "bytes": 597,
+      "sha256": "48588c256714c7662f44368b19eaeaa4c9950e98531e9d3efa3c1c2428eb5cd2"
+    },
+    {
+      "path": "assets/modules-png/24px/memoria.png",
+      "bytes": 695,
+      "sha256": "da5ac61c54692932a34a43e2da1132de876463fcc89daaf982e1ecdd5d594dca"
+    },
+    {
+      "path": "assets/modules-png/24px/oficina.png",
+      "bytes": 802,
+      "sha256": "df18952b2d12dc13da7d65ba883fc41704a0342037649b5fe2e2533aebdd6bb3"
+    },
+    {
+      "path": "assets/modules-png/24px/oraculo.png",
+      "bytes": 561,
+      "sha256": "9563d76aa2de468e30ea88104aa4382254c8d3541e97103eb15f7f3f1dcdc301"
+    },
+    {
+      "path": "assets/modules-png/24px/porta.png",
+      "bytes": 369,
+      "sha256": "1a026aa63cb6c8ddedb2de1073cbf995745b1e70ba4ef8354354cd85439b1851"
+    },
+    {
+      "path": "assets/modules-png/24px/regua.png",
+      "bytes": 486,
+      "sha256": "fa8078894c106755ae177818ebdb8984dc275962bc1fe13380caaa9bce9d8985"
+    },
+    {
+      "path": "assets/modules-png/24px/termometro.png",
+      "bytes": 463,
+      "sha256": "fbe43e80caaebde74e5072197827122d496a7790a8667fcffac79cc5e04dfe41"
+    },
+    {
+      "path": "assets/modules-png/24px/vigia.png",
+      "bytes": 493,
+      "sha256": "598d0d6a8b5663609c5802652c613b86e7e41a31a85b566e437bd5477748f431"
+    },
+    {
+      "path": "assets/modules-png/24px/vitrine.png",
+      "bytes": 549,
+      "sha256": "f55cdf8a5089ffeca7edf44df867de448b18c9084f32831ebef7177c1de7ede5"
+    },
+    {
+      "path": "assets/modules-png/32px/agenda.png",
+      "bytes": 650,
+      "sha256": "66d58cbfbdcd86864bc1caaeac1a4f7ca7009b345f6eabba393c35d6920a6f22"
+    },
+    {
+      "path": "assets/modules-png/32px/aguia.png",
+      "bytes": 1217,
+      "sha256": "e03435fb5706744b84e5104a76f4dce1fe5d9bcc830b1a8f675c4e757de843ff"
+    },
+    {
+      "path": "assets/modules-png/32px/atlas.png",
+      "bytes": 1200,
+      "sha256": "7e1d060f92f36b5993d80a9c8634acdb77ab080be88b6187d1a4b458a98dc288"
+    },
+    {
+      "path": "assets/modules-png/32px/bussola.png",
+      "bytes": 997,
+      "sha256": "7649cdfbab803d2b5e830c6a3c08dfdab10c1ca658dd27ec6fc97a6fdf939eb9"
+    },
+    {
+      "path": "assets/modules-png/32px/eco.png",
+      "bytes": 724,
+      "sha256": "9b2d5b6f525f08119f58e7ef921900dfaea6450e07f53de9a0463ee57ba15b5d"
+    },
+    {
+      "path": "assets/modules-png/32px/elo.png",
+      "bytes": 833,
+      "sha256": "572eafcfd6739441499d493db427935a6c23a11692fc8aab6773d042479aa95b"
+    },
+    {
+      "path": "assets/modules-png/32px/farol.png",
+      "bytes": 686,
+      "sha256": "06c96635bb821b3544f2de729687e878cef6bb1c1dd279ad20edb9db411127be"
+    },
+    {
+      "path": "assets/modules-png/32px/ima.png",
+      "bytes": 782,
+      "sha256": "1ec0726d9533dd95fe4f230a1ba92661e9362f9f49ef2528d8696134cefdaea5"
+    },
+    {
+      "path": "assets/modules-png/32px/lastro.png",
+      "bytes": 954,
+      "sha256": "771d12d0159d33cdedcae5fb44b9ce001282b9764c476e90fcc82ab908794b3e"
+    },
+    {
+      "path": "assets/modules-png/32px/lupa.png",
+      "bytes": 681,
+      "sha256": "5c8dbacc6c926fe0e328d6cb49e41bb968586f20e25d28f3ca3527e2d486a96f"
+    },
+    {
+      "path": "assets/modules-png/32px/maestro.png",
+      "bytes": 614,
+      "sha256": "bd8bf83697c6538fe4037fac8424fba757e8df0d253913f605187e7ef759624f"
+    },
+    {
+      "path": "assets/modules-png/32px/mapa.png",
+      "bytes": 760,
+      "sha256": "aca272566bef77e1fa88753dca1d6bcd86465a61d605cc97d3fb15d2782ca16e"
+    },
+    {
+      "path": "assets/modules-png/32px/memoria.png",
+      "bytes": 916,
+      "sha256": "127586662e2118549d444e9852d80ff60c1835d03acbcf1b96ed073ef3ba54a5"
+    },
+    {
+      "path": "assets/modules-png/32px/oficina.png",
+      "bytes": 1151,
+      "sha256": "f77820814f05936adece2fbbfa8b3ad7b54329349b06ba681467b288311cbcc5"
+    },
+    {
+      "path": "assets/modules-png/32px/oraculo.png",
+      "bytes": 735,
+      "sha256": "aea3001b1428c343d1929a11536777c9919f1adad0722bb31617ba54d57c7fbd"
+    },
+    {
+      "path": "assets/modules-png/32px/porta.png",
+      "bytes": 446,
+      "sha256": "db58d8f4711794e3b3e599ef281ae6fda4ba75a36559e0f539793d9573fbfe6d"
+    },
+    {
+      "path": "assets/modules-png/32px/regua.png",
+      "bytes": 521,
+      "sha256": "52282426c1f10ba9717e2898a580b89422f1a1b9a5185d41ee07a0511d8fd9c8"
+    },
+    {
+      "path": "assets/modules-png/32px/termometro.png",
+      "bytes": 578,
+      "sha256": "ebcc9d9a1bae32e1e4e1c4f272f10dcef89920953869bc67968e6ca03a75cc8b"
+    },
+    {
+      "path": "assets/modules-png/32px/vigia.png",
+      "bytes": 724,
+      "sha256": "9622bcfd6c6d9026d784a0dc286cdb10162f18179b1f788f27942ac2bb12cdf5"
+    },
+    {
+      "path": "assets/modules-png/32px/vitrine.png",
+      "bytes": 688,
+      "sha256": "2fc00f19adbb30c0e0d2920bcfcc0bfd77fe98e8e06b078335b51d1aaf2289c7"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/icone-subsistema.pdf",
+      "bytes": 2000,
+      "sha256": "b2afd9a522165c56cd553ab1fe7d5c4ce7bcfe43a910706627fdf63c32e90fd4"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/icone-subsistema.png",
+      "bytes": 24039,
+      "sha256": "b2c66c932b6ea069ecb2110bf724946d0f54d28f740cabc6475c5cbea38be5ea"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/icone-subsistema.svg",
+      "bytes": 1094,
+      "sha256": "7fa75a6186d0a1667e23eb094f913bbaf404d0fb614c838d3b69f352f9b222ef"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/linha-ambiental.pdf",
+      "bytes": 976,
+      "sha256": "15a7a597b472513eeb5f29a3bc20dbe39d5563360d23c8ec1582944065a8a469"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/linha-ambiental.png",
+      "bytes": 1427,
+      "sha256": "75716497a6653f4467118b3d396cf6966b1b2e473c2dd296a9dee32fe0e43129"
+    },
+    {
+      "path": "assets/subsystems/fluxo-da-contratacao/linha-ambiental.svg",
+      "bytes": 278,
+      "sha256": "476604a50e711ce3088027e753fb6704b0a73a4d62f7a14fab3b6e930f3a8176"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/icone-subsistema.pdf",
+      "bytes": 2089,
+      "sha256": "8528ef65d544c23fb9f6303e1a941c22dda4b5350d14c06ee96d58cc92dd48f3"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/icone-subsistema.png",
+      "bytes": 43596,
+      "sha256": "e3a7b43a4559de0d7a1dd275418ad05e40137982e073936684ff9b83b68667d8"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/icone-subsistema.svg",
+      "bytes": 1386,
+      "sha256": "1447ed62fe77201ff9be84163fab50d4a46172be34f6ef16c71219f6be3cfae1"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/linha-ambiental.pdf",
+      "bytes": 976,
+      "sha256": "66eb4921482396b9e0c2fa12935088494baf9485afcc69dd307b729aab71e763"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/linha-ambiental.png",
+      "bytes": 1427,
+      "sha256": "75716497a6653f4467118b3d396cf6966b1b2e473c2dd296a9dee32fe0e43129"
+    },
+    {
+      "path": "assets/subsystems/inteligencia-e-suporte/linha-ambiental.svg",
+      "bytes": 278,
+      "sha256": "1d82989abde352b9103226b6af8445be84e2bf2e22cd109ccf85e782928b25b5"
+    },
+    {
+      "path": "assets/subsystems/transparencia/icone-subsistema.pdf",
+      "bytes": 2014,
+      "sha256": "83216d9488c16df6738b1dd6905e36e9acc5bc28b26d9ad34ef5c56b97c427c4"
+    },
+    {
+      "path": "assets/subsystems/transparencia/icone-subsistema.png",
+      "bytes": 35317,
+      "sha256": "c1ae8b29ac58eead4e15f1c5e471867aa3a93340abe6d9f49c4575acc2fda86e"
+    },
+    {
+      "path": "assets/subsystems/transparencia/icone-subsistema.svg",
+      "bytes": 1018,
+      "sha256": "6053c54522c9e3c4d5a70fd82914edf044331b6556b1371bcbd58a52dd4dcf71"
+    },
+    {
+      "path": "assets/subsystems/transparencia/linha-ambiental.pdf",
+      "bytes": 976,
+      "sha256": "66eb4921482396b9e0c2fa12935088494baf9485afcc69dd307b729aab71e763"
+    },
+    {
+      "path": "assets/subsystems/transparencia/linha-ambiental.png",
+      "bytes": 1427,
+      "sha256": "75716497a6653f4467118b3d396cf6966b1b2e473c2dd296a9dee32fe0e43129"
+    },
+    {
+      "path": "assets/subsystems/transparencia/linha-ambiental.svg",
+      "bytes": 278,
+      "sha256": "6e78e5039a855f02c36dbda15fb9f3ebbc46360c52182673790e3451878d0e04"
+    },
+    {
+      "path": "css/orbita-components.css",
+      "bytes": 4310,
+      "sha256": "97743a78ceb35a5cfef518f63d9d7a51c277410cda5091cb7977fec032daabf3"
+    },
+    {
+      "path": "css/orbita-foundations.css",
+      "bytes": 1504,
+      "sha256": "0520ba8c506df16692a99d3729928812f65cec585d66b155ffc646590ebc4cc2"
+    },
+    {
+      "path": "css/orbita.css",
+      "bytes": 121,
+      "sha256": "f8fc04d11f4568e09188d926c0b4267ee4184d9d9313ad5c13bece5719184c5e"
+    },
+    {
+      "path": "docs/ACESSIBILIDADE.md",
+      "bytes": 1228,
+      "sha256": "8879b1565333bef62e3d7f8524e2268818aeb0c1cadb52d8a928fcdcac76ed71"
+    },
+    {
+      "path": "docs/GOVERNANCA.md",
+      "bytes": 1087,
+      "sha256": "e09911952d613f5ac0cf551bc56a03ce437c67860a5e591b7c7420d831cb40d4"
+    },
+    {
+      "path": "docs/GUIA_DO_DESENVOLVEDOR.md",
+      "bytes": 3682,
+      "sha256": "ae0ae40ba7da105eccef2eb53950dea85e24c5f612ee2adff91535d4e3774ab1"
+    },
+    {
+      "path": "docs/ORBITA_Guia_de_Implementacao_VERSAO_01.pdf",
+      "bytes": 1066761,
+      "sha256": "2825e2cc63d0b8e444f50b271101fc0672cab1b03ca578b5b28767e92d6522fc"
+    },
+    {
+      "path": "docs/VALIDACOES_NO_PRODUTO.md",
+      "bytes": 768,
+      "sha256": "4ea3d3467df36641f21dbe007f095b0d9f0f3e16d110511a907e3db23877698b"
+    },
+    {
+      "path": "examples/index.html",
+      "bytes": 5559,
+      "sha256": "ad0b5f8b0742b4eecd5eb9561c298983f8f95c6cd372bba3ffb2b7780c55bda0"
+    },
+    {
+      "path": "fonts/NotoSans-Bold.ttf",
+      "bytes": 838072,
+      "sha256": "3a08a47daa00cade516425c15c57615aef2fd418ec9811a7b9f465088f92cc05"
+    },
+    {
+      "path": "fonts/NotoSans-Regular.ttf",
+      "bytes": 825628,
+      "sha256": "f5f552c8c5edb61fe6efb824baf4d4de47b1a8689ab4925ff43f7bd6a4ebece5"
+    },
+    {
+      "path": "js/orbita-demo.js",
+      "bytes": 681,
+      "sha256": "4b015e2b285bf4f1d2af3239157bf42d8bd0a973f07f5242a998a6f741d6f07f"
+    },
+    {
+      "path": "manifests/componentes.json",
+      "bytes": 1285,
+      "sha256": "fbd5fd7431b62b364c4720bad5cb7c956dfe09be967d40b62231badf0820250c"
+    },
+    {
+      "path": "manifests/icons.json",
+      "bytes": 4386,
+      "sha256": "b992f41f1cd8021fd9b24fcb80a555b78548e33afc4437e226e265f281b64b29"
+    },
+    {
+      "path": "qa/README.md",
+      "bytes": 323,
+      "sha256": "2fcef87c656e5f442b41383f375aa3e6cb36935b6195a20122cee4c0a6e726cf"
+    },
+    {
+      "path": "qa/check_assets.py",
+      "bytes": 1861,
+      "sha256": "66e8630fcdf3a745b9c365bc4cea488004078d33325dbb277e8eceda0de6e338"
+    },
+    {
+      "path": "qa/validate-package.sh",
+      "bytes": 1756,
+      "sha256": "e89d93e4b0cba85cdf44cb941f89369d6cd5e77b29a8810e2be960374463ff45"
+    },
+    {
+      "path": "tokens/orbita-tokens.css",
+      "bytes": 1856,
+      "sha256": "610d91047269600dadae94a229c9f96a4854fa75d0020fc69987f6a7e4c0f9a8"
+    },
+    {
+      "path": "tokens/orbita-tokens.scss",
+      "bytes": 744,
+      "sha256": "d5e8cb48e29f30cd99dc0b266239c5a1d623c2dc143afbc068a811f2e4bb2ea6"
+    },
+    {
+      "path": "tokens/orbita-tokens.ts",
+      "bytes": 711,
+      "sha256": "43e39d652d1d285acbcdb287575eac77575430e3d9be321f10f2eaaf0b17630c"
+    },
+    {
+      "path": "tokens/orbita.tokens.json",
+      "bytes": 6879,
+      "sha256": "a1162244ee33c43228ee28134812f63120140e33b0d24ec5308bb51ee9df7c51"
+    }
+  ]
+}

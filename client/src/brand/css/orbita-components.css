@@ -1,0 +1,65 @@
+.orbita-button {
+  min-height: var(--orbita-control-default); padding: 0 var(--orbita-space-5);
+  border: 1px solid transparent; border-radius: var(--orbita-radius-md);
+  display: inline-flex; align-items: center; justify-content: center; gap: var(--orbita-space-3);
+  font-weight: 700; cursor: pointer; transition: background var(--orbita-duration-fast) var(--orbita-ease-standard);
+}
+.orbita-button--primary { background: var(--orbita-brand-deep-night); color: #fff; }
+.orbita-button--primary:hover { background: #22283a; }
+.orbita-button--secondary { background: var(--orbita-surface); color: var(--orbita-text); border-color: var(--orbita-border-strong); }
+.orbita-button--danger { background: var(--orbita-danger); color: #fff; }
+.orbita-button:disabled, .orbita-button[aria-disabled="true"] { cursor: not-allowed; opacity: .45; }
+
+.orbita-field { display: grid; gap: var(--orbita-space-2); }
+.orbita-label { font-weight: 700; }
+.orbita-input, .orbita-select {
+  min-height: var(--orbita-control-default); width: 100%; padding: 0 var(--orbita-space-4);
+  border: 1px solid var(--orbita-border-strong); border-radius: var(--orbita-radius-md);
+  background: var(--orbita-surface); color: var(--orbita-text);
+}
+.orbita-input[aria-invalid="true"] { border: 2px solid var(--orbita-danger); }
+.orbita-error { color: var(--orbita-danger); font-weight: 700; }
+
+.orbita-card { padding: var(--orbita-space-7); border: 1px solid var(--orbita-border); border-radius: var(--orbita-radius-lg); background: var(--orbita-surface); }
+.orbita-stack { display: grid; gap: var(--orbita-space-5); }
+.orbita-cluster { display: flex; flex-wrap: wrap; align-items: center; gap: var(--orbita-space-4); }
+
+.orbita-tag { display: inline-flex; align-items: center; min-height: 28px; padding: 0 var(--orbita-space-3); border-radius: 999px; font-size: .875rem; font-weight: 700; }
+.orbita-tag--success { color: #0d5138; background: #d9f4e8; }
+.orbita-tag--warning { color: #6b3d00; background: #ffebc7; }
+.orbita-tag--danger { color: #7c1710; background: #fde1de; }
+
+.orbita-alert { border-left: 4px solid; padding: var(--orbita-space-5); border-radius: var(--orbita-radius-sm); background: var(--orbita-surface); }
+.orbita-alert--information { border-color: var(--orbita-information); }
+.orbita-alert--success { border-color: var(--orbita-success); }
+.orbita-alert--warning { border-color: var(--orbita-warning); }
+.orbita-alert--danger { border-color: var(--orbita-danger); }
+
+.orbita-module-link { display: flex; align-items: center; gap: var(--orbita-space-3); min-height: 44px; padding: var(--orbita-space-3); border-radius: var(--orbita-radius-md); color: inherit; text-decoration: none; }
+.orbita-module-link img { width: 24px; height: 24px; object-fit: contain; }
+.orbita-module-link[aria-current="page"] { background: color-mix(in srgb, var(--module-color) 12%, transparent); font-weight: 700; }
+.orbita-module-link:not([aria-current="page"]) img { opacity: .72; }
+
+.orbita-table-wrap { overflow-x: auto; border: 1px solid var(--orbita-border); border-radius: var(--orbita-radius-lg); }
+.orbita-table { width: 100%; min-width: 680px; border-collapse: collapse; background: var(--orbita-surface); }
+.orbita-table th, .orbita-table td { min-height: 44px; padding: var(--orbita-space-4); text-align: left; border-bottom: 1px solid var(--orbita-border); }
+.orbita-table th { background: var(--orbita-surface-muted); }
+
+.orbita-shell { min-height: 100vh; display: grid; grid-template-columns: 280px minmax(0, 1fr); }
+.orbita-sidebar { padding: var(--orbita-space-5); border-right: 1px solid var(--orbita-border); background: var(--orbita-surface); }
+.orbita-sidebar__brand { width: 184px; height: auto; margin-bottom: var(--orbita-space-8); }
+.orbita-main { width: 100%; max-width: 1440px; padding: var(--orbita-space-8); }
+
+@media (max-width: 959px) {
+  .orbita-shell { grid-template-columns: 72px minmax(0, 1fr); }
+  .orbita-sidebar { padding-inline: var(--orbita-space-3); }
+  .orbita-sidebar__brand { width: 48px; }
+  .orbita-module-link span { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+}
+
+@media (max-width: 639px) {
+  .orbita-shell { display: block; }
+  .orbita-sidebar { display: none; }
+  .orbita-main { padding: var(--orbita-space-5); }
+  .orbita-display { font-size: 2rem; }
+}

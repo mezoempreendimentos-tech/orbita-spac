@@ -1,0 +1,15 @@
+{
+  "version": "1.0.0",
+  "status": "especificação inicial",
+  "components": {
+    "button": { "heights": [36, 44, 48], "variants": ["primary", "secondary", "tertiary", "danger"], "states": ["default", "hover", "focus", "pressed", "disabled", "loading"] },
+    "textInput": { "height": 44, "anatomy": ["label", "required marker", "input", "helper", "error"], "states": ["default", "hover", "focus", "filled", "disabled", "read-only", "error"] },
+    "select": { "height": 44, "supports": ["single", "searchable", "multiple when justified"] },
+    "checkboxRadio": { "control": 20, "minimumHitArea": 44, "labelRequired": true },
+    "tag": { "uses": ["status", "category"], "rule": "always combine color with text" },
+    "table": { "rowHeights": [44, 52], "supports": ["sorting", "filters", "selection", "pagination", "sticky header"], "rule": "keep primary action visible and secondary actions grouped" },
+    "modal": { "widths": [480, 640, 800], "rule": "reserve for interruption that requires a decision" },
+    "sidebar": { "expanded": 280, "collapsed": 72, "levels": ["system", "subsystem", "module", "generic command"] },
+    "notification": { "types": ["information", "success", "warning", "danger"], "rule": "validation errors use error summary plus field messages" }
+  }
+}

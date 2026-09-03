@@ -1,0 +1,19 @@
+// Arquivo gerado a partir dos tokens oficiais. Não altere valores isoladamente.
+$orbita-brand-orbital: #5e82ff;
+$orbita-brand-connection: #8a62ff;
+$orbita-brand-pulse: #e350ea;
+$orbita-brand-deep-night: #090a20;
+$orbita-subsystem-flow: #367cff;
+$orbita-subsystem-transparency: #13bfae;
+$orbita-subsystem-intelligence: #9554e8;
+$orbita-information: #2559c7;
+$orbita-success: #157a55;
+$orbita-warning: #9a5800;
+$orbita-danger: #b42318;
+$orbita-font: "Noto Sans", Arial, sans-serif;
+$orbita-breakpoints: (small: 640px, medium: 960px, large: 1280px, xlarge: 1600px);
+
+@function orbita-space($step) {
+  $scale: (1: 2px, 2: 4px, 3: 8px, 4: 12px, 5: 16px, 6: 20px, 7: 24px, 8: 32px, 9: 40px, 10: 48px, 11: 64px);
+  @return map-get($scale, $step);
+}

@@ -1,0 +1,64 @@
+:root {
+  --orbita-brand-orbital: #5e82ff;
+  --orbita-brand-connection: #8a62ff;
+  --orbita-brand-pulse: #e350ea;
+  --orbita-brand-deep-night: #090a20;
+  --orbita-subsystem-flow: #367cff;
+  --orbita-subsystem-transparency: #13bfae;
+  --orbita-subsystem-intelligence: #9554e8;
+  --orbita-information: #2559c7;
+  --orbita-success: #157a55;
+  --orbita-warning: #9a5800;
+  --orbita-danger: #b42318;
+  --orbita-focus: #5e82ff;
+  --orbita-background: #f7f8fc;
+  --orbita-surface: #ffffff;
+  --orbita-surface-muted: #eff1f7;
+  --orbita-text: #090a20;
+  --orbita-text-secondary: #525a6b;
+  --orbita-border: #c6cbd9;
+  --orbita-border-strong: #6f7788;
+  --orbita-font: "Noto Sans", Arial, sans-serif;
+  --orbita-space-1: 2px;
+  --orbita-space-2: 4px;
+  --orbita-space-3: 8px;
+  --orbita-space-4: 12px;
+  --orbita-space-5: 16px;
+  --orbita-space-6: 20px;
+  --orbita-space-7: 24px;
+  --orbita-space-8: 32px;
+  --orbita-space-9: 40px;
+  --orbita-space-10: 48px;
+  --orbita-space-11: 64px;
+  --orbita-control-compact: 36px;
+  --orbita-control-default: 44px;
+  --orbita-control-touch: 48px;
+  --orbita-radius-sm: 4px;
+  --orbita-radius-md: 8px;
+  --orbita-radius-lg: 12px;
+  --orbita-radius-xl: 16px;
+  --orbita-shadow-1: 0 1px 2px rgb(9 10 32 / 10%);
+  --orbita-shadow-2: 0 8px 24px rgb(9 10 32 / 14%);
+  --orbita-duration-fast: 120ms;
+  --orbita-duration-standard: 200ms;
+  --orbita-duration-slow: 320ms;
+  --orbita-ease-standard: cubic-bezier(.2, 0, 0, 1);
+}
+
+[data-theme="dark"] {
+  --orbita-background: #070817;
+  --orbita-surface: #12142a;
+  --orbita-surface-muted: #1a1d36;
+  --orbita-text: #f7f8fc;
+  --orbita-text-secondary: #c6cbd9;
+  --orbita-border: #394153;
+  --orbita-border-strong: #6f7788;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root {
+    --orbita-duration-fast: 1ms;
+    --orbita-duration-standard: 1ms;
+    --orbita-duration-slow: 1ms;
+  }
+}

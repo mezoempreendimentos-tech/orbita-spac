@@ -1,0 +1,65 @@
+{
+  "version": "1.0.0",
+  "updated": "2026-08-26",
+  "rules": {
+    "moduleIcon": "Use o pictograma do módulo, nunca o símbolo do subsistema como substituto.",
+    "color": "O módulo herda a cor do seu subsistema. Não trocar cores entre subsistemas.",
+    "active": "Cor oficial em 100% e fundo tonal suave.",
+    "inactive": "Cor oficial com opacidade visual reduzida; preservar reconhecimento e contraste.",
+    "disabled": "Estado neutro, acompanhado de atributo disabled ou aria-disabled.",
+    "sizes": [16, 20, 24, 32]
+  },
+  "subsystems": [
+    {
+      "id": "fluxo-da-contratacao",
+      "name": "Fluxo da Contratação",
+      "color": "#367CFF",
+      "icon": "assets/subsystems/fluxo-da-contratacao/icone-subsistema.svg",
+      "environmentalLine": "assets/subsystems/fluxo-da-contratacao/linha-ambiental.svg",
+      "modules": ["porta", "agenda", "lupa", "regua", "termometro", "lastro", "maestro", "elo", "vigia", "oraculo"]
+    },
+    {
+      "id": "transparencia",
+      "name": "Transparência",
+      "color": "#13BFAE",
+      "icon": "assets/subsystems/transparencia/icone-subsistema.svg",
+      "environmentalLine": "assets/subsystems/transparencia/linha-ambiental.svg",
+      "modules": ["eco", "vitrine"]
+    },
+    {
+      "id": "inteligencia-e-suporte",
+      "name": "Inteligência e Suporte",
+      "color": "#9554E8",
+      "icon": "assets/subsystems/inteligencia-e-suporte/icone-subsistema.svg",
+      "environmentalLine": "assets/subsystems/inteligencia-e-suporte/linha-ambiental.svg",
+      "modules": ["aguia", "farol", "mapa", "bussola", "ima", "oficina", "atlas", "memoria"]
+    }
+  ],
+  "modules": [
+    {"id":"porta","name":"Porta","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Entrada de Demandas"},
+    {"id":"agenda","name":"Agenda","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Planejamento Anual das Contratações"},
+    {"id":"lupa","name":"Lupa","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Investigação da Necessidade"},
+    {"id":"regua","name":"Régua","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Especificação da Contratação"},
+    {"id":"termometro","name":"Termômetro","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Pesquisa e Estimativa de Preços"},
+    {"id":"lastro","name":"Lastro","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Dotação e Adequação Orçamentária","concept":"Dar sustentação orçamentária para que a contratação possa avançar."},
+    {"id":"maestro","name":"Maestro","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Condução da Contratação"},
+    {"id":"elo","name":"Elo","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Gestão de Contratos"},
+    {"id":"vigia","name":"Vigia","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Fiscalização de Contratos"},
+    {"id":"oraculo","name":"Oráculo","subsystem":"fluxo-da-contratacao","color":"#367CFF","role":"Consultoria e Análise Jurídica"},
+    {"id":"eco","name":"Eco","subsystem":"transparencia","color":"#13BFAE","role":"Publicações"},
+    {"id":"vitrine","name":"Vitrine","subsystem":"transparencia","color":"#13BFAE","role":"Transparência"},
+    {"id":"aguia","name":"Águia","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Gestão"},
+    {"id":"farol","name":"Farol","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Alertas e Prazos"},
+    {"id":"mapa","name":"Mapa","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Consulta e Pesquisa"},
+    {"id":"bussola","name":"Bússola","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Indicadores e Análises"},
+    {"id":"ima","name":"Ímã","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Cadastro e Relacionamento com Fornecedores"},
+    {"id":"oficina","name":"Oficina","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Modelos e Minutas"},
+    {"id":"atlas","name":"Atlas","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Conhecimento"},
+    {"id":"memoria","name":"Memória","subsystem":"inteligencia-e-suporte","color":"#9554E8","role":"Histórico e Rastreabilidade"}
+  ],
+  "pathPattern": {
+    "master": "assets/modules/{id}/icone.svg",
+    "currentColor": "assets/modules-current-color/{id}.svg",
+    "png": "assets/modules-png/{size}px/{id}.png"
+  }
+}

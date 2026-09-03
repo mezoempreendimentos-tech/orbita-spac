@@ -1,0 +1,48 @@
+@font-face {
+  font-family: "Noto Sans";
+  src: url("../fonts/NotoSans-Regular.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 400;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Noto Sans";
+  src: url("../fonts/NotoSans-Bold.ttf") format("truetype");
+  font-style: normal;
+  font-weight: 700;
+  font-display: swap;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { color-scheme: light; font-family: var(--orbita-font); }
+[data-theme="dark"] { color-scheme: dark; }
+
+body {
+  margin: 0;
+  background: var(--orbita-background);
+  color: var(--orbita-text);
+  font: 400 1rem/1.5 var(--orbita-font);
+}
+
+img, svg { display: block; max-width: 100%; height: auto; }
+button, input, select, textarea { font: inherit; }
+
+:focus-visible {
+  outline: 3px solid var(--orbita-focus);
+  outline-offset: 3px;
+}
+
+.orbita-display { margin: 0; font-size: 2.5rem; line-height: 1.2; font-weight: 700; }
+.orbita-h1 { margin: 0; font-size: 2rem; line-height: 1.25; font-weight: 700; }
+.orbita-h2 { margin: 0; font-size: 1.5rem; line-height: 1.333; font-weight: 700; }
+.orbita-h3 { margin: 0; font-size: 1.25rem; line-height: 1.4; font-weight: 700; }
+.orbita-small { font-size: .875rem; line-height: 1.429; }
+.orbita-caption { font-size: .75rem; line-height: 1.333; }
+.orbita-muted { color: var(--orbita-text-secondary); }
+
+.orbita-sr-only {
+  position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px;
+  overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; border: 0;
+}
