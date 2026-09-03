@@ -4,11 +4,11 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { DemandPdfExportAction } from "@/components/DemandPdfExportAction";
 import { filterLocalAccounts, type LocalAccountFilterStatus } from "@shared/localAccountFilters";
-import "../official-logo.css";
 import { FormEvent, ReactNode, useEffect, useMemo, useRef, useState } from "react";
 import {
   AlertTriangle,
   Archive,
+  ArrowDown,
   ArrowLeft,
   ArrowRight,
   Trash2,
@@ -78,7 +78,7 @@ import { deadlineSummary, filterMapaItems, type MapaDateField } from "@shared/ma
 import { planningCalendarDefinitions } from "@shared/planningCalendar";
 import { getFinancialRubricByCode, searchFinancialRubrics, type FinancialRubric } from "@shared/financialRubrics";
 
-type Screen = "landing" | "porta-preview" | "dashboard" | "rascunhos" | "porta" | "trilha" | "mapa" | "agenda" | "perfis" | "privacidade" | "administracao" | "contas" | "configuracoes" | "modalidades" | "oficina" | "fluxo" | "farol" | "memoria" | "maestro" | "eco" | "vitrine" | "elo" | "vigia" | "bussola" | "lastro" | "oraculo" | "ima";
+type Screen = "landing" | "porta-preview" | "dashboard" | "rascunhos" | "porta" | "trilha" | "mapa" | "agenda" | "perfis" | "privacidade" | "administracao" | "contas" | "configuracoes" | "modalidades" | "oficina" | "fluxo" | "farol" | "memoria" | "maestro" | "eco" | "vitrine" | "elo" | "vigia" | "bussola" | "lastro" | "oraculo" | "ima" | "atlas" | "lupa" | "regua" | "termometro";
 type StatusTone = "info" | "success" | "warning" | "danger" | "neutral";
 
 const ASSETS = {
@@ -90,13 +90,23 @@ const ASSETS = {
   darkSurface: "/orbita/dark-surface.svg",
 };
 
-const navItems: { label: string; screen: Exclude<Screen, "landing">; icon: typeof LayoutDashboard }[] = [
-  { label: "Águia · Gestão", screen: "dashboard", icon: LayoutDashboard },
-  { label: "Mapa · Consulta", screen: "mapa", icon: Map },
-  { label: "Porta · Nova demanda", screen: "porta", icon: FileText },
-  { label: "Agenda · PCA", screen: "agenda", icon: CalendarDays },
-  { label: "Trilha · Processo", screen: "trilha", icon: Target },
-  { label: "Fluxo institucional", screen: "fluxo", icon: GitBranch },
+// Pic­tog­ra­ma oficial de mó­du­lo ou sub­sis­te­ma para a side­bar. Usa o
+// ver­so mas­ter (co­res ofi­ci­ais) em­bara­ca­do no SVG. Mes­ma fonte
+// de ver­da­de que o res­to da mar­ca (manifests/icons.json).
+function Pkt({ id, subsystem, alt }: { id?: string; subsystem?: string; alt: string }) {
+  const src = subsystem
+    ? `/orbita/subsystems/${subsystem}/icone-subsistema.svg`
+    : `/orbita/modules/${id}/icone.svg`;
+  return <img className="pictogram-mark" src={src} alt={alt} aria-hidden="true" />;
+}
+
+const navItems: { label: string; screen: Exclude<Screen, "landing">; icon: ReactNode }[] = [
+  { label: "Águia · Gestão", screen: "dashboard", icon: <Pkt id="aguia" alt="Águia" /> },
+  { label: "Mapa · Consulta", screen: "mapa", icon: <Pkt id="mapa" alt="Mapa" /> },
+  { label: "Porta · Nova demanda", screen: "porta", icon: <Pkt id="porta" alt="Porta" /> },
+  { label: "Agenda · PCA", screen: "agenda", icon: <Pkt id="agenda" alt="Agenda" /> },
+  { label: "Trilha · Processo", screen: "trilha", icon: <Pkt id="vigia" alt="Vigia" /> },
+  { label: "Fluxo institucional", screen: "fluxo", icon: <Pkt subsystem="fluxo-da-contratacao" alt="Fluxo da Contratação" /> },
 ];
 
 const DOCUMENT_TEMPLATE_BY_STEP: Record<string, { code: string; label: string }> = {
@@ -106,6 +116,71 @@ const DOCUMENT_TEMPLATE_BY_STEP: Record<string, { code: string; label: string }>
   PRICE_RESEARCH: { code: "MODELO_RPP_ORBITA", label: "RPP" },
   NOTICE: { code: "MODELO_EDITAL_ORBITA", label: "Edital" },
 };
+
+// ─── Marca: subsistemas e módulos (espelho de brand/manifests/icons.json) ───
+type LandingSubsystem = {
+  id: string;
+  name: string;
+  color: string;
+  role: string;
+  modules: string[];
+};
+
+type LandingModule = {
+  id: string;
+  name: string;
+  subsystem: string;
+  role: string;
+};
+
+const LANDING_SUBSYSTEMS: LandingSubsystem[] = [
+  {
+    id: "fluxo-da-contratacao",
+    name: "Fluxo da Contratação",
+    color: "#367CFF",
+    role: "Da entrada da demanda à fiscalização do contrato, com 10 módulos encadeando as etapas formais.",
+    modules: ["porta", "agenda", "lupa", "regua", "termometro", "lastro", "maestro", "elo", "vigia", "oraculo"],
+  },
+  {
+    id: "transparencia",
+    name: "Transparência",
+    color: "#13BFAE",
+    role: "Publicações oficiais no PNCP e vitrine institucional da casa, em tom teal.",
+    modules: ["eco", "vitrine"],
+  },
+  {
+    id: "inteligencia-e-suporte",
+    name: "Inteligência e Suporte",
+    color: "#9554E8",
+    role: "Operação assistida: gestão, alertas, indicadores, conhecimento, modelos e memória.",
+    modules: ["aguia", "farol", "mapa", "bussola", "ima", "oficina", "atlas", "memoria"],
+  },
+];
+
+const LANDING_MODULES: LandingModule[] = [
+  { id: "porta", name: "Porta", subsystem: "fluxo-da-contratacao", role: "Entrada de Demandas" },
+  { id: "agenda", name: "Agenda", subsystem: "fluxo-da-contratacao", role: "Planejamento Anual" },
+  { id: "lupa", name: "Lupa", subsystem: "fluxo-da-contratacao", role: "Investigação da Necessidade" },
+  { id: "regua", name: "Régua", subsystem: "fluxo-da-contratacao", role: "Especificação" },
+  { id: "termometro", name: "Termômetro", subsystem: "fluxo-da-contratacao", role: "Pesquisa de Preços" },
+  { id: "lastro", name: "Lastro", subsystem: "fluxo-da-contratacao", role: "Dotação Orçamentária" },
+  { id: "maestro", name: "Maestro", subsystem: "fluxo-da-contratacao", role: "Condução da Contratação" },
+  { id: "elo", name: "Elo", subsystem: "fluxo-da-contratacao", role: "Gestão de Contratos" },
+  { id: "vigia", name: "Vigia", subsystem: "fluxo-da-contratacao", role: "Fiscalização" },
+  { id: "oraculo", name: "Oráculo", subsystem: "fluxo-da-contratacao", role: "Análise Jurídica" },
+  { id: "eco", name: "Eco", subsystem: "transparencia", role: "Publicações" },
+  { id: "vitrine", name: "Vitrine", subsystem: "transparencia", role: "Transparência Ativa" },
+  { id: "aguia", name: "Águia", subsystem: "inteligencia-e-suporte", role: "Gestão" },
+  { id: "farol", name: "Farol", subsystem: "inteligencia-e-suporte", role: "Alertas e Prazos" },
+  { id: "mapa", name: "Mapa", subsystem: "inteligencia-e-suporte", role: "Consulta e Pesquisa" },
+  { id: "bussola", name: "Bússola", subsystem: "inteligencia-e-suporte", role: "Indicadores" },
+  { id: "ima", name: "Ímã", subsystem: "inteligencia-e-suporte", role: "Fornecedores" },
+  { id: "oficina", name: "Oficina", subsystem: "inteligencia-e-suporte", role: "Modelos e Minutas" },
+  { id: "atlas", name: "Atlas", subsystem: "inteligencia-e-suporte", role: "Conhecimento" },
+  { id: "memoria", name: "Memória", subsystem: "inteligencia-e-suporte", role: "Histórico" },
+];
+
+const landingModuleIndex = new globalThis.Map<string, LandingModule>(LANDING_MODULES.map(m => [m.id, m] as const));
 
 function formatMoney(value: string | null | undefined) {
   if (!value) return "Não informado";
@@ -234,63 +309,224 @@ function PlanningDeadlineAlerts({ alerts }: { alerts: { id: number; entityType: 
 }
 
 function BrandMark({ small = false }: { small?: boolean }) {
-  return <span className={small ? "brand-mark brand-mark-small" : "brand-mark"} role="img" aria-label="Símbolo orbital da ÓRBITA"><svg viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.7" fill="#E350EA" /><circle cx="18" cy="18" r="6.1" fill="none" stroke="#8A62FF" strokeWidth="0.7" opacity="0.72" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#5E82FF" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#8A62FF" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#E350EA" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.7" cy="16.1" r="1.65" fill="#E350EA" /><circle cx="12" cy="30.15" r="1.65" fill="#5E82FF" /><circle cx="13.15" cy="7.3" r="1.65" fill="#8A62FF" /></svg></span>;
-}
-
-function OrbitSphereArt() {
-  return <svg className="orbit-sphere-art" viewBox="0 0 600 420" role="presentation" aria-hidden="true">
-    <defs>
-      <linearGradient id="orbit-blue-violet" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#5E82FF" /><stop offset="1" stopColor="#8A62FF" /></linearGradient>
-      <linearGradient id="orbit-magenta-blue" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stopColor="#E350EA" /><stop offset="1" stopColor="#5E82FF" /></linearGradient>
-      <filter id="orbit-controlled-glow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4" result="blur" /><feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge></filter>
-    </defs>
-    <circle cx="300" cy="210" r="116" fill="none" stroke="#8A62FF" strokeOpacity=".16" strokeWidth="1" />
-    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="url(#orbit-blue-violet)" strokeWidth="3" transform="rotate(-24 300 210)" filter="url(#orbit-controlled-glow)" />
-    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="#E350EA" strokeWidth="3" transform="rotate(16 300 210)" filter="url(#orbit-controlled-glow)" />
-    <ellipse cx="300" cy="210" rx="190" ry="72" fill="none" stroke="url(#orbit-magenta-blue)" strokeWidth="3" transform="rotate(68 300 210)" filter="url(#orbit-controlled-glow)" />
-    <circle cx="300" cy="210" r="10" fill="#F7F8FC" stroke="#5E82FF" strokeWidth="3" />
-    <g filter="url(#orbit-controlled-glow)"><circle cx="465" cy="194" r="9" fill="#E350EA" stroke="#F7F8FC" strokeWidth="2" /><circle cx="237" cy="65" r="8" fill="#5E82FF" stroke="#F7F8FC" strokeWidth="2" /><circle cx="204" cy="314" r="8" fill="#8A62FF" stroke="#F7F8FC" strokeWidth="2" /></g>
-  </svg>;
+  const sizeClass = small ? "brand-mark--sm" : "brand-mark--lg";
+  return <span className={`brand-mark ${sizeClass} brand-mark--shadow`} role="img" aria-label="Símbolo orbital da ÓRBITA"><img src="/orbita/brand/svg/symbol-color.svg" alt="" /></span>;
 }
 
 function LandingBrand() {
-  return <button className="wordmark wordmark-on-dark landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="ÓRBITA, início">
-    <svg className="landing-brand-orbit" viewBox="0 0 36 36" aria-hidden="true"><circle cx="18" cy="18" r="3.6" fill="#E350EA" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#5E82FF" strokeWidth="1" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#8A62FF" strokeWidth="1" transform="rotate(60 18 18)" /><ellipse cx="18" cy="18" rx="14" ry="5.2" fill="none" stroke="#E350EA" strokeWidth="1" transform="rotate(-60 18 18)" /><circle cx="29.8" cy="16" r="1.65" fill="#E350EA" /><circle cx="12" cy="30.2" r="1.65" fill="#5E82FF" /><circle cx="13.2" cy="7.3" r="1.65" fill="#8A62FF" /></svg>
-    <span>ÓRBITA</span>
+  return <button className="orbita-wordmark orbita-wordmark--on-dark landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="ÓRBITA, início">
+    <img className="orbita-signature--intermediate" src="/orbita/brand/svg/signature-intermediate-negative.svg" alt="" />
   </button>;
 }
 
-function Landing({ authenticated, openWorkspace, openModule }: { authenticated: boolean; openWorkspace: () => void; openModule: (screen: Exclude<Screen, "landing">) => void }) {
-  const { theme, toggleTheme } = useTheme();
-  return <div className="landing-shell">
-    <header className="landing-nav">
-      <LandingBrand />
-      <nav className="landing-nav-links" aria-label="Navegação principal">
-        <button className="icon-button icon-button-dark" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button>
-        <button className="button button-cyan" onClick={() => authenticated ? openWorkspace() : startLogin()}>{authenticated ? "Abrir área de trabalho" : "Entrar"} <ArrowRight size={16} /></button>
-      </nav>
-    </header>
-    <main>
-      <section className="welcome-hero">
-        <div className="hero-copy reveal">
-          <div className="eyebrow eyebrow-light"><span />{publicLandingContent.eyebrow}</div>
-          <h1>{publicLandingContent.title} <em>{publicLandingContent.titleAccent}</em></h1>
-          <p>{publicLandingContent.description}</p>
-          <div className="hero-actions">
-            <button className="button button-cyan button-lg" onClick={() => authenticated ? openWorkspace() : startLogin()}><LogIn size={18} /> {publicAccessLabel(authenticated)}</button>
-          </div>
-        </div>
-        <div className="hero-visual hero-visual-3d hero-visual-logo reveal" role="img" aria-label={publicLandingVisual.officialLogo.accessibleDescription}><OrbitSphereArt /></div>
-      </section>
-      <section className="welcome-principles" aria-label="Princípios da plataforma">
-        <article><CircleDot size={18} /><div><strong>{publicLandingContent.principles[0].title}</strong><span>{publicLandingContent.principles[0].description}</span></div></article>
-        <article><ShieldCheck size={18} /><div><strong>{publicLandingContent.principles[1].title}</strong><span>{publicLandingContent.principles[1].description}</span></div></article>
-        <article><Archive size={18} /><div><strong>{publicLandingContent.principles[2].title}</strong><span>{publicLandingContent.principles[2].description}</span></div></article>
-      </section>
-    </main>
-    <footer className="landing-footer"><span>ÓRBITA</span><span>Plataforma Integrada de Contratações</span></footer>
-  </div>;
+function LandingSubsystemIcon({ id, alt, color }: { id: string; alt: string; color: string }) {
+  return <span className="landing-pictogram" style={{ color }}><img src={`/orbita/subsystems/${id}/icone-subsistema.svg`} alt={alt} /></span>;
 }
+
+function LandingModuleIcon({ id, alt, color }: { id: string; alt: string; color: string }) {
+  return <span className="landing-pictogram" style={{ color }}><img src={`/orbita/modules-current-color/${id}.svg`} alt={alt} /></span>;
+}
+
+function Landing({ authenticated, openWorkspace }: { authenticated: boolean; openWorkspace: () => void }) {
+  const { theme, toggleTheme } = useTheme();
+  return (
+    <div className="landing-shell">
+      <header className="landing-nav">
+        <LandingBrand />
+        <nav className="landing-nav-links" aria-label="Navegação principal">
+          <button className="icon-button icon-button-dark" onClick={toggleTheme} aria-label="Alternar tema">
+            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
+          <button className="button button-cyan" onClick={() => authenticated ? openWorkspace() : startLogin()}>
+            {authenticated ? "Abrir área de trabalho" : "Entrar"} <ArrowRight size={16} />
+          </button>
+        </nav>
+      </header>
+
+      <main>
+        {/* HERO — assinatura completa no card à direita, com a faixa de subsistemas abaixo */}
+        <section className="landing-hero" aria-label="Apresentação da plataforma">
+          <div className="landing-hero-copy">
+            <div className="eyebrow eyebrow-light"><span />Plataforma institucional</div>
+            <h1 className="landing-hero-title">
+              Contratações públicas <em>em contexto</em>, do planejamento ao encerramento.
+            </h1>
+            <p className="landing-hero-lead">{publicLandingContent.description}</p>
+            <div className="hero-actions">
+              <button className="button button-cyan button-lg" onClick={() => authenticated ? openWorkspace() : startLogin()}>
+                <LogIn size={18} /> {publicAccessLabel(authenticated)}
+              </button>
+              <a className="button button-quiet button-lg" href="#subsistemas">
+                Conheça os 3 subsistemas <ArrowDown size={16} />
+              </a>
+            </div>
+            <div className="landing-hero-stats">
+              <div><strong>3</strong><span>subsistemas</span></div>
+              <div><strong>20</strong><span>módulos operacionais</span></div>
+              <div><strong>1</strong><span>plataforma institucional</span></div>
+            </div>
+          </div>
+
+          <aside className="landing-hero-card" aria-label="Identidade visual da plataforma">
+            <img className="landing-hero-signature" src="/orbita/brand/svg/signature-horizontal-negative.svg" alt="ÓRBITA — Plataforma Integrada de Contratações" />
+          </aside>
+        </section>
+
+        {/* 3 SUBSISTEMAS */}
+        <section id="subsistemas" className="landing-subsistemas" aria-labelledby="subsistemas-title">
+          <div className="section-heading">
+            <span className="orbita-eyebrow">Os 3 subsistemas</span>
+            <h2 id="subsistemas-title" className="section-title">Três frentes para cobrir o ciclo inteiro da contratação</h2>
+            <p className="section-lead">Cada subsistema tem cor e papel próprios, e reúne os módulos que operam naquela frente da contratação.</p>
+          </div>
+          <div className="landing-subsistemas-grid">
+            {LANDING_SUBSYSTEMS.map(s => (
+              <article key={s.id} className="surface-panel landing-subsistema-card" style={{ ['--subsystem-color' as any]: s.color }}>
+                <div className="landing-subsistema-card-head">
+                  <LandingSubsystemIcon id={s.id} alt={s.name} color={s.color} />
+                  <span className="orbita-tag landing-subsistema-count">{s.modules.length} módulos</span>
+                </div>
+                <h3 className="landing-subsistema-name">{s.name}</h3>
+                <p className="landing-subsistema-role">{s.role}</p>
+                <ul className="landing-subsistema-modules">
+                  {s.modules.map(mid => {
+                    const mod = landingModuleIndex.get(mid);
+                    return (
+                      <li key={mid} className="landing-subsistema-module">
+                        <LandingModuleIcon id={mid} alt={mod?.name || mid} color={s.color} />
+                        <span>
+                          <strong>{mod?.name || mid}</strong>
+                          <small>{mod?.role}</small>
+                        </span>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </article>
+            ))}
+          </div>
+        </section>
+
+        {/* 20 MÓDULOS em grade por subsistema */}
+        <section className="landing-modulos" aria-labelledby="modulos-title">
+          <div className="section-heading">
+            <span className="orbita-eyebrow">Os 20 módulos</span>
+            <h2 id="modulos-title" className="section-title">Cada frente tem um nome, um pictograma oficial e um papel</h2>
+            <p className="section-lead">Os pictogramas abaixo são os oficiais do pacote de marca. Cada módulo herda a cor do seu subsistema — sem troca de cor entre subsistemas, conforme o manifesto.</p>
+          </div>
+          <div className="landing-modulos-groups">
+            {LANDING_SUBSYSTEMS.map(s => (
+              <div key={s.id} className="landing-modulos-group" style={{ ['--subsystem-color' as any]: s.color }}>
+                <header className="landing-modulos-group-head">
+                  <LandingSubsystemIcon id={s.id} alt={s.name} color={s.color} />
+                  <div>
+                    <h3>{s.name}</h3>
+                    <span>{s.role}</span>
+                  </div>
+                  <span className="orbita-tag landing-modulos-group-count">{s.modules.length}</span>
+                </header>
+                <div className="landing-modulos-grid">
+                  {s.modules.map(mid => {
+                    const mod = landingModuleIndex.get(mid);
+                    if (!mod) return null;
+                    return (
+                      <div key={mid} className="landing-modulo-chip" style={{ color: s.color }}>
+                        <LandingModuleIcon id={mid} alt={mod.name} color={s.color} />
+                        <strong>{mod.name}</strong>
+                        <small>{mod.role}</small>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            ))}
+          </div>
+        </section>
+      </main>
+
+      <footer className="landing-footer">
+        <div className="landing-footer-grid">
+          <div className="landing-footer-brand">
+            <img src="/orbita/brand/svg/symbol-color.svg" alt="" className="landing-footer-mark" />
+            <div>
+              <strong>ÓRBITA</strong>
+              <small>Plataforma Integrada de Contratações</small>
+            </div>
+          </div>
+          <nav className="landing-footer-meta" aria-label="Atalhos do rodapé">
+            <a href="#subsistemas">Subsistemas</a>
+            <a href="#modulos-title">Módulos</a>
+          </nav>
+        </div>
+      </footer>
+    </div>
+  );
+}
+
+// ─── Navegação institucional da sidebar
+// Estruturada como na hierarquia do Design System: 3 grandes subsistemas
+// (inteligência-e-suporte, fluxo-da-contratacao, transparencia) e seus
+// 20 módulos oficiais. Cada subsistema é uma section com cor própria.
+type SubsystemNavItem = { id: string; name: string; screen: Exclude<Screen, "landing"> };
+type SubsystemNavGroup = { id: string; name: string; short: string; color: string; items: SubsystemNavItem[] };
+
+const SUBSYSTEM_NAV: SubsystemNavGroup[] = [
+  {
+    id: "inteligencia-e-suporte",
+    name: "Inteligência e Suporte",
+    short: "Visão",
+    color: "#9554E8",
+    items: [
+      { id: "aguia",    name: "Águia",     screen: "dashboard" },
+      { id: "mapa",     name: "Mapa",      screen: "mapa" },
+      { id: "bussola",  name: "Bússola",   screen: "bussola" },
+      { id: "farol",    name: "Farol",     screen: "farol" },
+      { id: "memoria",  name: "Memória",   screen: "memoria" },
+      { id: "atlas",    name: "Atlas",     screen: "atlas" },
+      { id: "oficina",  name: "Oficina",   screen: "oficina" },
+      { id: "ima",      name: "Ímã",       screen: "ima" },
+    ],
+  },
+  {
+    id: "fluxo-da-contratacao",
+    name: "Fluxo da Contratação",
+    short: "Fluxo",
+    color: "#367CFF",
+    items: [
+      { id: "porta",      name: "Porta",      screen: "porta" },
+      { id: "agenda",     name: "Agenda",     screen: "agenda" },
+      { id: "lupa",       name: "Lupa",       screen: "lupa" },
+      { id: "regua",      name: "Régua",      screen: "regua" },
+      { id: "termometro", name: "Termômetro", screen: "termometro" },
+      { id: "lastro",     name: "Lastro",     screen: "lastro" },
+      { id: "maestro",    name: "Maestro",    screen: "maestro" },
+      { id: "elo",        name: "Elo",        screen: "elo" },
+      { id: "vigia",      name: "Vigia",      screen: "vigia" },
+      { id: "oraculo",    name: "Oráculo",    screen: "oraculo" },
+    ],
+  },
+  {
+    id: "transparencia",
+    name: "Transparência",
+    short: "Transparência",
+    color: "#13BFAE",
+    items: [
+      { id: "eco",     name: "Eco",     screen: "eco" },
+      { id: "vitrine", name: "Vitrine", screen: "vitrine" },
+    ],
+  },
+];
+
+const ADMIN_NAV: SubsystemNavItem[] = [
+  { id: "trilha",        name: "Trilha",       screen: "trilha" },
+  { id: "rascunhos",     name: "Rascunhos",    screen: "rascunhos" },
+  { id: "perfis",        name: "Perfis",       screen: "perfis" },
+  { id: "privacidade",   name: "Privacidade",  screen: "privacidade" },
+  { id: "contas",        name: "Contas locais",screen: "contas" },
+  { id: "administracao", name: "Administração", screen: "administracao" },
+  { id: "configuracoes", name: "Configurações",screen: "configuracoes" },
+  { id: "modalidades",   name: "Modalidades",  screen: "modalidades" },
+];
 
 function AppShell({ active, go, children, userName, alertCount, logout }: { active: Screen; go: (screen: Exclude<Screen, "landing">) => void; children: ReactNode; userName: string; alertCount: number; logout: () => void }) {
   const { theme, toggleTheme } = useTheme();
@@ -298,45 +534,95 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
   const displayName = session.user?.name || userName || "Usuário institucional";
   const signOut = session.logout || logout;
   const [open, setOpen] = useState(false);
+  // Subset de subsistemas expandidos. Por padrão só o subsistema do módulo ativo fica aberto.
+  const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
   const unreadNotifications = trpc.dashboard.unreadNotificationCount.useQuery();
   const navigate = (screen: Exclude<Screen, "landing">) => { go(screen); setOpen(false); };
+  const toggleSub = (id: string) => setExpanded(prev => { const n = new Set(prev); n.has(id) ? n.delete(id) : n.add(id); return n; });
+  // Sempre que o usuário trocar de tela, garante que o subsistema do módulo ativo esteja aberto
+  useEffect(() => {
+    const sub = SUBSYSTEM_NAV.find(s => s.items.some(i => i.screen === active));
+    if (sub) setExpanded(prev => prev.has(sub.id) ? prev : new Set(prev).add(sub.id));
+  }, [active]);
+  // Subsistema do módulo ativo — usado pra tingir o header da sidebar
+  // e para abrir o grupo automaticamente quando o usuário está nele.
+  const activeSub = SUBSYSTEM_NAV.find(s => s.items.some(i => i.screen === active));
+  // Garante que o subsistema do módulo ativo está expandido.
+  if (activeSub && !expanded.has(activeSub.id)) {
+    // setState no render é ok aqui pq o useEffect/setState não bloqueia;
+    // mas pra evitar warning de "setState in render" usamos um layout effect.
+  }
   return <div className={`app-screen app-screen-${active}`}><aside className={`app-sidebar ${open ? "app-sidebar-open" : ""}`}>
     <div className="sidebar-top"><button className="wordmark app-wordmark" onClick={() => window.location.hash = ""}><BrandMark small /><span>ÓRBITA</span></button><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div>
-    <div className="sidebar-meta">Plataforma integrada · Ambiente operacional</div>
-    <nav>
-      <span className="nav-group-label">Visão</span>
-      {navItems.slice(0, 2).map(item => <SidebarButton key={item.screen} item={item} active={active} onClick={() => navigate(item.screen)} />)}
-      <SidebarButton item={{ label: "PORTA · Rascunhos", screen: "rascunhos", icon: FileText }} active={active} onClick={() => navigate("rascunhos")} />
-      <SidebarButton item={{ label: "Bússola · Indicadores", screen: "bussola", icon: Radar }} active={active} onClick={() => navigate("bussola")} />
-      <span className="nav-group-label">Contratação</span>
-      {navItems.slice(2).map(item => <SidebarButton key={item.screen} item={item} active={active} onClick={() => navigate(item.screen)} />)}
-      <SidebarButton item={{ label: "Maestro · Propostas", screen: "maestro", icon: PanelTop }} active={active} onClick={() => navigate("maestro")} />
-      <SidebarButton item={{ label: "ECO · Publicações", screen: "eco", icon: Send }} active={active} onClick={() => navigate("eco")} />
-      <SidebarButton item={{ label: "Vitrine · Transparência", screen: "vitrine", icon: Eye }} active={active} onClick={() => navigate("vitrine")} />
-      <span className="nav-group-label">Governança</span>
-      <SidebarButton item={{ label: "Farol · Alertas", screen: "farol", icon: Bell }} active={active} onClick={() => navigate("farol")} />
-      <SidebarButton item={{ label: "Memória · Auditoria", screen: "memoria", icon: Archive }} active={active} onClick={() => navigate("memoria")} />
-      <SidebarButton item={{ label: "Lastro · Documentos", screen: "lastro", icon: FileCog }} active={active} onClick={() => navigate("lastro")} />
-      <SidebarButton item={{ label: "Oráculo · Conformidade", screen: "oraculo", icon: ShieldCheck }} active={active} onClick={() => navigate("oraculo")} />
-      <SidebarButton item={{ label: "Privacidade LGPD", screen: "privacidade", icon: ShieldCheck }} active={active} onClick={() => navigate("privacidade")} />
-      <SidebarButton item={{ label: "Administração", screen: "administracao", icon: SlidersHorizontal }} active={active} onClick={() => navigate("administracao")} />
-      <SidebarButton item={{ label: "Contas locais", screen: "contas", icon: Users }} active={active} onClick={() => navigate("contas")} />
-      <SidebarButton item={{ label: "Configurações", screen: "configuracoes", icon: Wrench }} active={active} onClick={() => navigate("configuracoes")} />
-      <SidebarButton item={{ label: "Modalidades", screen: "modalidades", icon: ListFilter }} active={active} onClick={() => navigate("modalidades")} />
-      <SidebarButton item={{ label: "OFICINA · Modelos", screen: "oficina", icon: LayoutTemplate }} active={active} onClick={() => navigate("oficina")} />
-      <SidebarButton item={{ label: "ÍMÃ · Fornecedores", screen: "ima", icon: Users }} active={active} onClick={() => navigate("ima")} />
-      <SidebarButton item={{ label: "Perfis", screen: "perfis", icon: Users }} active={active} onClick={() => navigate("perfis")} />
-      <span className="nav-group-label">Execução contratual</span>
-      <SidebarButton item={{ label: "ELO · Contratos", screen: "elo", icon: FolderKanban }} active={active} onClick={() => navigate("elo")} />
-      <SidebarButton item={{ label: "VIGIA · Fiscalização", screen: "vigia", icon: ClipboardList }} active={active} onClick={() => navigate("vigia")} />
+    {activeSub ? (
+      <div className="sidebar-active-sub" style={{ ['--subsystem-color' as any]: activeSub.color }}>
+        <img src={`/orbita/subsystems/${activeSub.id}/icone-subsistema.svg`} alt="" className="sidebar-active-sub-mark" />
+        <div><span>Você está em</span><strong>{activeSub.short}</strong></div>
+      </div>
+    ) : (
+      <div className="sidebar-meta">Plataforma integrada · Ambiente operacional</div>
+    )}
+    <nav className="sidebar-nav">
+      {SUBSYSTEM_NAV.map(sub => {
+        const isOpen = expanded.has(sub.id) || (activeSub?.id === sub.id);
+        const hasActive = activeSub?.id === sub.id;
+        return (
+          <section key={sub.id} className={`sidebar-sub ${isOpen ? "is-open" : "is-collapsed"} ${hasActive ? "is-current" : ""}`} style={{ ['--subsystem-color' as any]: sub.color }}>
+            <button
+              type="button"
+              className="sidebar-sub-header"
+              onClick={() => toggleSub(sub.id)}
+              aria-expanded={isOpen}
+              aria-controls={`sidebar-sub-${sub.id}`}
+            >
+              <img src={`/orbita/subsystems/${sub.id}/icone-subsistema.svg`} alt="" className="sidebar-sub-mark" />
+              <div className="sidebar-sub-text">
+                <span className="sidebar-sub-short">{sub.short}</span>
+                <strong className="sidebar-sub-name">{sub.name}</strong>
+              </div>
+              <span className="sidebar-sub-count">{sub.items.length}</span>
+              <span className="sidebar-sub-chevron" aria-hidden="true">▾</span>
+            </button>
+            <ul id={`sidebar-sub-${sub.id}`} className="sidebar-sub-modules">
+              {sub.items.map(m => (
+                <li key={m.id} className={active === m.screen ? "is-active" : ""}>
+                  <button type="button" onClick={() => navigate(m.screen)} aria-current={active === m.screen ? "page" : undefined}>
+                    <img className="pictogram-mark" src={`/orbita/modules/${m.id}/icone.svg`} alt="" />
+                    <span className="sidebar-sub-module-name">{m.name}</span>
+                  </button>
+                </li>
+              ))}
+            </ul>
+          </section>
+        );
+      })}
+      <section className="sidebar-sub sidebar-sub--admin is-open is-current">
+        <button type="button" className="sidebar-sub-header" onClick={() => toggleSub("__admin")} aria-expanded={expanded.has("__admin") || true} aria-controls="sidebar-sub-admin">
+          <div className="sidebar-sub-mark sidebar-sub-mark-admin">A</div>
+          <div className="sidebar-sub-text">
+            <span className="sidebar-sub-short">Administração</span>
+            <strong className="sidebar-sub-name">Conta e plataforma</strong>
+          </div>
+          <span className="sidebar-sub-chevron" aria-hidden="true">▾</span>
+        </button>
+        <ul id="sidebar-sub-admin" className="sidebar-sub-modules">
+          {ADMIN_NAV.map(m => (
+            <li key={m.id} className={active === m.screen ? "is-active" : ""}>
+              <button type="button" onClick={() => navigate(m.screen)} aria-current={active === m.screen ? "page" : undefined}>
+                <span className="sidebar-admin-dot" />
+                <span className="sidebar-sub-module-name">{m.name}</span>
+              </button>
+            </li>
+          ))}
+        </ul>
+      </section>
     </nav>
     <div className="sidebar-user"><div>{displayName.slice(0, 1).toUpperCase() || "U"}</div><span><strong>{displayName}</strong><small>Conta autenticada</small></span><button className="sidebar-signout" onClick={signOut} title="Sair">Sair</button></div>
   </aside><div className="app-main-wrap"><header className="app-header"><button className="mobile-menu" onClick={() => setOpen(true)}><Menu size={19} /></button><div className="app-header-context app-header-brand"><BrandMark small /><span>ÓRBITA</span><ChevronRight size={14} /><strong>Ambiente operacional</strong></div><div className="app-header-actions"><button className="header-notice" onClick={() => navigate("dashboard")}><Bell size={17} /><b>{Math.max(alertCount, unreadNotifications.data ?? 0)}</b></button><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button></div></header><main className="app-content">{children}</main></div></div>;
 }
 
-function SidebarButton({ item, active, onClick }: { item: { label: string; screen: Exclude<Screen, "landing">; icon: typeof LayoutDashboard }; active: Screen; onClick: () => void }) {
-  const Icon = item.icon;
-  return <button className={`sidebar-link ${active === item.screen ? "sidebar-link-active" : ""}`} onClick={onClick}><Icon size={17} />{item.label}</button>;
+function _SidebarButton_DEPRECATED({ item, active, onClick }: { item: { label: string; screen: Exclude<Screen, "landing">; icon: ReactNode }; active: Screen; onClick: () => void }) {
+  return null;
 }
 
 function PageHeading({ eyebrow, title, subtitle, actions }: { eyebrow: string; title: string; subtitle: string; actions?: ReactNode }) {
@@ -1569,15 +1855,15 @@ function FlowPanel({ go }: { go: (screen: Exclude<Screen, "landing">) => void })
   const board = trpc.planning.board.useQuery();
   const data = board.data ? { ...board.data, consolidations: board.data.pcas } : undefined;
   const flow = [
-    { code: "01", title: "DFD", role: "Setor requisitante", detail: "Demanda formalizada e triagem LGPD", count: data?.demands.filter(row => ["submitted", "under_review"].includes(row.demand.status)).length ?? 0, screen: "porta" as const, icon: FileText },
-    { code: "02", title: "Consolidação", role: "Diretoria de Administração", detail: "Agrupamento de DFDs semelhantes", count: data?.demandConsolidations.filter(row => row.status === "ready_for_pca").length ?? 0, screen: "agenda" as const, icon: Layers },
-    { code: "03", title: "PCA único", role: "Diretoria de Administração", detail: "Documento formado a partir das consolidações", count: data?.pcas.filter(row => ["draft", "ready_for_review", "returned"].includes(row.status)).length ?? 0, screen: "agenda" as const, icon: Boxes },
-    { code: "04", title: "Deliberação", role: "Presidência", detail: "Aprovação, devolução ou rejeição motivada", count: data?.pcas.filter(row => row.status === "presidency_review").length ?? 0, screen: "agenda" as const, icon: Landmark },
-    { code: "05", title: "Abertura", role: "Compras e Presidência", detail: "Modalidade proposta e autorização formal", count: data?.openingRequests.filter(row => row.request.status === "presidency_review").length ?? 0, screen: "agenda" as const, icon: ListFilter },
-    { code: "06", title: "Instauração", role: "Setor de Compras", detail: "Processo liberado para a TRILHA", count: data?.openingRequests.filter(row => row.request.status === "authorized").length ?? 0, screen: "trilha" as const, icon: Target },
+    { code: "01", title: "DFD", role: "Setor requisitante", detail: "Demanda formalizada e triagem LGPD", count: data?.demands.filter(row => ["submitted", "under_review"].includes(row.demand.status)).length ?? 0, screen: "porta" as const, icon: <Pkt id="porta" alt="Porta" /> },
+    { code: "02", title: "Consolidação", role: "Diretoria de Administração", detail: "Agrupamento de DFDs semelhantes", count: data?.demandConsolidations.filter(row => row.status === "ready_for_pca").length ?? 0, screen: "agenda" as const, icon: <Pkt id="lupa" alt="Lupa" /> },
+    { code: "03", title: "PCA único", role: "Diretoria de Administração", detail: "Documento formado a partir das consolidações", count: data?.pcas.filter(row => ["draft", "ready_for_review", "returned"].includes(row.status)).length ?? 0, screen: "agenda" as const, icon: <Pkt id="agenda" alt="Agenda" /> },
+    { code: "04", title: "Deliberação", role: "Presidência", detail: "Aprovação, devolução ou rejeição motivada", count: data?.pcas.filter(row => row.status === "presidency_review").length ?? 0, screen: "agenda" as const, icon: <Pkt id="oraculo" alt="Oráculo" /> },
+    { code: "05", title: "Abertura", role: "Compras e Presidência", detail: "Modalidade proposta e autorização formal", count: data?.openingRequests.filter(row => row.request.status === "presidency_review").length ?? 0, screen: "agenda" as const, icon: <Pkt id="maestro" alt="Maestro" /> },
+    { code: "06", title: "Instauração", role: "Setor de Compras", detail: "Processo liberado para a TRILHA", count: data?.openingRequests.filter(row => row.request.status === "authorized").length ?? 0, screen: "trilha" as const, icon: <Pkt id="elo" alt="Elo" /> },
   ];
   return <AppShell active="fluxo" go={go} userName="" alertCount={data?.alerts.length ?? 0} logout={() => undefined}><PageHeading eyebrow="Planejamento / Acompanhamento" title="FLUXO — Da DFD à instauração" subtitle="Visualize a situação real de cada marco e acesse a área responsável sem reduzir as decisões humanas a automatismos." actions={<button className="button button-ink button-sm" onClick={() => go("agenda")}><CalendarDays size={15} /> Abrir AGENDA</button>} />
-    {board.isLoading ? <LoadingPanel message="Lendo os marcos do planejamento…" /> : board.error ? <EmptyState icon={<AlertTriangle size={28} />} title="Fluxo indisponível" text={board.error.message} /> : <><section className="flow-overview glass-panel"><div><span className="panel-kicker">TRILHA INSTITUCIONAL</span><h2>O processo só nasce após autorização.</h2><p>O quadro acompanha DFD, PCA, deliberação e abertura como fases independentes. A instauração ocorre apenas quando a solicitação autorizada chega ao Setor de Compras.</p></div><div className="flow-summary"><strong>{data?.demands.length ?? 0}</strong><span>DFD no histórico</span><strong>{data?.consolidations.length ?? 0}</strong><span>PCA registrados</span></div></section><section className="flow-track">{flow.map((stage, index) => { const Icon = stage.icon; return <article className={`flow-stage ${stage.count ? "flow-stage-active" : ""}`} key={stage.code}><button type="button" onClick={() => go(stage.screen)}><span className="flow-stage-code">{stage.code}</span><span className="flow-stage-icon"><Icon size={19} /></span><span className="flow-stage-title"><strong>{stage.title}</strong><small>{stage.role}</small></span><span className="flow-stage-count">{stage.count}<small>em ação</small></span><ArrowRight size={17} /></button>{index < flow.length - 1 ? <i className="flow-connector" /> : null}<p>{stage.detail}</p></article>; })}</section><section className="content-two-columns"><article className="surface-panel glass-panel"><div className="panel-heading"><div><span className="panel-kicker">ATENÇÃO OPERACIONAL</span><h2>Alertas da jornada</h2></div><Bell size={20} /></div>{data?.alerts.length ? data.alerts.slice(0, 6).map(alert => <AlertItem key={alert.id} code={alert.entityType === "demand" ? "DFD" : alert.entityType === "consolidation" ? "PCA" : "Abertura"} message={alert.title} tone={alert.severity === "critical" ? "danger" : alert.severity === "warning" ? "warning" : "info"} />) : <EmptyState icon={<ShieldCheck size={28} />} title="Jornada sem alertas" text="Os prazos e pendências aparecerão aqui conforme as fases forem movimentadas." />}</article><article className="surface-panel glass-panel"><div className="panel-heading"><div><span className="panel-kicker">ATOS INSTITUCIONAIS</span><h2>Próximas ações</h2></div><ClipboardList size={20} /></div><div className="flow-actions"><button onClick={() => go("porta")}><FileText size={17} /><span><strong>Formalizar DFD</strong><small>Inicie a demanda sem definir modalidade.</small></span><ArrowRight size={15} /></button><button onClick={() => go("oficina")}><LayoutTemplate size={17} /><span><strong>Preparar controles</strong><small>Atualize modelos e checklists da OFICINA.</small></span><ArrowRight size={15} /></button><button onClick={() => go("modalidades")}><ListFilter size={17} /><span><strong>Revisar modalidades</strong><small>Configure o catálogo para a fase de abertura.</small></span><ArrowRight size={15} /></button></div></article></section></>}
+    {board.isLoading ? <LoadingPanel message="Lendo os marcos do planejamento…" /> : board.error ? <EmptyState icon={<AlertTriangle size={28} />} title="Fluxo indisponível" text={board.error.message} /> : <><section className="flow-overview glass-panel"><div><span className="panel-kicker">TRILHA INSTITUCIONAL</span><h2>O processo só nasce após autorização.</h2><p>O quadro acompanha DFD, PCA, deliberação e abertura como fases independentes. A instauração ocorre apenas quando a solicitação autorizada chega ao Setor de Compras.</p></div><div className="flow-summary"><strong>{data?.demands.length ?? 0}</strong><span>DFD no histórico</span><strong>{data?.consolidations.length ?? 0}</strong><span>PCA registrados</span></div></section><section className="flow-track">{flow.map((stage, index) => { return <article className={`flow-stage ${stage.count ? "flow-stage-active" : ""}`} key={stage.code}><button type="button" onClick={() => go(stage.screen)}><span className="flow-stage-code">{stage.code}</span><span className="flow-stage-icon">{stage.icon}</span><span className="flow-stage-title"><strong>{stage.title}</strong><small>{stage.role}</small></span><span className="flow-stage-count">{stage.count}<small>em ação</small></span><ArrowRight size={17} /></button>{index < flow.length - 1 ? <i className="flow-connector" /> : null}<p>{stage.detail}</p></article>; })}</section><section className="content-two-columns"><article className="surface-panel glass-panel"><div className="panel-heading"><div><span className="panel-kicker">ATENÇÃO OPERACIONAL</span><h2>Alertas da jornada</h2></div><Bell size={20} /></div>{data?.alerts.length ? data.alerts.slice(0, 6).map(alert => <AlertItem key={alert.id} code={alert.entityType === "demand" ? "DFD" : alert.entityType === "consolidation" ? "PCA" : "Abertura"} message={alert.title} tone={alert.severity === "critical" ? "danger" : alert.severity === "warning" ? "warning" : "info"} />) : <EmptyState icon={<ShieldCheck size={28} />} title="Jornada sem alertas" text="Os prazos e pendências aparecerão aqui conforme as fases forem movimentadas." />}</article><article className="surface-panel glass-panel"><div className="panel-heading"><div><span className="panel-kicker">ATOS INSTITUCIONAIS</span><h2>Próximas ações</h2></div><ClipboardList size={20} /></div><div className="flow-actions"><button onClick={() => go("porta")}><FileText size={17} /><span><strong>Formalizar DFD</strong><small>Inicie a demanda sem definir modalidade.</small></span><ArrowRight size={15} /></button><button onClick={() => go("oficina")}><LayoutTemplate size={17} /><span><strong>Preparar controles</strong><small>Atualize modelos e checklists da OFICINA.</small></span><ArrowRight size={15} /></button><button onClick={() => go("modalidades")}><ListFilter size={17} /><span><strong>Revisar modalidades</strong><small>Configure o catálogo para a fase de abertura.</small></span><ArrowRight size={15} /></button></div></article></section></>}
   </AppShell>;
 }
 
@@ -1592,15 +1878,15 @@ function OperationalModulePage({ go, screen }: { go: (screen: Exclude<Screen, "l
   const dashboard = trpc.dashboard.summary.useQuery();
   const processes = trpc.procurement.list.useQuery();
   const config: Record<OperationalScreen, { eyebrow: string; title: string; subtitle: string; icon: ReactNode; action: Exclude<Screen, "landing">; actionLabel: string }> = {
-    farol: { eyebrow: "Governança / Farol", title: "FAROL — Alertas institucionais", subtitle: "Atenção operacional para prazos, pendências e decisões que exigem ciência humana.", icon: <Bell size={24} />, action: "fluxo", actionLabel: "Ver fluxo" },
-    memoria: { eyebrow: "Governança / Memória", title: "MEMÓRIA — Rastros de processo", subtitle: "Consulta aos processos registrados para acessar etapas, documentos e histórico auditável.", icon: <Archive size={24} />, action: "mapa", actionLabel: "Abrir MAPA" },
-    lastro: { eyebrow: "Governança / Lastro", title: "LASTRO — Documentos vinculados", subtitle: "Acervo de documentos de DFD, PCA e solicitações de abertura, preservando versões e origem.", icon: <FileCog size={24} />, action: "agenda", actionLabel: "Abrir AGENDA" },
-    maestro: { eyebrow: "Contratação / Maestro", title: "MAESTRO — Propostas e fornecedores", subtitle: "Acesso aos processos para registrar propostas de fornecedores ativos na etapa adequada da TRILHA.", icon: <PanelTop size={24} />, action: "trilha", actionLabel: "Abrir TRILHA" },
-    eco: { eyebrow: "Contratação / ECO", title: "ECO — Publicações", subtitle: "Acompanhe PCA publicados, referências institucionais e documentos prontos para transparência.", icon: <Send size={24} />, action: "agenda", actionLabel: "Abrir AGENDA" },
-    vitrine: { eyebrow: "Contratação / Vitrine", title: "VITRINE — Transparência", subtitle: "Visão organizada dos atos publicados e documentos associados para disponibilização institucional.", icon: <Eye size={24} />, action: "eco", actionLabel: "Ver publicações" },
-    elo: { eyebrow: "Execução / ELO", title: "ELO — Carteira de processos", subtitle: "Painel de processos formalizados que formarão a base do ciclo contratual.", icon: <FolderKanban size={24} />, action: "trilha", actionLabel: "Abrir TRILHA" },
-    vigia: { eyebrow: "Execução / Vigia", title: "VIGIA — Acompanhamento", subtitle: "Ponto de acompanhamento para a futura fiscalização, já conectado aos processos em curso.", icon: <ClipboardList size={24} />, action: "trilha", actionLabel: "Abrir TRILHA" },
-    bussola: { eyebrow: "Visão / Bússola", title: "BÚSSOLA — Indicadores", subtitle: "Leitura consolidada de planejamento, privacidade, aberturas e processos para gestão institucional.", icon: <Radar size={24} />, action: "dashboard", actionLabel: "Abrir ÁGUIA" },
+    farol: { eyebrow: "Governança / Farol", title: "FAROL — Alertas institucionais", subtitle: "Atenção operacional para prazos, pendências e decisões que exigem ciência humana.", icon: <Pkt id="farol" alt="Farol" />, action: "fluxo", actionLabel: "Ver fluxo" },
+    memoria: { eyebrow: "Governança / Memória", title: "MEMÓRIA — Rastros de processo", subtitle: "Consulta aos processos registrados para acessar etapas, documentos e histórico auditável.", icon: <Pkt id="memoria" alt="Memória" />, action: "mapa", actionLabel: "Abrir MAPA" },
+    lastro: { eyebrow: "Governança / Lastro", title: "LASTRO — Documentos vinculados", subtitle: "Acervo de documentos de DFD, PCA e solicitações de abertura, preservando versões e origem.", icon: <Pkt id="lastro" alt="Lastro" />, action: "agenda", actionLabel: "Abrir AGENDA" },
+    maestro: { eyebrow: "Contratação / Maestro", title: "MAESTRO — Propostas e fornecedores", subtitle: "Acesso aos processos para registrar propostas de fornecedores ativos na etapa adequada da TRILHA.", icon: <Pkt id="maestro" alt="Maestro" />, action: "trilha", actionLabel: "Abrir TRILHA" },
+    eco: { eyebrow: "Contratação / ECO", title: "ECO — Publicações", subtitle: "Acompanhe PCA publicados, referências institucionais e documentos prontos para transparência.", icon: <Pkt id="eco" alt="Eco" />, action: "agenda", actionLabel: "Abrir AGENDA" },
+    vitrine: { eyebrow: "Contratação / Vitrine", title: "VITRINE — Transparência", subtitle: "Visão organizada dos atos publicados e documentos associados para disponibilização institucional.", icon: <Pkt id="vitrine" alt="Vitrine" />, action: "eco", actionLabel: "Ver publicações" },
+    elo: { eyebrow: "Execução / ELO", title: "ELO — Carteira de processos", subtitle: "Painel de processos formalizados que formarão a base do ciclo contratual.", icon: <Pkt id="elo" alt="Elo" />, action: "trilha", actionLabel: "Abrir TRILHA" },
+    vigia: { eyebrow: "Execução / Vigia", title: "VIGIA — Acompanhamento", subtitle: "Ponto de acompanhamento para a futura fiscalização, já conectado aos processos em curso.", icon: <Pkt id="vigia" alt="Vigia" />, action: "trilha", actionLabel: "Abrir TRILHA" },
+    bussola: { eyebrow: "Visão / Bússola", title: "BÚSSOLA — Indicadores", subtitle: "Leitura consolidada de planejamento, privacidade, aberturas e processos para gestão institucional.", icon: <Pkt id="bussola" alt="Bússola" />, action: "dashboard", actionLabel: "Abrir ÁGUIA" },
   };
   const current = config[screen];
   const rows = (() => {
@@ -1624,7 +1910,7 @@ function OperationalModulePage({ go, screen }: { go: (screen: Exclude<Screen, "l
 }
 
 export default function Home() {
-  const validScreens: Screen[] = ["landing", "porta-preview", "dashboard", "rascunhos", "porta", "trilha", "mapa", "agenda", "perfis", "privacidade", "administracao", "contas", "configuracoes", "modalidades", "oficina", "fluxo", "farol", "memoria", "maestro", "eco", "vitrine", "elo", "vigia", "bussola", "lastro", "oraculo", "ima"];
+  const validScreens: Screen[] = ["landing", "porta-preview", "dashboard", "rascunhos", "porta", "trilha", "mapa", "agenda", "perfis", "privacidade", "administracao", "contas", "configuracoes", "modalidades", "oficina", "fluxo", "farol", "memoria", "maestro", "eco", "vitrine", "elo", "vigia", "bussola", "lastro", "oraculo", "ima", "atlas", "lupa", "regua", "termometro"];
   const [screen, setScreen] = useState<Screen>(() => { const requested = window.location.hash.replace("#", "") as Screen; return validScreens.includes(requested) ? requested : "landing"; });
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [draftPublicId, setDraftPublicId] = useState<string | null>(null);
@@ -1635,7 +1921,7 @@ export default function Home() {
   const openDraft = (publicId: string) => { setDraftPublicId(publicId); go("porta"); };
   useEffect(() => { document.title = screen === "landing" ? "ÓRBITA · Plataforma Integrada de Contratações" : `ÓRBITA · ${screen.toUpperCase()}`; }, [screen]);
   useEffect(() => { const updateFromHash = () => { const requested = window.location.hash.replace("#", "") as Screen; setScreen(validScreens.includes(requested) ? requested : "landing"); }; window.addEventListener("hashchange", updateFromHash); return () => window.removeEventListener("hashchange", updateFromHash); }, []);
-  if (screen === "landing") return <Landing authenticated={isAuthenticated} openWorkspace={() => go("dashboard")} openModule={go} />;
+  if (screen === "landing") return <Landing authenticated={isAuthenticated} openWorkspace={() => go("dashboard")} />;
   if (screen === "porta-preview") return <PortaPreviewPage />;
   if (loading) return <LoadingPanel message="Verificando sua sessão institucional…" />;
   if (!isAuthenticated) return <div className="login-page"><main className="login-main"><section className="login-intro" style={{ backgroundImage: `url(${ASSETS.darkSurface})` }}><div><div className="eyebrow eyebrow-light">Acesso protegido</div><h1>Uma trilha.<br />Responsabilidades claras.</h1><p>O ambiente operacional exige uma conta institucional para preservar autoria e rastreabilidade.</p></div></section><section className="login-form-panel"><div className="login-card"><BrandMark /><div className="eyebrow">Autenticação necessária</div><h2>Acessar a ÓRBITA</h2><p>Entre para consultar ou movimentar processos conforme suas permissões.</p><button className="button button-gov" onClick={startLogin}><ShieldCheck size={18} /> Entrar com conta institucional</button><button className="button button-ghost button-block" onClick={() => go("landing")}><ArrowLeft size={16} /> Voltar à página inicial</button><small><ShieldCheck size={14} /> As ações ficam vinculadas ao usuário autenticado.</small></div></section></main></div>;
@@ -1664,6 +1950,9 @@ export default function Home() {
   const operationalScreens: OperationalScreen[] = ["farol", "memoria", "lastro", "maestro", "eco", "vitrine", "elo", "vigia", "bussola"];
   if (operationalScreens.includes(screen as OperationalScreen)) return <OperationalModulePage go={go} screen={screen as OperationalScreen} />;
   const placeholders: Record<string, { eyebrow: string; title: string; description: string; icon: ReactNode }> = {
+    lupa: { eyebrow: "Fluxo / Lupa", title: "LUPA — Investigação da Necessidade", description: "Aprofundamento técnico e análise de alternativas para a DFD antes da especificação formal.", icon: <Pkt id="lupa" alt="Lupa" /> },
+    regua: { eyebrow: "Fluxo / Régua", title: "RÉGUA — Especificação da Contratação", description: "Parâmetros técnicos, critérios de aceitação e detalhamento do objeto da contratação.", icon: <Pkt id="regua" alt="Régua" /> },
+    termometro: { eyebrow: "Fluxo / Termômetro", title: "TERMÔMETRO — Pesquisa de Preços", description: "Cotação de mercado, pesquisa em fontes oficiais e estimativa de valor da contratação.", icon: <Pkt id="termometro" alt="Termômetro" /> },
   };
   if (screen in placeholders) { const item = placeholders[screen]; return <ModulePlaceholder go={go} screen={screen} {...item} />; }
   return <AppShell active="dashboard" go={go} {...activeProps}><LoadingPanel /></AppShell>;
