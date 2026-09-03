@@ -137,6 +137,34 @@ Diretórios:
 - `shared/` — código compartilhado client/server (constantes, tipos, filtros)
 - `standalone/` — Dockerfile, compose, entrypoint, template de env
 
+## Identidade visual
+
+A marca **ÓRBITA** (símbolo + assinatura + 3 subsistemas + 20 módulos) está
+consolidada em [`docs/brand/`](./docs/brand/). Os assets oficiais vivem em
+`client/public/orbita/` e os tokens em `client/src/brand/tokens/`.
+
+Hierarquia: **3 subsistemas** (Fluxo da Contratação, Transparência,
+Inteligência e Suporte) → **20 módulos** (porta, agenda, lupa, régua,
+termômetro, lastro, maestro, elo, vigia, oráculo, eco, vitrine, águia, farol,
+mapa, bússola, ímã, oficina, atlas, memória). Cada módulo herda a cor
+canônica do seu subsistema.
+
+| Doc | O que tem |
+|---|---|
+| [`docs/brand/README.md`](./docs/brand/README.md) | Sumário da marca v1.0.0 e da hierarquia subsistema → módulo |
+| [`docs/brand/CHANGELOG.md`](./docs/brand/CHANGELOG.md) | Histórico versionado da marca |
+| [`docs/brand/GUIA_DO_DESENVOLVEDOR.md`](./docs/brand/GUIA_DO_DESENVOLVEDOR.md) | Como usar tokens, pictogramas e manifests no código |
+| [`docs/brand/GOVERNANCA.md`](./docs/brand/GOVERNANCA.md) | Quem pode alterar o quê (aprovação de mudanças na marca) |
+| [`docs/brand/ACESSIBILIDADE.md`](./docs/brand/ACESSIBILIDADE.md) | Contraste, sizes mínimos, dark mode, foco de teclado |
+| [`docs/brand/VALIDACOES_NO_PRODUTO.md`](./docs/brand/VALIDACOES_NO_PRODUTO.md) | Checklist de QA visual pré-deploy |
+
+Pontos de uso no código:
+
+- Tokens CSS em [`client/src/brand/tokens/orbita-tokens.css`](./client/src/brand/tokens/orbita-tokens.css) — bridge Tailwind via `@theme inline` em `client/src/index.css`
+- Pictogramas em [`client/public/orbita/modules/`](./client/public/orbita/modules/) (master SVG) e [`client/public/orbita/modules-png/`](./client/public/orbita/modules-png/) (16/20/24/32 px)
+- Manifest de ícones em [`client/src/brand/manifests/icons.json`](./client/src/brand/manifests/icons.json) — fonte canônica da hierarquia
+- Helper React `<Pkt id="porta" />` em `client/src/pages/Home.tsx`
+
 ## CI
 
 GitHub Actions em `.github/workflows/ci.yml`:
