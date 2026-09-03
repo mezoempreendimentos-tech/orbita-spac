@@ -22,6 +22,10 @@ export function ThemeProvider({
   switchable = false,
 }: ThemeProviderProps) {
   const [theme, setTheme] = useState<Theme>(() => {
+    if (typeof document !== "undefined") {
+      const fromHtml = document.documentElement.getAttribute("data-theme");
+      if (fromHtml === "dark" || fromHtml === "light") return fromHtml;
+    }
     if (switchable) {
       const stored = localStorage.getItem("theme");
       return (stored as Theme) || defaultTheme;
