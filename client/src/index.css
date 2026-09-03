@@ -87,7 +87,8 @@
   --orbita-ease-standard: cubic-bezier(0.2, 0, 0, 1);
 }
 
-.dark {
+.dark,
+[data-theme="dark"] {
   --orbita-background: #070817;
   --orbita-surface: #12142A;
   --orbita-surface-muted: #1A1D36;

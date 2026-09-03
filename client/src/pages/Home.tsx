@@ -313,9 +313,37 @@ function BrandMark({ small = false }: { small?: boolean }) {
   return <span className={`brand-mark ${sizeClass} brand-mark--shadow`} role="img" aria-label="Símbolo orbital da ÓRBITA"><img src="/orbita/brand/svg/symbol-color.svg" alt="" /></span>;
 }
 
+// Wordmark (símbolo + nome "ÓRBITA") que troca o SVG por tema.
+// Resolve o problema de "órbita some no light / some no dark": cada modo
+// usa o SVG canônico correto (color no light, mono-white no dark).
+// - variant "intermediate" (184px, default): sidebar, topbar, login
+// - variant "horizontal" (320px): hero da landing
+// - variant "symbol" (96px): apenas o símbolo (sem o nome)
+function Wordmark({ variant = "intermediate", alt = "ÓRBITA", onClick, className = "" }: {
+  variant?: "intermediate" | "horizontal" | "symbol";
+  alt?: string;
+  onClick?: () => void;
+  className?: string;
+}) {
+  const { theme } = useTheme();
+  const isDark = theme === "dark";
+  const map = {
+    intermediate: { light: "/orbita/brand/svg/signature-intermediate.svg",       dark: "/orbita/brand/svg/signature-intermediate-negative.svg", cls: "orbita-signature--intermediate" },
+    horizontal:   { light: "/orbita/brand/svg/signature-horizontal.svg",         dark: "/orbita/brand/svg/signature-horizontal-negative.svg",   cls: "orbita-signature--horizontal" },
+    symbol:       { light: "/orbita/brand/svg/symbol-color.svg",                 dark: "/orbita/brand/svg/symbol-mono-white.svg",               cls: "orbita-signature--symbol" },
+  } as const;
+  const m = map[variant];
+  const src = isDark ? m.dark : m.light;
+  const img = <img className={`orbita-signature ${m.cls}`} src={src} alt={alt} />;
+  if (onClick) return <button type="button" className={`orbita-wordmark ${className}`} onClick={onClick} aria-label={alt}>{img}</button>;
+  return <span className={`orbita-wordmark ${className}`} aria-label={alt}>{img}</span>;
+}
+
 function LandingBrand() {
+  // A landing é dark-only (forçado no <head> antes do React montar),
+  // então sempre usamos o wordmark em negativo.
   return <button className="orbita-wordmark orbita-wordmark--on-dark landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="ÓRBITA, início">
-    <img className="orbita-signature--intermediate" src="/orbita/brand/svg/signature-intermediate-negative.svg" alt="" />
+    <img className="orbita-signature--intermediate" src="/orbita/brand/svg/signature-intermediate-negative.svg" alt="ÓRBITA" />
   </button>;
 }
 
@@ -328,15 +356,11 @@ function LandingModuleIcon({ id, alt, color }: { id: string; alt: string; color:
 }
 
 function Landing({ authenticated, openWorkspace }: { authenticated: boolean; openWorkspace: () => void }) {
-  const { theme, toggleTheme } = useTheme();
   return (
     <div className="landing-shell">
       <header className="landing-nav">
         <LandingBrand />
         <nav className="landing-nav-links" aria-label="Navegação principal">
-          <button className="icon-button icon-button-dark" onClick={toggleTheme} aria-label="Alternar tema">
-            {theme === "light" ? <Moon size={18} /> : <Sun size={18} />}
-          </button>
           <button className="button button-cyan" onClick={() => authenticated ? openWorkspace() : startLogin()}>
             {authenticated ? "Abrir área de trabalho" : "Entrar"} <ArrowRight size={16} />
           </button>
@@ -344,7 +368,9 @@ function Landing({ authenticated, openWorkspace }: { authenticated: boolean; ope
       </header>
 
       <main>
-        {/* HERO — assinatura completa no card à direita, com a faixa de subsistemas abaixo */}
+        {/* HERO — copy à esquerda + orbit card à direita (padrão do catálogo INDEX)
+            A landing é dark-only; o card à direita explica a ponte entre a
+            identidade visual aprovada e a interface que o usuário usa. */}
         <section className="landing-hero" aria-label="Apresentação da plataforma">
           <div className="landing-hero-copy">
             <div className="eyebrow eyebrow-light"><span />Plataforma institucional</div>
@@ -367,8 +393,18 @@ function Landing({ authenticated, openWorkspace }: { authenticated: boolean; ope
             </div>
           </div>
 
-          <aside className="landing-hero-card" aria-label="Identidade visual da plataforma">
+          <aside className="landing-hero-card" aria-label="Ponte entre identidade visual e interface">
+            <div className="landing-hero-card-band">
+              <span>Identidade visual</span>
+              <span>→</span>
+              <span>Interface</span>
+            </div>
             <img className="landing-hero-signature" src="/orbita/brand/svg/signature-horizontal-negative.svg" alt="ÓRBITA — Plataforma Integrada de Contratações" />
+            <div className="landing-hero-card-band landing-hero-card-band--bottom">
+              <span>Como a ÓRBITA deve parecer</span>
+              <code>v1.0.0</code>
+              <span>Como a ÓRBITA funciona na tela</span>
+            </div>
           </aside>
         </section>
 
@@ -553,7 +589,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
     // mas pra evitar warning de "setState in render" usamos um layout effect.
   }
   return <div className={`app-screen app-screen-${active}`}><aside className={`app-sidebar ${open ? "app-sidebar-open" : ""}`}>
-    <div className="sidebar-top"><button className="wordmark app-wordmark" onClick={() => window.location.hash = ""}><BrandMark small /><span>ÓRBITA</span></button><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div>
+    <div className="sidebar-top"><Wordmark variant="intermediate" alt="ÓRBITA" onClick={() => window.location.hash = ""} /><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div>
     {activeSub ? (
       <div className="sidebar-active-sub" style={{ ['--subsystem-color' as any]: activeSub.color }}>
         <img src={`/orbita/subsystems/${activeSub.id}/icone-subsistema.svg`} alt="" className="sidebar-active-sub-mark" />
@@ -618,7 +654,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
       </section>
     </nav>
     <div className="sidebar-user"><div>{displayName.slice(0, 1).toUpperCase() || "U"}</div><span><strong>{displayName}</strong><small>Conta autenticada</small></span><button className="sidebar-signout" onClick={signOut} title="Sair">Sair</button></div>
-  </aside><div className="app-main-wrap"><header className="app-header"><button className="mobile-menu" onClick={() => setOpen(true)}><Menu size={19} /></button><div className="app-header-context app-header-brand"><BrandMark small /><span>ÓRBITA</span><ChevronRight size={14} /><strong>Ambiente operacional</strong></div><div className="app-header-actions"><button className="header-notice" onClick={() => navigate("dashboard")}><Bell size={17} /><b>{Math.max(alertCount, unreadNotifications.data ?? 0)}</b></button><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button></div></header><main className="app-content">{children}</main></div></div>;
+  </aside><div className="app-main-wrap"><header className="app-header"><button className="mobile-menu" onClick={() => setOpen(true)}><Menu size={19} /></button><div className="app-header-context app-header-breadcrumb"><span>ÓRBITA</span><ChevronRight size={14} /><strong>{activeSub?.short || "Ambiente operacional"}</strong></div><div className="app-header-actions"><button className="header-notice" onClick={() => navigate("dashboard")}><Bell size={17} /><b>{Math.max(alertCount, unreadNotifications.data ?? 0)}</b></button><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button></div></header><main className="app-content">{children}</main></div></div>;
 }
 
 function _SidebarButton_DEPRECATED({ item, active, onClick }: { item: { label: string; screen: Exclude<Screen, "landing">; icon: ReactNode }; active: Screen; onClick: () => void }) {

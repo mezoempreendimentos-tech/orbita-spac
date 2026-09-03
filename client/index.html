@@ -11,6 +11,27 @@
     <link rel="icon" type="image/png" sizes="16x16" href="/orbita/favicons/favicon-16.png" />
     <link rel="icon" href="/orbita/favicons/favicon.ico" sizes="any" />
     <link rel="apple-touch-icon" sizes="180x180" href="/orbita/favicons/favicon-180.png" />
+    <script>
+      // Tema inicial: a landing pública (/) é dark-only; o resto respeita a preferência salva.
+      // Roda antes do React montar para evitar flash de tema claro.
+      (function () {
+        try {
+          var path = window.location.pathname || "/";
+          var stored = null;
+          try { stored = localStorage.getItem("theme"); } catch (_) {}
+          var theme = (path === "/" || path === "/index.html")
+            ? "dark"
+            : (stored === "dark" || stored === "light" ? stored : "light");
+          var root = document.documentElement;
+          if (theme === "dark") {
+            root.classList.add("dark");
+            root.setAttribute("data-theme", "dark");
+          } else {
+            root.setAttribute("data-theme", "light");
+          }
+        } catch (_) {}
+      })();
+    </script>
   </head>
   <body>
     <div id="root"></div>
