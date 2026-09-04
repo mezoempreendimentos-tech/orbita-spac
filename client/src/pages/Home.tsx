@@ -46,6 +46,7 @@ import {
   Radar,
   Search,
   Send,
+  Settings,
   ShieldCheck,
   SlidersHorizontal,
   Sparkles,
@@ -632,13 +633,14 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
           </section>
         );
       })}
-      <section className="sidebar-sub sidebar-sub--admin is-open is-current">
-        <button type="button" className="sidebar-sub-header" onClick={() => toggleSub("__admin")} aria-expanded={expanded.has("__admin") || true} aria-controls="sidebar-sub-admin">
-          <div className="sidebar-sub-mark sidebar-sub-mark-admin">A</div>
+      <section className={`sidebar-sub sidebar-sub--admin ${expanded.has("__admin") || ADMIN_NAV.some(m => m.screen === active) ? "is-open" : "is-collapsed"} ${ADMIN_NAV.some(m => m.screen === active) ? "is-current" : ""}`}>
+        <button type="button" className="sidebar-sub-header" onClick={() => toggleSub("__admin")} aria-expanded={expanded.has("__admin") || ADMIN_NAV.some(m => m.screen === active)} aria-controls="sidebar-sub-admin">
+          <span className="sidebar-sub-mark sidebar-sub-mark-admin" aria-hidden="true"><Settings size={20} /></span>
           <div className="sidebar-sub-text">
             <span className="sidebar-sub-short">Administração</span>
             <strong className="sidebar-sub-name">Conta e plataforma</strong>
           </div>
+          <span className="sidebar-sub-count">{ADMIN_NAV.length}</span>
           <span className="sidebar-sub-chevron" aria-hidden="true">▾</span>
         </button>
         <ul id="sidebar-sub-admin" className="sidebar-sub-modules">

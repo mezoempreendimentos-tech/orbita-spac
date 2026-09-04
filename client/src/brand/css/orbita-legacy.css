@@ -61,7 +61,8 @@ button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-vis
 .sidebar-sub-header:hover{background:color-mix(in srgb,var(--subsystem-color, var(--orbita-border)) 8%, transparent)}
 .sidebar-sub-header:focus-visible{outline:2px solid var(--subsystem-color, var(--orbita-focus));outline-offset:1px}
 .sidebar-sub-mark{width:22px;height:22px;flex:0 0 22px;display:inline-grid;place-items:center}
-.sidebar-sub-mark-admin{width:22px;height:22px;border-radius:6px;background:color-mix(in srgb,var(--orbita-text) 8%, transparent);color:var(--muted);font:700 11px var(--orbita-font);justify-content:center;align-items:center;display:inline-flex}
+.sidebar-sub-mark-admin{width:22px;height:22px;border-radius:0;background:transparent;color:var(--muted);justify-content:center;align-items:center;display:inline-grid;transition:color .14s}
+.sidebar-sub.is-open .sidebar-sub-mark-admin{color:var(--orbita-text)}
 .sidebar-sub-text{display:grid;line-height:1.2;min-width:0}
 .sidebar-sub-short{font-size:9px;font-weight:700;letter-spacing:.18em;text-transform:uppercase;color:var(--subsystem-color, var(--muted))}
 .sidebar-sub-name{font:700 11.5px/1.2 var(--orbita-font);letter-spacing:-.01em;color:var(--orbita-text);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
