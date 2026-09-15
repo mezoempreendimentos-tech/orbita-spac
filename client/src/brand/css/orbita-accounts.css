@@ -1,0 +1,272 @@
+/* Gestão de contas: layout próprio, não herda a grade de catálogos.
+ * Diretório é uma lista vertical de cards; cada card tem 4 colunas
+ * (conta / acesso / situação / ações) que colapsam para empilhado em
+ * telas estreitas mantendo a hierarquia visual com gaps generosos. */
+
+.local-accounts-page {
+  display: grid;
+  gap: var(--orbita-space-7);
+  min-width: 0;
+}
+.local-accounts-page .content-two-columns {
+  align-items: start;
+  min-width: 0;
+}
+.local-accounts-page .surface-panel {
+  min-width: 0;
+}
+.local-accounts-page .panel-heading {
+  flex-wrap: wrap;
+}
+.local-accounts-page .panel-heading h2 {
+  overflow-wrap: anywhere;
+}
+.local-accounts-page .local-account-tools {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(180px, 220px);
+  gap: var(--orbita-space-5);
+  align-items: end;
+  margin-block: var(--orbita-space-6);
+}
+.local-account-tools .table-search {
+  min-width: 0;
+  min-height: var(--orbita-control-touch);
+  margin: 0;
+}
+.local-account-tools .table-search input {
+  min-width: 0;
+  width: 100%;
+}
+.local-account-tools .field {
+  margin: 0;
+}
+
+/* ─────────── Diretório de contas ─────────── */
+
+.accounts-directory {
+  --gap-cell: var(--orbita-space-6);
+  --gap-row: var(--orbita-space-4);
+  --avatar-size: 40px;
+  --col-identity: minmax(0, 1fr);
+  --col-access: 170px;
+  --col-status: 130px;
+  --col-actions: 130px;
+
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: var(--gap-row);
+  min-width: 0;
+}
+
+.accounts-directory-row {
+  display: grid;
+  grid-template-columns:
+    var(--col-identity)
+    var(--col-access)
+    var(--col-status)
+    var(--col-actions);
+  gap: var(--gap-cell);
+  align-items: center;
+  padding: var(--orbita-space-6) var(--orbita-space-7);
+  background: var(--orbita-surface);
+  border: 1px solid var(--orbita-border);
+  border-radius: var(--orbita-radius-md);
+  min-width: 0;
+}
+
+/* Cabeçalho (aria-hidden) — apenas em desktop ≥ 900px, oculto em mobile. */
+.accounts-directory-row--head {
+  display: none;
+  padding: var(--orbita-space-3) var(--orbita-space-7);
+  background: var(--orbita-surface-muted);
+  color: var(--orbita-text-secondary);
+  border: 0;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.accounts-directory-cell {
+  display: grid;
+  gap: var(--orbita-space-3);
+  min-width: 0;
+  align-content: center;
+}
+
+.accounts-directory-identity {
+  grid-template-columns: var(--avatar-size) 1fr;
+  align-items: center;
+  column-gap: var(--orbita-space-5);
+}
+
+.accounts-directory-avatar {
+  display: grid;
+  place-items: center;
+  width: var(--avatar-size);
+  height: var(--avatar-size);
+  border-radius: var(--orbita-radius-md);
+  background: var(--orbita-surface-muted);
+  color: var(--orbita-text-secondary);
+  font-size: 15px;
+  font-weight: 700;
+  flex: 0 0 var(--avatar-size);
+}
+
+.accounts-directory-identity-text {
+  display: grid;
+  gap: var(--orbita-space-2);
+  min-width: 0;
+}
+
+.accounts-directory-identity-text strong {
+  color: var(--orbita-text);
+  font-size: 14px;
+  line-height: 1.4;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+
+.accounts-directory-email {
+  color: var(--orbita-text-secondary);
+  font-size: 12px;
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+
+.accounts-directory-meta {
+  color: var(--orbita-text-secondary);
+  font-size: 11px;
+  line-height: 1.4;
+}
+
+.accounts-access-badge,
+.accounts-state-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--orbita-space-2);
+  padding: var(--orbita-space-2) var(--orbita-space-3);
+  border: 1px solid var(--orbita-border);
+  border-radius: var(--orbita-radius-sm);
+  font-size: 11px;
+  line-height: 1.6;
+  font-weight: 700;
+  white-space: nowrap;
+  color: var(--orbita-text-secondary);
+  background: var(--orbita-surface-muted);
+  width: max-content;
+}
+
+.accounts-access-admin {
+  color: var(--orbita-text);
+}
+
+.accounts-state-active {
+  background: color-mix(in srgb, var(--orbita-success) 10%, var(--orbita-surface));
+  color: var(--orbita-text);
+  border-color: color-mix(in srgb, var(--orbita-success) 40%, var(--orbita-border));
+}
+
+.accounts-state-badge i {
+  width: 6px;
+  height: 6px;
+  background: var(--orbita-text-secondary);
+  border-radius: 50%;
+}
+
+.accounts-state-active i {
+  background: var(--orbita-success);
+}
+
+.accounts-directory-actions {
+  justify-items: end;
+}
+
+.accounts-directory-manage {
+  width: 100%;
+  justify-content: center;
+  font-size: 12px;
+}
+
+.accounts-directory-mobile-label {
+  display: none;
+}
+
+/* ─────────── Breakpoints ─────────── */
+
+/* Tablet / telas medias: comprime colunas, mantem label oculto mas
+ * mostra "Acesso / Situação / Ações" por meio das badges e do botão. */
+@media (max-width: 1100px) {
+  .accounts-directory {
+    --avatar-size: 36px;
+    --col-access: 150px;
+    --col-status: 110px;
+    --col-actions: 110px;
+    --gap-cell: var(--orbita-space-5);
+  }
+  .accounts-directory-row {
+    padding: var(--orbita-space-5) var(--orbita-space-5);
+  }
+}
+
+/* Mostra o cabecalho (Conta / Acesso / Situação / Ações) a partir de 900px. */
+@media (min-width: 900px) {
+  .accounts-directory-row--head {
+    display: grid;
+  }
+}
+
+/* Mobile: 2 colunas (conta + ações) e as colunas internas viram rótulo+badge
+ * empilhado com gap generoso para evitar o visual "tudo grudado". */
+@media (max-width: 760px) {
+  .accounts-directory {
+    --gap-row: var(--orbita-space-4);
+    --avatar-size: 36px;
+  }
+  .accounts-directory-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    column-gap: var(--orbita-space-5);
+    row-gap: var(--orbita-space-4);
+    padding: var(--orbita-space-5);
+  }
+  .accounts-directory-mobile-label {
+    display: block;
+    font-size: 10px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--orbita-text-secondary);
+    margin-bottom: var(--orbita-space-2);
+  }
+  /* Identity ocupa a linha inteira (avatar + nome/email/meta) */
+  .accounts-directory-identity {
+    grid-column: 1/-1;
+    align-items: start;
+  }
+  /* Access, status, actions: cada um ocupa sua linha, com gap interno generoso */
+  .accounts-directory-cell {
+    grid-column: auto;
+  }
+  .accounts-directory-actions {
+    grid-column: 2;
+    grid-row: 2 / span 2;
+    justify-self: end;
+    align-self: center;
+  }
+  .accounts-directory-manage {
+    width: max-content;
+  }
+  .local-accounts-page .content-two-columns,
+  .local-accounts-page .local-account-tools {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+
+.local-accounts-page .form-stack > [role="status"] {
+  margin: 0;
+  font-size: 13px;
+  color: var(--orbita-text);
+}
