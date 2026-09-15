@@ -17,6 +17,8 @@
 @import "./brand/css/orbita-components.css";
 @import "./brand/css/orbita-legacy.css";
 @import "./brand/css/orbita-landing.css";
+@import "./brand/css/orbita-institutional.css";
+@import "./brand/css/orbita-accounts.css";
 
 @custom-variant dark (&:is(.dark *));
 

@@ -7,6 +7,7 @@ import {
   authenticateLocalRequest,
   createLocalSession,
   LOCAL_SESSION_COOKIE,
+  isLocalMasterEmail,
 } from "./localAuth";
 import { requestLocalPasswordRecovery } from "./localAccountService";
 import { getDb } from "../db";
@@ -53,6 +54,9 @@ export function registerLocalAuthRoutes(app: Express) {
       }
       const db = await getDb();
       if (!db) return res.status(503).json({ message: "Banco de dados indisponível." });
+      if (parsed.data.email !== user.email?.toLowerCase() && isLocalMasterEmail(parsed.data.email)) {
+        return res.status(403).json({ message: "Este endereço é reservado à Administração." });
+      }
       const [emailTaken] = await db.select({ id: users.id }).from(users).where(eq(users.email, parsed.data.email)).limit(1);
       if (emailTaken && emailTaken.id !== user.id) {
         return res.status(409).json({ message: "Já existe uma conta cadastrada para este e-mail." });

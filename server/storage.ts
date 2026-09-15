@@ -9,7 +9,7 @@
  * (2026-08-27) along with _core/storageProxy.ts and the Forge env vars.
  */
 import { mkdir, writeFile } from "node:fs/promises";
-import { dirname, resolve } from "node:path";
+import { dirname, isAbsolute, relative, resolve, sep } from "node:path";
 
 function normalizeKey(relKey: string): string {
   return relKey.replace(/^\/+/, "");
@@ -31,7 +31,8 @@ export async function storagePut(
   const root = resolve(process.env.LOCAL_STORAGE_DIR || "./data/files");
   const target = resolve(root, key);
   // Path-traversal guard: the resolved target must stay inside the storage root.
-  if (!target.startsWith(`${root}/`) && target !== root) {
+  const rel = relative(root, target);
+  if (!rel || isAbsolute(rel) || rel === ".." || rel.startsWith(`..${sep}`)) {
     throw new Error("Chave de arquivo inválida.");
   }
   await mkdir(dirname(target), { recursive: true });

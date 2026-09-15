@@ -1,5 +1,7 @@
 # Plano de execução do sistema ÓRBITA
 
+> Etapa atual (11/09/2026): [profissionalização da interface e acesso pela internet](docs/TODO_PROFISSIONALIZACAO.md). O histórico abaixo foi preservado; o novo plano registra validações atuais e pendências de túnel.
+
 - [x] Ler e consolidar os requisitos funcionais do documento, da apresentação e dos fluxos anexados.
 - [x] Inventariar etapas, decisões, documentos, eventos e responsáveis do fluxo de contratação direta.
 - [x] Comparar o fluxo de contratação direta com o fluxo de licitação e registrar diferenças de negócio.

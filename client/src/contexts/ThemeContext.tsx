@@ -6,6 +6,7 @@ interface ThemeContextType {
   theme: Theme;
   toggleTheme?: () => void;
   switchable: boolean;
+  setForcedTheme: (theme: Theme | null) => void;
 }
 
 const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
@@ -21,17 +22,17 @@ export function ThemeProvider({
   defaultTheme = "light",
   switchable = false,
 }: ThemeProviderProps) {
-  const [theme, setTheme] = useState<Theme>(() => {
-    if (typeof document !== "undefined") {
-      const fromHtml = document.documentElement.getAttribute("data-theme");
-      if (fromHtml === "dark" || fromHtml === "light") return fromHtml;
-    }
+  const [preference, setPreference] = useState<Theme>(() => {
     if (switchable) {
-      const stored = localStorage.getItem("theme");
-      return (stored as Theme) || defaultTheme;
+      try {
+        const stored = localStorage.getItem("theme");
+        if (stored === "light" || stored === "dark") return stored;
+      } catch { /* Armazenamento indisponível: manter preferência em memória. */ }
     }
     return defaultTheme;
   });
+  const [forcedTheme, setForcedTheme] = useState<Theme | null>(null);
+  const theme = forcedTheme ?? preference;
 
   useEffect(() => {
     const root = document.documentElement;
@@ -43,19 +44,22 @@ export function ThemeProvider({
       root.setAttribute("data-theme", "light");
     }
 
+  }, [theme]);
+
+  useEffect(() => {
     if (switchable) {
-      localStorage.setItem("theme", theme);
+      try { localStorage.setItem("theme", preference); } catch { /* Sem persistência. */ }
     }
-  }, [theme, switchable]);
+  }, [preference, switchable]);
 
   const toggleTheme = switchable
     ? () => {
-        setTheme(prev => (prev === "light" ? "dark" : "light"));
+        setPreference(prev => (prev === "light" ? "dark" : "light"));
       }
     : undefined;
 
   return (
-    <ThemeContext.Provider value={{ theme, toggleTheme, switchable }}>
+    <ThemeContext.Provider value={{ theme, toggleTheme, switchable, setForcedTheme }}>
       {children}
     </ThemeContext.Provider>
   );

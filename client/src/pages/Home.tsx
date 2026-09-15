@@ -1,3 +1,5 @@
+import LocalAccountsList from "@/components/LocalAccountsList";
+import Landing from "@/components/InstitutionalLanding";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
@@ -60,7 +62,7 @@ import {
 import { startLogin } from "../const";
 import { useTheme } from "../contexts/ThemeContext";
 import { presentationLabel, presentationRole, presentationStatus } from "@shared/presentationLabels";
-import { publicAccessLabel, publicLandingContent, publicLandingVisual } from "@shared/landingPresentation";
+import { publicLandingVisual } from "@shared/landingPresentation";
 import { unitOptionKey, uniqueUnitOptions } from "@shared/unitOptions";
 import { uniqueAgendaRows } from "@shared/agendaRows";
 import { dashboardAlertKey } from "@shared/dashboardAlerts";
@@ -117,71 +119,6 @@ const DOCUMENT_TEMPLATE_BY_STEP: Record<string, { code: string; label: string }>
   PRICE_RESEARCH: { code: "MODELO_RPP_ORBITA", label: "RPP" },
   NOTICE: { code: "MODELO_EDITAL_ORBITA", label: "Edital" },
 };
-
-// ─── Marca: subsistemas e módulos (espelho de brand/manifests/icons.json) ───
-type LandingSubsystem = {
-  id: string;
-  name: string;
-  color: string;
-  role: string;
-  modules: string[];
-};
-
-type LandingModule = {
-  id: string;
-  name: string;
-  subsystem: string;
-  role: string;
-};
-
-const LANDING_SUBSYSTEMS: LandingSubsystem[] = [
-  {
-    id: "fluxo-da-contratacao",
-    name: "Fluxo da Contratação",
-    color: "#367CFF",
-    role: "Da entrada da demanda à fiscalização do contrato, com 10 módulos encadeando as etapas formais.",
-    modules: ["porta", "agenda", "lupa", "regua", "termometro", "lastro", "maestro", "elo", "vigia", "oraculo"],
-  },
-  {
-    id: "transparencia",
-    name: "Transparência",
-    color: "#13BFAE",
-    role: "Publicações oficiais no PNCP e vitrine institucional da casa, em tom teal.",
-    modules: ["eco", "vitrine"],
-  },
-  {
-    id: "inteligencia-e-suporte",
-    name: "Inteligência e Suporte",
-    color: "#9554E8",
-    role: "Operação assistida: gestão, alertas, indicadores, conhecimento, modelos e memória.",
-    modules: ["aguia", "farol", "mapa", "bussola", "ima", "oficina", "atlas", "memoria"],
-  },
-];
-
-const LANDING_MODULES: LandingModule[] = [
-  { id: "porta", name: "Porta", subsystem: "fluxo-da-contratacao", role: "Entrada de Demandas" },
-  { id: "agenda", name: "Agenda", subsystem: "fluxo-da-contratacao", role: "Planejamento Anual" },
-  { id: "lupa", name: "Lupa", subsystem: "fluxo-da-contratacao", role: "Investigação da Necessidade" },
-  { id: "regua", name: "Régua", subsystem: "fluxo-da-contratacao", role: "Especificação" },
-  { id: "termometro", name: "Termômetro", subsystem: "fluxo-da-contratacao", role: "Pesquisa de Preços" },
-  { id: "lastro", name: "Lastro", subsystem: "fluxo-da-contratacao", role: "Dotação Orçamentária" },
-  { id: "maestro", name: "Maestro", subsystem: "fluxo-da-contratacao", role: "Condução da Contratação" },
-  { id: "elo", name: "Elo", subsystem: "fluxo-da-contratacao", role: "Gestão de Contratos" },
-  { id: "vigia", name: "Vigia", subsystem: "fluxo-da-contratacao", role: "Fiscalização" },
-  { id: "oraculo", name: "Oráculo", subsystem: "fluxo-da-contratacao", role: "Análise Jurídica" },
-  { id: "eco", name: "Eco", subsystem: "transparencia", role: "Publicações" },
-  { id: "vitrine", name: "Vitrine", subsystem: "transparencia", role: "Transparência Ativa" },
-  { id: "aguia", name: "Águia", subsystem: "inteligencia-e-suporte", role: "Gestão" },
-  { id: "farol", name: "Farol", subsystem: "inteligencia-e-suporte", role: "Alertas e Prazos" },
-  { id: "mapa", name: "Mapa", subsystem: "inteligencia-e-suporte", role: "Consulta e Pesquisa" },
-  { id: "bussola", name: "Bússola", subsystem: "inteligencia-e-suporte", role: "Indicadores" },
-  { id: "ima", name: "Ímã", subsystem: "inteligencia-e-suporte", role: "Fornecedores" },
-  { id: "oficina", name: "Oficina", subsystem: "inteligencia-e-suporte", role: "Modelos e Minutas" },
-  { id: "atlas", name: "Atlas", subsystem: "inteligencia-e-suporte", role: "Conhecimento" },
-  { id: "memoria", name: "Memória", subsystem: "inteligencia-e-suporte", role: "Histórico" },
-];
-
-const landingModuleIndex = new globalThis.Map<string, LandingModule>(LANDING_MODULES.map(m => [m.id, m] as const));
 
 function formatMoney(value: string | null | undefined) {
   if (!value) return "Não informado";
@@ -340,166 +277,6 @@ function Wordmark({ variant = "intermediate", alt = "ÓRBITA", onClick, classNam
   return <span className={`orbita-wordmark ${className}`} aria-label={alt}>{img}</span>;
 }
 
-function LandingBrand() {
-  // A landing é dark-only (forçado no <head> antes do React montar),
-  // então sempre usamos o wordmark em negativo.
-  return <button className="orbita-wordmark orbita-wordmark--on-dark landing-brand" onClick={() => window.scrollTo({ top: 0, behavior: "smooth" })} aria-label="ÓRBITA, início">
-    <img className="orbita-signature--intermediate" src="/orbita/brand/svg/signature-intermediate-negative.svg" alt="ÓRBITA" />
-  </button>;
-}
-
-function LandingSubsystemIcon({ id, alt, color }: { id: string; alt: string; color: string }) {
-  return <span className="landing-pictogram" style={{ color }}><img src={`/orbita/subsystems/${id}/icone-subsistema.svg`} alt={alt} /></span>;
-}
-
-function LandingModuleIcon({ id, alt, color }: { id: string; alt: string; color: string }) {
-  return <span className="landing-pictogram" style={{ color }}><img src={`/orbita/modules-current-color/${id}.svg`} alt={alt} /></span>;
-}
-
-function Landing({ authenticated, openWorkspace }: { authenticated: boolean; openWorkspace: () => void }) {
-  return (
-    <div className="landing-shell">
-      <header className="landing-nav">
-        <LandingBrand />
-        <nav className="landing-nav-links" aria-label="Navegação principal">
-          <button className="button button-cyan" onClick={() => authenticated ? openWorkspace() : startLogin()}>
-            {authenticated ? "Abrir área de trabalho" : "Entrar"} <ArrowRight size={16} />
-          </button>
-        </nav>
-      </header>
-
-      <main>
-        {/* HERO — copy à esquerda + orbit card à direita (padrão do catálogo INDEX)
-            A landing é dark-only; o card à direita explica a ponte entre a
-            identidade visual aprovada e a interface que o usuário usa. */}
-        <section className="landing-hero" aria-label="Apresentação da plataforma">
-          <div className="landing-hero-copy">
-            <div className="eyebrow eyebrow-light"><span />Plataforma institucional</div>
-            <h1 className="landing-hero-title">
-              Contratações públicas <em>em contexto</em>, do planejamento ao encerramento.
-            </h1>
-            <p className="landing-hero-lead">{publicLandingContent.description}</p>
-            <div className="hero-actions">
-              <button className="button button-cyan button-lg" onClick={() => authenticated ? openWorkspace() : startLogin()}>
-                <LogIn size={18} /> {publicAccessLabel(authenticated)}
-              </button>
-              <a className="button button-quiet button-lg" href="#subsistemas">
-                Conheça os 3 subsistemas <ArrowDown size={16} />
-              </a>
-            </div>
-            <div className="landing-hero-stats">
-              <div><strong>3</strong><span>subsistemas</span></div>
-              <div><strong>20</strong><span>módulos operacionais</span></div>
-              <div><strong>1</strong><span>plataforma institucional</span></div>
-            </div>
-          </div>
-
-          <aside className="landing-hero-card" aria-label="Ponte entre identidade visual e interface">
-            <div className="landing-hero-card-band">
-              <span>Identidade visual</span>
-              <span>→</span>
-              <span>Interface</span>
-            </div>
-            <img className="landing-hero-signature" src="/orbita/brand/svg/signature-horizontal-negative.svg" alt="ÓRBITA — Plataforma Integrada de Contratações" />
-            <div className="landing-hero-card-band landing-hero-card-band--bottom">
-              <span>Como a ÓRBITA deve parecer</span>
-              <code>v1.0.0</code>
-              <span>Como a ÓRBITA funciona na tela</span>
-            </div>
-          </aside>
-        </section>
-
-        {/* 3 SUBSISTEMAS */}
-        <section id="subsistemas" className="landing-subsistemas" aria-labelledby="subsistemas-title">
-          <div className="section-heading">
-            <span className="orbita-eyebrow">Os 3 subsistemas</span>
-            <h2 id="subsistemas-title" className="section-title">Três frentes para cobrir o ciclo inteiro da contratação</h2>
-            <p className="section-lead">Cada subsistema tem cor e papel próprios, e reúne os módulos que operam naquela frente da contratação.</p>
-          </div>
-          <div className="landing-subsistemas-grid">
-            {LANDING_SUBSYSTEMS.map(s => (
-              <article key={s.id} className="surface-panel landing-subsistema-card" style={{ ['--subsystem-color' as any]: s.color }}>
-                <div className="landing-subsistema-card-head">
-                  <LandingSubsystemIcon id={s.id} alt={s.name} color={s.color} />
-                  <span className="orbita-tag landing-subsistema-count">{s.modules.length} módulos</span>
-                </div>
-                <h3 className="landing-subsistema-name">{s.name}</h3>
-                <p className="landing-subsistema-role">{s.role}</p>
-                <ul className="landing-subsistema-modules">
-                  {s.modules.map(mid => {
-                    const mod = landingModuleIndex.get(mid);
-                    return (
-                      <li key={mid} className="landing-subsistema-module">
-                        <LandingModuleIcon id={mid} alt={mod?.name || mid} color={s.color} />
-                        <span>
-                          <strong>{mod?.name || mid}</strong>
-                          <small>{mod?.role}</small>
-                        </span>
-                      </li>
-                    );
-                  })}
-                </ul>
-              </article>
-            ))}
-          </div>
-        </section>
-
-        {/* 20 MÓDULOS em grade por subsistema */}
-        <section className="landing-modulos" aria-labelledby="modulos-title">
-          <div className="section-heading">
-            <span className="orbita-eyebrow">Os 20 módulos</span>
-            <h2 id="modulos-title" className="section-title">Cada frente tem um nome, um pictograma oficial e um papel</h2>
-            <p className="section-lead">Os pictogramas abaixo são os oficiais do pacote de marca. Cada módulo herda a cor do seu subsistema — sem troca de cor entre subsistemas, conforme o manifesto.</p>
-          </div>
-          <div className="landing-modulos-groups">
-            {LANDING_SUBSYSTEMS.map(s => (
-              <div key={s.id} className="landing-modulos-group" style={{ ['--subsystem-color' as any]: s.color }}>
-                <header className="landing-modulos-group-head">
-                  <LandingSubsystemIcon id={s.id} alt={s.name} color={s.color} />
-                  <div>
-                    <h3>{s.name}</h3>
-                    <span>{s.role}</span>
-                  </div>
-                  <span className="orbita-tag landing-modulos-group-count">{s.modules.length}</span>
-                </header>
-                <div className="landing-modulos-grid">
-                  {s.modules.map(mid => {
-                    const mod = landingModuleIndex.get(mid);
-                    if (!mod) return null;
-                    return (
-                      <div key={mid} className="landing-modulo-chip" style={{ color: s.color }}>
-                        <LandingModuleIcon id={mid} alt={mod.name} color={s.color} />
-                        <strong>{mod.name}</strong>
-                        <small>{mod.role}</small>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-            ))}
-          </div>
-        </section>
-      </main>
-
-      <footer className="landing-footer">
-        <div className="landing-footer-grid">
-          <div className="landing-footer-brand">
-            <img src="/orbita/brand/svg/symbol-color.svg" alt="" className="landing-footer-mark" />
-            <div>
-              <strong>ÓRBITA</strong>
-              <small>Plataforma Integrada de Contratações</small>
-            </div>
-          </div>
-          <nav className="landing-footer-meta" aria-label="Atalhos do rodapé">
-            <a href="#subsistemas">Subsistemas</a>
-            <a href="#modulos-title">Módulos</a>
-          </nav>
-        </div>
-      </footer>
-    </div>
-  );
-}
-
 // ─── Navegação institucional da sidebar
 // Estruturada como na hierarquia do Design System: 3 grandes subsistemas
 // (inteligência-e-suporte, fluxo-da-contratacao, transparencia) e seus
@@ -567,9 +344,19 @@ const ADMIN_NAV: SubsystemNavItem[] = [
 
 function AppShell({ active, go, children, userName, alertCount, logout }: { active: Screen; go: (screen: Exclude<Screen, "landing">) => void; children: ReactNode; userName: string; alertCount: number; logout: () => void }) {
   const { theme, toggleTheme } = useTheme();
-  const session = useAuth();
+  // redirectOnUnauthenticated true: apos logout o useAuth redireciona pra /login.
+  // Alem disso o signOut abaixo faz redirect manual explicito (cobre o caso
+  // em que o caller passou `logout={() => undefined}` como prop).
+  const session = useAuth({ redirectOnUnauthenticated: true });
   const displayName = session.user?.name || userName || "Usuário institucional";
-  const signOut = session.logout || logout;
+  const signOut = async () => {
+    const fn = session.logout || logout;
+    if (!fn) return;
+    try { await fn(); } catch { /* swallow — redireciona de qualquer forma */ }
+    if (typeof window !== "undefined") {
+      window.location.href = "/login";
+    }
+  };
   const [open, setOpen] = useState(false);
   // Subset de subsistemas expandidos. Por padrão só o subsistema do módulo ativo fica aberto.
   const [expanded, setExpanded] = useState<Set<string>>(() => new Set());
@@ -590,7 +377,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
     // mas pra evitar warning de "setState in render" usamos um layout effect.
   }
   return <div className={`app-screen app-screen-${active}`}><aside className={`app-sidebar ${open ? "app-sidebar-open" : ""}`}>
-    <div className="sidebar-top"><Wordmark variant="intermediate" alt="ÓRBITA" onClick={() => window.location.hash = ""} /><button className="sidebar-close" onClick={() => setOpen(false)}><X size={18} /></button></div>
+    <div className="sidebar-top"><Wordmark variant="intermediate" alt="ÓRBITA" onClick={() => window.location.hash = ""} /><button className="sidebar-close" aria-label="Fechar navegação" onClick={() => setOpen(false)}><X size={18} /></button></div>
     {activeSub ? (
       <div className="sidebar-active-sub" style={{ ['--subsystem-color' as any]: activeSub.color }}>
         <img src={`/orbita/subsystems/${activeSub.id}/icone-subsistema.svg`} alt="" className="sidebar-active-sub-mark" />
@@ -601,7 +388,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
     )}
     <nav className="sidebar-nav">
       {SUBSYSTEM_NAV.map(sub => {
-        const isOpen = expanded.has(sub.id) || (activeSub?.id === sub.id);
+        const isOpen = expanded.has(sub.id);
         const hasActive = activeSub?.id === sub.id;
         return (
           <section key={sub.id} className={`sidebar-sub ${isOpen ? "is-open" : "is-collapsed"} ${hasActive ? "is-current" : ""}`} style={{ ['--subsystem-color' as any]: sub.color }}>
@@ -656,7 +443,7 @@ function AppShell({ active, go, children, userName, alertCount, logout }: { acti
       </section>
     </nav>
     <div className="sidebar-user"><div>{displayName.slice(0, 1).toUpperCase() || "U"}</div><span><strong>{displayName}</strong><small>Conta autenticada</small></span><button className="sidebar-signout" onClick={signOut} title="Sair">Sair</button></div>
-  </aside><div className="app-main-wrap"><header className="app-header"><button className="mobile-menu" onClick={() => setOpen(true)}><Menu size={19} /></button><div className="app-header-context app-header-breadcrumb"><span>ÓRBITA</span><ChevronRight size={14} /><strong>{activeSub?.short || "Ambiente operacional"}</strong></div><div className="app-header-actions"><button className="header-notice" onClick={() => navigate("dashboard")}><Bell size={17} /><b>{Math.max(alertCount, unreadNotifications.data ?? 0)}</b></button><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button></div></header><main className="app-content">{children}</main></div></div>;
+  </aside><div className="app-main-wrap"><header className="app-header"><button className="mobile-menu" aria-label="Abrir navegação" aria-expanded={open} onClick={() => setOpen(true)}><Menu size={19} /></button><div className="app-header-context app-header-breadcrumb"><span>ÓRBITA</span><ChevronRight size={14} /><strong>{activeSub?.short || "Ambiente operacional"}</strong></div><div className="app-header-actions"><button className="header-notice" aria-label="Ver notificações" onClick={() => navigate("dashboard")}><Bell size={17} /><b>{Math.max(alertCount, unreadNotifications.data ?? 0)}</b></button><button className="icon-button" onClick={toggleTheme} aria-label="Alternar tema">{theme === "light" ? <Moon size={18} /> : <Sun size={18} />}</button></div></header><main className="app-content">{children}</main></div></div>;
 }
 
 function _SidebarButton_DEPRECATED({ item, active, onClick }: { item: { label: string; screen: Exclude<Screen, "landing">; icon: ReactNode }; active: Screen; onClick: () => void }) {
@@ -1694,15 +1481,15 @@ function LocalAccountsPage({ go }: { go: (screen: Exclude<Screen, "landing">) =>
   const accountData = accounts.data ?? { accounts: [], recoveryRequests: [] };
   const filteredAccounts = useMemo(() => filterLocalAccounts(accountData.accounts, accountSearch, accountStatus), [accountData.accounts, accountSearch, accountStatus]);
   const selected = accountData.accounts.find(account => account.id === selectedUserId) ?? null;
-  const createAccount = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const form = new FormData(event.currentTarget); create.mutate({ name: String(form.get("name") ?? ""), email: String(form.get("email") ?? ""), password: String(form.get("password") ?? ""), role: String(form.get("role")) as "user" | "admin" }, { onSuccess: () => event.currentTarget.reset() }); };
+  const createAccount = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); const formElement = event.currentTarget; const form = new FormData(formElement); create.mutate({ name: String(form.get("name") ?? ""), email: String(form.get("email") ?? ""), password: String(form.get("password") ?? ""), role: String(form.get("role")) as "user" | "admin" }, { onSuccess: () => formElement.reset() }); };
   const saveAccount = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const form = new FormData(event.currentTarget); update.mutate({ userId: selected.id, name: String(form.get("name") ?? ""), email: String(form.get("email") ?? ""), role: String(form.get("role")) as "user" | "admin", active: form.get("active") === "on" }); };
-  const changePassword = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const password = String(new FormData(event.currentTarget).get("password") ?? ""); resetPassword.mutate({ userId: selected.id, password }, { onSuccess: () => event.currentTarget.reset() }); };
+  const changePassword = (event: FormEvent<HTMLFormElement>) => { event.preventDefault(); if (!selected) return; const formElement = event.currentTarget; const password = String(new FormData(formElement).get("password") ?? ""); resetPassword.mutate({ userId: selected.id, password }, { onSuccess: () => formElement.reset() }); };
   return <AppShell active="contas" go={go} userName="" alertCount={0} logout={() => undefined}><PageHeading eyebrow="Governança / Administração" title="CONTAS LOCAIS" subtitle="Crie, edite, inative e recupere acessos da instalação independente." actions={<button className="button button-ghost button-sm" onClick={() => go("administracao")}><SlidersHorizontal size={15} /> Administração geral</button>} />
-    {accounts.isLoading ? <LoadingPanel message="Carregando contas locais…" /> : accounts.error ? <EmptyState icon={<AlertTriangle size={28} />} title="Contas indisponíveis" text={accounts.error.message} /> : <>
-      <section className="content-two-columns"><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">NOVA CONTA</span><h2>Criar acesso local</h2></div><Plus size={20} /></div><form className="form-stack" onSubmit={createAccount}><Field label="Nome"><input name="name" required minLength={3} placeholder="Nome completo" /></Field><Field label="E-mail"><input name="email" required type="email" placeholder="servidor@fozdoiguacu.pr.leg.br" /></Field><Field label="Perfil"><select name="role" defaultValue="user"><option value="user">Usuário</option><option value="admin">Administrador</option></select></Field><Field label="Senha inicial" full><input name="password" required type="password" minLength={12} autoComplete="new-password" placeholder="Mínimo de 12 caracteres, com letras e números" /><small>A senha não fica visível novamente após a criação.</small></Field>{create.error ? <p className="form-error">{create.error.message}</p> : null}<button className="button button-ink" disabled={create.isPending} type="submit">{create.isPending ? "Criando…" : "Criar conta local"}</button></form></article><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">RECUPERAÇÃO ASSISTIDA</span><h2>Solicitações pendentes</h2></div><CircleHelp size={20} /></div><p className="trilha-current-copy">Nesta implantação inicial, a recuperação não envia e-mail: o administrador redefine a senha de forma auditável.</p>{accountData.recoveryRequests.length ? <div className="checklist-box">{accountData.recoveryRequests.map(request => <div className="checklist-row" key={request.id}><span className="check-circle"><CircleHelp size={14} /></span><div><strong>{request.name || "Usuário institucional"}</strong><small>{request.email} · solicitada em {formatDate(request.requestedAt)}</small></div><button className="text-button" onClick={() => setSelectedUserId(request.userId)}>Redefinir senha</button></div>)}</div> : <p className="task-empty">Nenhuma solicitação de recuperação pendente.</p>}</article></section>
-      <section className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">ACESSOS CADASTRADOS</span><h2>{filteredAccounts.length} de {accountData.accounts.length} conta(s) local(is)</h2></div><Status tone="info">Gestão administrativa</Status></div><div className="table-tools local-account-tools"><label className="table-search"><Search size={16} /><input value={accountSearch} onChange={event => setAccountSearch(event.target.value)} placeholder="Buscar por nome ou e-mail" aria-label="Buscar por nome ou e-mail" /></label><label className="field"><span>Situação</span><select value={accountStatus} onChange={event => setAccountStatus(event.target.value as LocalAccountFilterStatus)}><option value="all">Todas as contas</option><option value="active">Somente ativas</option><option value="inactive">Somente inativas</option></select></label></div>{filteredAccounts.length ? <div className="catalog-items">{filteredAccounts.map(account => <article className="catalog-item" key={account.id}><span className="catalog-order">{String(account.id).padStart(2, "0")}</span><div><strong>{account.name || "Sem nome"}</strong><small>{account.email} · último acesso {account.lastSignedIn.getTime() > 0 ? formatDate(account.lastSignedIn) : "ainda não acessou"}</small></div><div className="tag-row"><Status tone={account.active ? "success" : "neutral"}>{account.active ? "Ativa" : "Inativa"}</Status><Status tone={account.role === "admin" ? "info" : "neutral"}>{account.role === "admin" ? "Administradora" : "Usuária"}</Status><button className="text-button" onClick={() => setSelectedUserId(account.id)}>Gerenciar</button></div></article>)}</div> : <EmptyState icon={<Search size={26} />} title="Nenhuma conta encontrada" text="Altere a busca ou o filtro de situação para localizar outra conta." />}</section>
-      {selected ? <section className="content-two-columns"><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">EDITAR CONTA</span><h2>{selected.name || selected.email}</h2></div><button className="text-button" onClick={() => setSelectedUserId(null)}>Fechar</button></div><form key={selected.id} className="form-stack" onSubmit={saveAccount}><Field label="Nome"><input name="name" required minLength={3} defaultValue={selected.name || ""} /></Field><Field label="E-mail"><input name="email" required type="email" defaultValue={selected.email || ""} /></Field><Field label="Perfil"><select name="role" defaultValue={selected.role}><option value="user">Usuário</option><option value="admin">Administrador</option></select></Field><Field label="Situação" full><label className="checkbox-line"><input name="active" type="checkbox" defaultChecked={selected.active} /> Conta ativa para acesso local</label></Field>{update.error ? <p className="form-error">{update.error.message}</p> : null}<button className="button button-ink" type="submit" disabled={update.isPending}>{update.isPending ? "Salvando…" : "Salvar alterações"}</button></form></article><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">NOVA SENHA</span><h2>Redefinir acesso</h2></div><ShieldCheck size={20} /></div><p className="trilha-current-copy">A redefinição encerra as solicitações pendentes de recuperação para esta conta e fica registrada na auditoria.</p><form className="form-stack" onSubmit={changePassword}><Field label="Nova senha" full><input name="password" type="password" required minLength={12} autoComplete="new-password" placeholder="Mínimo de 12 caracteres, com letras e números" /></Field>{resetPassword.error ? <p className="form-error">{resetPassword.error.message}</p> : null}<button className="button button-cyan" type="submit" disabled={resetPassword.isPending}>{resetPassword.isPending ? "Redefinindo…" : "Definir nova senha"}</button></form></article></section> : null}
-    </>}</AppShell>;
+    <div className="local-accounts-page">{accounts.isLoading ? <LoadingPanel message="Carregando contas locais…" /> : accounts.error ? <EmptyState icon={<AlertTriangle size={28} />} title="Contas indisponíveis" text={accounts.error.message} /> : <>
+      <section className="content-two-columns"><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">NOVA CONTA</span><h2>Criar acesso local</h2></div><Plus size={20} /></div><form className="form-stack" onSubmit={createAccount}><Field label="Nome"><input name="name" required minLength={3} placeholder="Nome completo" /></Field><Field label="E-mail"><input name="email" required type="email" placeholder="servidor@fozdoiguacu.pr.leg.br" /></Field><Field label="Acesso à plataforma"><select name="role" defaultValue="user"><option value="user">Usuário</option><option value="admin">Administrador</option></select></Field><Field label="Senha inicial" full><input name="password" required type="password" minLength={12} autoComplete="new-password" placeholder="Mínimo de 12 caracteres, com letras e números" /><small>A senha não fica visível novamente após a criação.</small></Field>{create.isSuccess ? <p role="status">Conta criada com sucesso.</p> : null}{create.error ? <p className="form-error">{create.error.message}</p> : null}<button className="button button-ink" disabled={create.isPending} type="submit">{create.isPending ? "Criando…" : "Criar conta local"}</button></form></article><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">RECUPERAÇÃO ASSISTIDA</span><h2>Solicitações pendentes</h2></div><CircleHelp size={20} /></div><p className="trilha-current-copy">Nesta implantação inicial, a recuperação não envia e-mail: o administrador redefine a senha de forma auditável.</p>{accountData.recoveryRequests.length ? <div className="checklist-box">{accountData.recoveryRequests.map(request => <div className="checklist-row" key={request.id}><span className="check-circle"><CircleHelp size={14} /></span><div><strong>{request.name || "Usuário institucional"}</strong><small>{request.email} · solicitada em {formatDate(request.requestedAt)}</small></div><button className="text-button" onClick={() => setSelectedUserId(request.userId)}>Redefinir senha</button></div>)}</div> : <p className="task-empty">Nenhuma solicitação de recuperação pendente.</p>}</article></section>
+      <section className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">ACESSOS CADASTRADOS</span><h2>{filteredAccounts.length} de {accountData.accounts.length} conta(s) local(is)</h2></div><Status tone="info">Gestão administrativa</Status></div><div className="table-tools local-account-tools"><label className="table-search"><Search size={16} /><input value={accountSearch} onChange={event => setAccountSearch(event.target.value)} placeholder="Buscar por nome ou e-mail" aria-label="Buscar por nome ou e-mail" /></label><label className="field"><span>Situação</span><select value={accountStatus} onChange={event => setAccountStatus(event.target.value as LocalAccountFilterStatus)}><option value="all">Todas as contas</option><option value="active">Somente ativas</option><option value="inactive">Somente inativas</option></select></label></div>{filteredAccounts.length ? <LocalAccountsList accounts={filteredAccounts} onManage={setSelectedUserId} /> : <EmptyState icon={<Search size={26} />} title="Nenhuma conta encontrada" text="Altere a busca ou o filtro de situação para localizar outra conta." />}</section>
+      {selected ? <section className="content-two-columns"><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">EDITAR CONTA</span><h2>{selected.name || selected.email}</h2></div><button className="text-button" onClick={() => setSelectedUserId(null)}>Fechar</button></div><form key={selected.id} className="form-stack" onSubmit={saveAccount}><Field label="Nome"><input name="name" required minLength={3} defaultValue={selected.name || ""} /></Field><Field label="E-mail"><input name="email" required type="email" defaultValue={selected.email || ""} /></Field><Field label="Acesso à plataforma"><select name="role" defaultValue={selected.role}><option value="user">Usuário</option><option value="admin">Administrador</option></select></Field><Field label="Situação" full><label className="checkbox-line"><input name="active" type="checkbox" defaultChecked={selected.active} /> Conta ativa para acesso local</label></Field>{update.isSuccess ? <p role="status">Alterações salvas.</p> : null}{update.error ? <p className="form-error">{update.error.message}</p> : null}<button className="button button-ink" type="submit" disabled={update.isPending}>{update.isPending ? "Salvando…" : "Salvar alterações"}</button></form></article><article className="surface-panel"><div className="panel-heading"><div><span className="panel-kicker">NOVA SENHA</span><h2>Redefinir acesso</h2></div><ShieldCheck size={20} /></div><p className="trilha-current-copy">A redefinição encerra as solicitações pendentes de recuperação para esta conta e fica registrada na auditoria.</p><form className="form-stack" onSubmit={changePassword}><Field label="Nova senha" full><input name="password" type="password" required minLength={12} autoComplete="new-password" placeholder="Mínimo de 12 caracteres, com letras e números" /></Field>{resetPassword.isSuccess ? <p role="status">Senha redefinida.</p> : null}{resetPassword.error ? <p className="form-error">{resetPassword.error.message}</p> : null}<button className="button button-cyan" type="submit" disabled={resetPassword.isPending}>{resetPassword.isPending ? "Redefinindo…" : "Definir nova senha"}</button></form></article></section> : null}
+    </>}</div></AppShell>;
 }
 
 function SettingsPage({ go }: { go: (screen: Exclude<Screen, "landing">) => void }) {
@@ -1948,8 +1735,10 @@ function OperationalModulePage({ go, screen }: { go: (screen: Exclude<Screen, "l
 }
 
 export default function Home() {
+  const { setForcedTheme } = useTheme();
   const validScreens: Screen[] = ["landing", "porta-preview", "dashboard", "rascunhos", "porta", "trilha", "mapa", "agenda", "perfis", "privacidade", "administracao", "contas", "configuracoes", "modalidades", "oficina", "fluxo", "farol", "memoria", "maestro", "eco", "vitrine", "elo", "vigia", "bussola", "lastro", "oraculo", "ima", "atlas", "lupa", "regua", "termometro"];
   const [screen, setScreen] = useState<Screen>(() => { const requested = window.location.hash.replace("#", "") as Screen; return validScreens.includes(requested) ? requested : "landing"; });
+  useEffect(() => { setForcedTheme(screen === "landing" ? "dark" : null); return () => setForcedTheme(null); }, [screen, setForcedTheme]);
   const [selectedProcessId, setSelectedProcessId] = useState<string | null>(null);
   const [draftPublicId, setDraftPublicId] = useState<string | null>(null);
   const { user, loading, isAuthenticated, logout } = useAuth();
@@ -1988,6 +1777,7 @@ export default function Home() {
   const operationalScreens: OperationalScreen[] = ["farol", "memoria", "lastro", "maestro", "eco", "vitrine", "elo", "vigia", "bussola"];
   if (operationalScreens.includes(screen as OperationalScreen)) return <OperationalModulePage go={go} screen={screen as OperationalScreen} />;
   const placeholders: Record<string, { eyebrow: string; title: string; description: string; icon: ReactNode }> = {
+    atlas: { eyebrow: "Inteligência e Suporte / Atlas", title: "ATLAS — Conhecimento", description: "Referências e conhecimento institucional para apoiar o trabalho em cada etapa da contratação.", icon: <Pkt id="atlas" alt="Atlas" /> },
     lupa: { eyebrow: "Fluxo / Lupa", title: "LUPA — Investigação da Necessidade", description: "Aprofundamento técnico e análise de alternativas para a DFD antes da especificação formal.", icon: <Pkt id="lupa" alt="Lupa" /> },
     regua: { eyebrow: "Fluxo / Régua", title: "RÉGUA — Especificação da Contratação", description: "Parâmetros técnicos, critérios de aceitação e detalhamento do objeto da contratação.", icon: <Pkt id="regua" alt="Régua" /> },
     termometro: { eyebrow: "Fluxo / Termômetro", title: "TERMÔMETRO — Pesquisa de Preços", description: "Cotação de mercado, pesquisa em fontes oficiais e estimativa de valor da contratação.", icon: <Pkt id="termometro" alt="Termômetro" /> },

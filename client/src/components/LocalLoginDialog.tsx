@@ -2,6 +2,7 @@ import { FormEvent, useEffect, useState } from "react";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { ShieldCheck } from "lucide-react";
+import { useTheme } from "@/contexts/ThemeContext";
 
 /**
  * Modal de login local. Substitui a página `/login` separada — agora o
@@ -58,11 +59,11 @@ export default function LocalLoginDialog() {
     finally { setRecovering(false); }
   };
   return <Dialog open={open} onOpenChange={setOpen}>
-    <DialogContent>
+    <DialogContent className="institutional-login">
       <DialogHeader>
         <BrandMark />
         <DialogTitle>Entrar na área de trabalho</DialogTitle>
-        <DialogDescription>Use a conta definida pela administração da instalação local.</DialogDescription>
+        <DialogDescription>Acesse com sua conta institucional para continuar seu trabalho.</DialogDescription>
       </DialogHeader>
       <form className="form-stack" onSubmit={submit}>
         <label className="field"><span>E-mail institucional</span><input type="email" name="email" required autoComplete="email" /></label>
@@ -72,7 +73,7 @@ export default function LocalLoginDialog() {
       </form>
       <details className="local-login-recovery">
         <summary>Esqueci minha senha</summary>
-        <p>Sem serviço de e-mail nesta versão inicial, a solicitação será encaminhada à Administração para redefinição manual da senha.</p>
+        <p>Solicite à Administração a redefinição da sua senha.</p>
         <form className="form-stack" onSubmit={requestRecovery}>
           <label className="field"><span>E-mail institucional</span><input type="email" name="recoveryEmail" required autoComplete="email" /></label>
           {recoveryMessage ? <p className="form-success" role="status">{recoveryMessage}</p> : null}
@@ -85,16 +86,6 @@ export default function LocalLoginDialog() {
 
 // Versão local do BrandMark para não importar do Home.tsx e criar ciclo.
 function BrandMark() {
-  return <span className="brand-mark brand-mark-small" role="img" aria-label="Símbolo orbital da ÓRBITA" style={{ width: 44, height: 44, margin: "0 auto 12px" }}>
-    <svg viewBox="0 0 36 36" aria-hidden="true">
-      <circle cx="18" cy="18" r="3.7" fill="#E350EA" />
-      <circle cx="18" cy="18" r="6.1" fill="none" stroke="#8A62FF" strokeWidth="0.7" opacity="0.72" />
-      <ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#5E82FF" strokeWidth="1" />
-      <ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#8A62FF" strokeWidth="1" transform="rotate(60 18 18)" />
-      <ellipse cx="18" cy="18" rx="14.2" ry="5.1" fill="none" stroke="#E350EA" strokeWidth="1" transform="rotate(-60 18 18)" />
-      <circle cx="29.7" cy="16.1" r="1.65" fill="#E350EA" />
-      <circle cx="12" cy="30.15" r="1.65" fill="#5E82FF" />
-      <circle cx="13.15" cy="7.3" r="1.65" fill="#8A62FF" />
-    </svg>
-  </span>;
+  const { theme } = useTheme();
+  return <img className="institutional-login-logo" src={`/orbita/brand/svg/signature-horizontal${theme === "dark" ? "-negative" : ""}.svg`} alt="ÓRBITA — Plataforma Integrada de Contratações Públicas" />;
 }

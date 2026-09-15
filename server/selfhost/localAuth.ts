@@ -68,6 +68,6 @@ export async function authenticateLocalRequest(req: Request): Promise<User | nul
     const db = await getDb();
     if (!db) return null;
     const [user] = await db.select().from(users).where(eq(users.id, id)).limit(1);
-    return user ?? null;
+    return user?.active ? user : null;
   } catch { return null; }
 }
