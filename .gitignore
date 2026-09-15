@@ -163,3 +163,9 @@ scripts/_archive/
 
 # Pacote de marca original (zip de origem, extraído em client/public/orbita/)
 _brand_inbox/
+
+# placeholder criado por engano (resto de cmd start com numero)
+3000
+
+# smoke artifacts
+standalone/smoke-cookies.txt
