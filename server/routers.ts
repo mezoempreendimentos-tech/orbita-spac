@@ -1,4 +1,5 @@
 import { COOKIE_NAME } from "@shared/const";
+import { LOCAL_SESSION_COOKIE } from "./selfhost/localAuth";
 import { z } from "zod";
 import { TRPCError } from "@trpc/server";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -171,8 +172,12 @@ export const appRouter = router({
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
+      // Limpa tanto o cookie do template Manus antigo (app_session_id) quanto
+      // o cookie local (orbita_session). Sem isso, re-login silencioso reusa
+      // o JWT antigo e o usuario continua logado mesmo apos o "Sair".
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
+      ctx.res.clearCookie(LOCAL_SESSION_COOKIE, { ...cookieOptions, maxAge: -1 });
       return {
         success: true,
       } as const;
